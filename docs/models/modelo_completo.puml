@@ -1,11 +1,12 @@
-' Modelo conceptual desarrollado mediante GPT Sol-6.1 High
+' Modelo conceptual desarrollado mediante GPT Sol-6.1 High - Revisado por pepecabrera
+
 
 ' Plato-Plató — Modelo conceptual UML
 ' Fuente: Pasted markdown.md y tema «Introducción al Modelado Conceptual».
 ' Fecha: 2026-10-14.
 ' Archivo autónomo: no requiere !include, Internet ni librerías externas.
-' Contiene seis vistas del MISMO modelo. La primera muestra toda la estructura.
-' Las vistas restantes desarrollan restricciones y enumerados relevantes.
+' Un único diagrama reúne toda la estructura, los enumerados y las restricciones.
+' Actualizado para visualizar todo el modelo a la vez con Option+D.
 '
 ' DECISIONES CONFIRMADAS POR EL USUARIO
 ' D-01: un precio vigente seleccionado explícitamente por ingrediente.
@@ -45,7 +46,7 @@
 ' Escandallo y rentabilidad: atributos derivados, RI-05, RF-07..08, RC-05..07.
 ' Alertas: restricciones/comportamiento derivado, RF-11..12; no se exige
 '   almacenar avisos ni escandallos históricos como entidades independientes.
-' Todos los RC-01..12 y RN-01..04 tienen restricciones explícitas en las vistas.
+' Todos los RC-01..12 y RN-01..04 tienen restricciones explícitas en este diagrama.
 ' RG-01..02 y RNF-06 quedan soportados por las relaciones y restricciones.
 ' RNF-03..05 son cualidades del sistema, sin información propia que persistir.
 '
@@ -60,7 +61,8 @@
 ' No se guardan claves foráneas, IDs técnicos ni operaciones de software.
 ' El único identificador explícito es identificadorLote, solicitado en RI-07.
 '
-@startuml 01_estructura
+
+@startuml Plato_Plato_modelo_completo
 hide methods
 hide circle
 skinparam backgroundColor white
@@ -75,13 +77,17 @@ skinparam packageStyle rectangle
 skinparam packageBorderColor #94A3B8
 skinparam noteBackgroundColor #FFFBEB
 skinparam noteBorderColor #D6B563
-skinparam nodesep 65
-skinparam ranksep 100
+skinparam nodesep 75
+skinparam ranksep 110
 skinparam ArrowFontSize 12
 skinparam linetype polyline
 top to bottom direction
 
-title Plato-Plató | Modelo conceptual: estructura completa
+skinparam noteFontSize 12
+scale max 3900*3900
+
+title Plato-Plató | Modelo conceptual completo
+
 package "Acceso" #EDF2FF {
 class Usuario <<entidad>> {
   nombre
@@ -96,7 +102,51 @@ class Rol <<entidad>> {
 class Permiso <<entidad>> {
   nombre
 }
+enum TipoRol {
+  ADMINISTRADOR
+  ENCARGADO
+  EMPLEADO
 }
+note right of Rol
+  {US-01..US-03, RI-01: existen los roles
+  ADMINISTRADOR, ENCARGADO y EMPLEADO.
+  Cada usuario tiene exactamente un rol.
+  Puede haber varios administradores.}
+end note
+
+note bottom of Permiso
+  {RC-10, D-03: permisos efectivos del usuario =
+  permisos de su rol UNION permisos adicionales.
+  Un permiso adicional puede concederse a un
+  usuario concreto por un administrador.}
+
+  {US-01: el administrador dispone de todas las
+  funciones, incluyendo usuarios y asignación
+  de roles/permisos y consulta económica.}
+
+  {US-02: el encargado gestiona ingredientes,
+  platos, proveedores y usuarios empleados.
+  El acceso económico no se concede por defecto;
+  puede concederse individualmente.}
+
+  {US-03: el empleado consulta platos y recetas
+  y registra manualmente las mermas.}
+end note
+
+note left of Usuario
+  {RNF-01: solo usuarios activos y autenticados
+  pueden acceder; cada operación comprueba
+  los permisos efectivos.}
+
+  {RNF-02: contraseñaProtegida no contiene
+  la contraseña en texto plano.}
+
+  {RC-09: la desactivación conserva el usuario
+  cuando participa en información histórica.}
+end note
+
+}
+
 package "Compras" #ECFDF5 {
 class Proveedor <<entidad>> {
   nombre
@@ -118,7 +168,58 @@ class PrecioCompra <<entidad>> {
   fechaFinVigencia [0..1]
   seleccionadoParaCosteo
 }
+note right of PrecioCompra
+  {RC-03: precioCompra > 0.}
+
+  {Vigencia: fechaFinVigencia, si existe, es
+  posterior a fechaInicioVigencia.
+  El intervalo es [inicio, fin); sin fin,
+  permanece abierto.}
+
+  {RC-04: no se solapan intervalos de vigencia
+  del mismo par Proveedor-Ingrediente.}
+
+  {RI-04, RC-09: al actualizar un precio se
+  conserva el registro anterior y su intervalo.
+  PrecioCompra es una entidad histórica; NO
+  queda identificado solo por el par proveedor
+  e ingrediente, que puede repetirse.}
+end note
+
+note bottom of Ingrediente
+  {D-01: como máximo un PrecioCompra de este
+  Ingrediente tiene seleccionadoParaCosteo
+  verdadero. El precio elegido debe estar
+  vigente en el instante del cálculo.
+  Puede haber precios vigentes de varios
+  proveedores; solo se selecciona uno.}
+
+  {RC-11: sin un precio seleccionado válido
+  no se puede costear ese ingrediente ni las
+  elaboraciones que dependan de él.}
+
+  {RI-03: unidadMedida tiene kg como valor
+  por defecto; las cantidades del stock se
+  expresan siempre en esta unidad.}
+end note
+
+note left of Proveedor
+  {RF-13: los proveedores de un ingrediente
+  se obtienen mediante PrecioCompra.
+  Para comparar importes se normalizan las
+  unidades y se usa la vigencia pertinente.}
+end note
+
+note left of Ingrediente
+  {RI-03: cantidadTotalDisponible = suma de
+  los saldos de sus lotes. Existencia física
+  y aptitud para elaborar son conceptos distintos;
+  los lotes caducados pendientes de registrar
+  como merma no desaparecen del saldo.}
+end note
+
 }
+
 package "Elaboraciones" #FFF7ED {
 class Plato <<entidad>> {
   nombre
@@ -147,276 +248,7 @@ class ComponenteReceta <<entidad>> {
   cantidad
   unidadMedida
 }
-}
-package "Almacén y pérdidas" #F0F9FF {
-class Lote <<entidad>> {
-  identificadorLote
-  /cantidad
-  fechaEntrada
-  fechaCaducidad [0..1]
-  ubicacionAlmacen
-  fresco
-  aptoParaConsumo
-}
-class MovimientoStock <<entidad>> {
-  tipo : TipoMovimiento
-  cantidad
-  fechaMovimiento
-  finalidadSalida : FinalidadSalida [0..1]
-}
-class Merma <<entidad>> {
-  cantidadDesperdiciada
-  fechaMerma
-  motivo
-  costePerdida
-}
-}
-package "Oferta y autorización" #FAF5FF {
-class PeriodoOferta <<entidad>> {
-  tipo : TipoOferta
-  fechaInicio
-  fechaFin [0..1]
-}
-class AutorizacionCarta <<entidad>> {
-  fechaAutorizacion
-  costeEvaluado
-  precioVentaEvaluado
-}
-}
-
-Usuario "0..*" -left- "1" Rol : tieneRol
-Rol "0..*" -down- "0..*" Permiso : concede
-Usuario "0..*" -down- "0..*" Permiso : tienePermisoAdicional
-Proveedor "1" -- "0..*" PrecioCompra : ofrece
-Ingrediente "1" -- "0..*" PrecioCompra : tienePrecio
-Ingrediente "1" -- "0..*" Lote : tieneLote
-Lote "1" -- "0..*" MovimientoStock : recibeMovimiento
-Plato "0..1" -- "1" Receta : tieneReceta
-Subreceta "0..1" -- "1" Receta : tieneReceta
-Receta "1" *-- "1..*" ComponenteReceta : seComponeDe
-ComponenteReceta "0..*" -- "0..1" Ingrediente : utilizaIngrediente
-ComponenteReceta "0..*" -- "0..1" Subreceta : utilizaSubreceta
-Merma "0..*" -- "0..1" Lote : afectaLote
-Merma "0..*" -- "0..1" Plato : afectaPlato
-Merma "0..1" -left- "0..1" MovimientoStock : originaSalida
-MovimientoStock "0..*" -- "0..1\nplatoDestino" Plato : seDestinaA
-Plato "1" -- "0..*" PeriodoOferta : tienePeriodoOferta
-PeriodoOferta "1" -- "0..1" AutorizacionCarta : tieneAutorizacion
-Usuario "1" -- "0..*" AutorizacionCarta : emite
-
-
-note bottom of Receta
-  {Propietario exclusivo: cada Receta pertenece
-  a exactamente un Plato o una Subreceta.}
-end note
-note bottom of ComponenteReceta
-  {Componente exclusivo: utiliza exactamente
-  un Ingrediente o una Subreceta.}
-end note
-note bottom of Merma
-  {Elemento afectado exclusivo: exactamente
-  un Lote o un Plato.}
-end note
-
-legend bottom
-Cada extremo indica cuántos objetos de esa clase se relacionan con uno del otro extremo.
-0..1 = opcional; 0..* = cero o más; 1..* = uno o más; 1 = exactamente uno.
-Rombo negro: las líneas de receta pertenecen a una única receta.
-/atributo = valor derivado; [0..1] = atributo opcional; tipos solo en enumerados.
-La selección para costear se registra en seleccionadoParaCosteo de PrecioCompra.
-Las vistas 02-06 desarrollan todas las restricciones y los cinco enumerados.
-endlegend
-@enduml
-
-@startuml 02_acceso
-hide methods
-hide circle
-skinparam backgroundColor white
-skinparam shadowing false
-skinparam roundcorner 8
-skinparam defaultFontName SansSerif
-skinparam defaultFontSize 14
-skinparam classAttributeIconSize 0
-skinparam classBorderColor #334155
-skinparam ArrowColor #475569
-skinparam packageStyle rectangle
-skinparam packageBorderColor #94A3B8
-skinparam noteBackgroundColor #FFFBEB
-skinparam noteBorderColor #D6B563
-skinparam nodesep 65
-skinparam ranksep 100
-skinparam ArrowFontSize 12
-skinparam linetype polyline
-top to bottom direction
-
-title Plato-Plató | Usuarios, roles y permisos
-class Usuario <<entidad>> {
-  nombre
-  correoElectronico
-  contraseñaProtegida
-  estado : EstadoRegistro
-  fechaCreacion
-}
-class Rol <<entidad>> {
-  nombre : TipoRol
-}
-class Permiso <<entidad>> {
-  nombre
-}
-enum TipoRol {
-  ADMINISTRADOR
-  ENCARGADO
-  EMPLEADO
-}
-enum EstadoRegistro {
-  ACTIVO
-  INACTIVO
-}
-
-Usuario "0..*" -left- "1" Rol : tieneRol
-Rol "0..*" -down- "0..*" Permiso : concede
-Usuario "0..*" -down- "0..*" Permiso : tienePermisoAdicional
-
-
-note right of Rol
-  {US-01..US-03, RI-01: existen los roles
-  ADMINISTRADOR, ENCARGADO y EMPLEADO.
-  Cada usuario tiene exactamente un rol.
-  Puede haber varios administradores.}
-end note
-note bottom of Permiso
-  {RC-10, D-03: permisos efectivos del usuario =
-  permisos de su rol UNION permisos adicionales.
-  Un permiso adicional puede concederse a un
-  usuario concreto por un administrador.}
-
-  {US-01: el administrador dispone de todas las
-  funciones, incluyendo usuarios y asignación
-  de roles/permisos y consulta económica.}
-
-  {US-02: el encargado gestiona ingredientes,
-  platos, proveedores y usuarios empleados.
-  El acceso económico no se concede por defecto;
-  puede concederse individualmente.}
-
-  {US-03: el empleado consulta platos y recetas
-  y registra manualmente las mermas.}
-end note
-note left of Usuario
-  {RNF-01: solo usuarios activos y autenticados
-  pueden acceder; cada operación comprueba
-  los permisos efectivos.}
-
-  {RNF-02: contraseñaProtegida no contiene
-  la contraseña en texto plano.}
-
-  {RC-09: la desactivación conserva el usuario
-  cuando participa en información histórica.}
-end note
-
-legend bottom
-RC-10 se amplía conforme a la decisión confirmada D-03. No se modelan los roles como subclases.
-endlegend
-@enduml
-
-@startuml 03_precios
-hide methods
-hide circle
-skinparam backgroundColor white
-skinparam shadowing false
-skinparam roundcorner 8
-skinparam defaultFontName SansSerif
-skinparam defaultFontSize 14
-skinparam classAttributeIconSize 0
-skinparam classBorderColor #334155
-skinparam ArrowColor #475569
-skinparam packageStyle rectangle
-skinparam packageBorderColor #94A3B8
-skinparam noteBackgroundColor #FFFBEB
-skinparam noteBorderColor #D6B563
-skinparam nodesep 65
-skinparam ranksep 100
-skinparam ArrowFontSize 12
-skinparam linetype polyline
-top to bottom direction
-
-title Plato-Plató | Histórico de precios y escandallo
-class Proveedor <<entidad>> {
-  nombre
-  informacionContacto
-  formaPago
-  estado : EstadoRegistro
-}
-class Ingrediente <<entidad>> {
-  nombre
-  categoria
-  unidadMedida
-  estado : EstadoRegistro
-  /cantidadTotalDisponible
-}
-class PrecioCompra <<entidad>> {
-  precioCompra
-  unidadPrecio
-  fechaInicioVigencia
-  fechaFinVigencia [0..1]
-  seleccionadoParaCosteo
-}
-class Plato <<entidad>> {
-  nombre
-  imagen
-  descripcion
-  categoria
-  menuDelDia
-  precioVenta
-  estado : EstadoRegistro
-  porcentajeMargenObjetivo [0..1]
-  /costeProduccion [0..1]
-  /margenBruto [0..1]
-  /porcentajeMargen [0..1]
-}
-enum EstadoRegistro {
-  ACTIVO
-  INACTIVO
-}
-
-Proveedor "1" -- "0..*" PrecioCompra : ofrece
-Ingrediente "1" -- "0..*" PrecioCompra : tienePrecio
-
-
-note right of PrecioCompra
-  {RC-03: precioCompra > 0.}
-
-  {Vigencia: fechaFinVigencia, si existe, es
-  posterior a fechaInicioVigencia.
-  El intervalo es [inicio, fin); sin fin,
-  permanece abierto.}
-
-  {RC-04: no se solapan intervalos de vigencia
-  del mismo par Proveedor-Ingrediente.}
-
-  {RI-04, RC-09: al actualizar un precio se
-  conserva el registro anterior y su intervalo.
-  PrecioCompra es una entidad histórica; NO
-  queda identificado solo por el par proveedor
-  e ingrediente, que puede repetirse.}
-end note
-note bottom of Ingrediente
-  {D-01: como máximo un PrecioCompra de este
-  Ingrediente tiene seleccionadoParaCosteo
-  verdadero. El precio elegido debe estar
-  vigente en el instante del cálculo.
-  Puede haber precios vigentes de varios
-  proveedores; solo se selecciona uno.}
-
-  {RC-11: sin un precio seleccionado válido
-  no se puede costear ese ingrediente ni las
-  elaboraciones que dependan de él.}
-
-  {RI-03: unidadMedida tiene kg como valor
-  por defecto; las cantidades del stock se
-  expresan siempre en esta unidad.}
-end note
-note bottom of Plato
+note right of Plato
   {RC-05, RF-07: costeProduccion es el coste
   de los componentes de la receta necesarios
   para producir una unidad del plato.}
@@ -440,85 +272,6 @@ note bottom of Plato
   Los umbrales de aviso no están cuantificados
   en los requisitos; quedan como parámetros.}
 end note
-note left of Proveedor
-  {RF-13: los proveedores de un ingrediente
-  se obtienen mediante PrecioCompra.
-  Para comparar importes se normalizan las
-  unidades y se usa la vigencia pertinente.}
-end note
-
-legend bottom
-El precio elegido sirve para el escandallo; no identifica una compra real ni el proveedor de un lote.
-endlegend
-@enduml
-
-@startuml 04_recetas
-hide methods
-hide circle
-skinparam backgroundColor white
-skinparam shadowing false
-skinparam roundcorner 8
-skinparam defaultFontName SansSerif
-skinparam defaultFontSize 14
-skinparam classAttributeIconSize 0
-skinparam classBorderColor #334155
-skinparam ArrowColor #475569
-skinparam packageStyle rectangle
-skinparam packageBorderColor #94A3B8
-skinparam noteBackgroundColor #FFFBEB
-skinparam noteBorderColor #D6B563
-skinparam nodesep 65
-skinparam ranksep 100
-skinparam ArrowFontSize 12
-skinparam linetype polyline
-top to bottom direction
-
-title Plato-Plató | Recetas, componentes y rendimiento
-class Plato <<entidad>> {
-  nombre
-  imagen
-  descripcion
-  categoria
-  menuDelDia
-  precioVenta
-  estado : EstadoRegistro
-  porcentajeMargenObjetivo [0..1]
-  /costeProduccion [0..1]
-  /margenBruto [0..1]
-  /porcentajeMargen [0..1]
-}
-class Subreceta <<entidad>> {
-  nombre
-  cantidadRendimiento
-  unidadRendimiento
-  /costeUnitario [0..1]
-}
-class Receta <<entidad>> {
-  estado : EstadoRegistro
-  /costeElaboracion [0..1]
-}
-class ComponenteReceta <<entidad>> {
-  cantidad
-  unidadMedida
-}
-class Ingrediente <<entidad>> {
-  nombre
-  categoria
-  unidadMedida
-  estado : EstadoRegistro
-  /cantidadTotalDisponible
-}
-enum EstadoRegistro {
-  ACTIVO
-  INACTIVO
-}
-
-Plato "0..1" -- "1" Receta : tieneReceta
-Subreceta "0..1" -- "1" Receta : tieneReceta
-Receta "1" *-- "1..*" ComponenteReceta : seComponeDe
-ComponenteReceta "0..*" -- "0..1" Ingrediente : utilizaIngrediente
-ComponenteReceta "0..*" -- "0..1" Subreceta : utilizaSubreceta
-
 
 note left of Receta
   {RI-06: cada Receta tiene exactamente
@@ -533,6 +286,7 @@ note left of Receta
   por el histórico. La composición no autoriza
   a eliminar referencias históricas.}
 end note
+
 note bottom of ComponenteReceta
   {RI-06: cada línea utiliza exactamente
   un Ingrediente XOR una Subreceta.}
@@ -548,6 +302,7 @@ note bottom of ComponenteReceta
   válida; no se supone que kg, litros y unidades
   sean intercambiables.}
 end note
+
 note right of Subreceta
   {D-02: cantidadRendimiento > 0 y la receta
   produce esa cantidad en unidadRendimiento.}
@@ -560,6 +315,7 @@ note right of Subreceta
   es acíclico. Se prohíbe que una receta
   dependa de sí misma directa o indirectamente.}
 end note
+
 note bottom of Plato
   {RC-05: su receta se expresa para producir
   exactamente una unidad de Plato.}
@@ -580,40 +336,24 @@ note bottom of Plato
   incluida la dependencia indirecta.}
 end note
 
-legend bottom
-Plato y Subreceta son propietarios de recetas; se evita confundir la elaboración con su composición.
-endlegend
-@enduml
+note left of Plato
+  {RC-08, D-06: porcentajeMargenObjetivo
+  es opcional y específico de cada Plato.
+  Se expresa sobre el precio de venta y puede
+  modificarse solo con permiso suficiente.}
 
-@startuml 05_inventario
-hide methods
-hide circle
-skinparam backgroundColor white
-skinparam shadowing false
-skinparam roundcorner 8
-skinparam defaultFontName SansSerif
-skinparam defaultFontSize 14
-skinparam classAttributeIconSize 0
-skinparam classBorderColor #334155
-skinparam ArrowColor #475569
-skinparam packageStyle rectangle
-skinparam packageBorderColor #94A3B8
-skinparam noteBackgroundColor #FFFBEB
-skinparam noteBorderColor #D6B563
-skinparam nodesep 65
-skinparam ranksep 100
-skinparam ArrowFontSize 12
-skinparam linetype polyline
-top to bottom direction
+  {RF-08, RC-07: el margen bruto puede ser
+  negativo; no se impone rentabilidad mínima
+  distinta de las políticas indicadas.}
 
-title Plato-Plató | Lotes, stock y mermas
-class Ingrediente <<entidad>> {
-  nombre
-  categoria
-  unidadMedida
-  estado : EstadoRegistro
-  /cantidadTotalDisponible
+  {RN-02: el 35 % mide coste / precioVenta;
+  porcentajeMargen mide margen / precioVenta.
+  No son el mismo indicador.}
+end note
+
 }
+
+package "Almacén y pérdidas" #F0F9FF {
 class Lote <<entidad>> {
   identificadorLote
   /cantidad
@@ -635,19 +375,6 @@ class Merma <<entidad>> {
   motivo
   costePerdida
 }
-class Plato <<entidad>> {
-  nombre
-  imagen
-  descripcion
-  categoria
-  menuDelDia
-  precioVenta
-  estado : EstadoRegistro
-  porcentajeMargenObjetivo [0..1]
-  /costeProduccion [0..1]
-  /margenBruto [0..1]
-  /porcentajeMargen [0..1]
-}
 enum TipoMovimiento {
   ENTRADA
   SALIDA
@@ -658,19 +385,6 @@ enum FinalidadSalida {
   MERMA
   OTRA
 }
-enum EstadoRegistro {
-  ACTIVO
-  INACTIVO
-}
-
-Ingrediente "1" -- "0..*" Lote : tieneLote
-Lote "1" -- "0..*" MovimientoStock : recibeMovimiento
-Merma "0..*" -- "0..1" Lote : afectaLote
-Merma "0..*" -- "0..1" Plato : afectaPlato
-Merma "0..1" -left- "0..1" MovimientoStock : originaSalida
-MovimientoStock "0..*" -- "0..1\nplatoDestino" Plato : seDestinaA
-
-
 note left of Lote
   {RI-07: identificadorLote distingue cada lote.
   fechaCaducidad es opcional cuando no procede.
@@ -695,6 +409,7 @@ note left of Lote
   próximos a caducar según un umbral de aviso
   que los requisitos no cuantifican.}
 end note
+
 note bottom of MovimientoStock
   {RI-08: cantidad se mide en la unidadMedida
   del Ingrediente al que pertenece el Lote.}
@@ -711,6 +426,7 @@ note bottom of MovimientoStock
   identifica el plato final, aunque use subrecetas,
   para comprobar las restricciones de sus lotes.}
 end note
+
 note right of Merma
   {RI-09: cada Merma afecta exactamente
   un Lote XOR un Plato; cantidadDesperdiciada > 0.}
@@ -729,54 +445,10 @@ note right of Merma
   la valoración aplicable en fechaMerma y se
   conserva. NO se deriva del precio actual.}
 end note
-note bottom of Ingrediente
-  {RI-03: cantidadTotalDisponible = suma de
-  los saldos de sus lotes. Existencia física
-  y aptitud para elaborar son conceptos distintos;
-  los lotes caducados pendientes de registrar
-  como merma no desaparecen del saldo.}
-end note
 
-legend bottom
-El destino de las salidas y aptoParaConsumo son información deducida de RN-01/RN-03.
-endlegend
-@enduml
-
-@startuml 06_carta
-hide methods
-hide circle
-skinparam backgroundColor white
-skinparam shadowing false
-skinparam roundcorner 8
-skinparam defaultFontName SansSerif
-skinparam defaultFontSize 14
-skinparam classAttributeIconSize 0
-skinparam classBorderColor #334155
-skinparam ArrowColor #475569
-skinparam packageStyle rectangle
-skinparam packageBorderColor #94A3B8
-skinparam noteBackgroundColor #FFFBEB
-skinparam noteBorderColor #D6B563
-skinparam nodesep 65
-skinparam ranksep 100
-skinparam ArrowFontSize 12
-skinparam linetype polyline
-top to bottom direction
-
-title Plato-Plató | Oferta, autorización y margen objetivo
-class Plato <<entidad>> {
-  nombre
-  imagen
-  descripcion
-  categoria
-  menuDelDia
-  precioVenta
-  estado : EstadoRegistro
-  porcentajeMargenObjetivo [0..1]
-  /costeProduccion [0..1]
-  /margenBruto [0..1]
-  /porcentajeMargen [0..1]
 }
+
+package "Oferta y autorización" #FAF5FF {
 class PeriodoOferta <<entidad>> {
   tipo : TipoOferta
   fechaInicio
@@ -787,32 +459,10 @@ class AutorizacionCarta <<entidad>> {
   costeEvaluado
   precioVentaEvaluado
 }
-class Usuario <<entidad>> {
-  nombre
-  correoElectronico
-  contraseñaProtegida
-  estado : EstadoRegistro
-  fechaCreacion
-}
 enum TipoOferta {
   SUGERENCIA_CHEF
   CARTA_PERMANENTE
 }
-enum TipoRol {
-  ADMINISTRADOR
-  ENCARGADO
-  EMPLEADO
-}
-enum EstadoRegistro {
-  ACTIVO
-  INACTIVO
-}
-
-Plato "1" -- "0..*" PeriodoOferta : tienePeriodoOferta
-PeriodoOferta "1" -- "0..1" AutorizacionCarta : tieneAutorizacion
-Usuario "1" -- "0..*" AutorizacionCarta : emite
-
-
 note left of PeriodoOferta
   {RN-04, D-05: antes de la primera incorporación
   a CARTA_PERMANENTE debe haber un periodo real
@@ -830,6 +480,7 @@ note left of PeriodoOferta
   no equivale a haberlo ofrecido al público.
   menuDelDia es independiente del TipoOferta.}
 end note
+
 note right of AutorizacionCarta
   {RN-02: corresponde a un periodo de tipo
   CARTA_PERMANENTE. El emisor tiene el rol
@@ -851,22 +502,42 @@ note right of AutorizacionCarta
   Los cambios posteriores no reescriben esa
   evaluación ni alteran su fecha.}
 end note
-note bottom of Plato
-  {RC-08, D-06: porcentajeMargenObjetivo
-  es opcional y específico de cada Plato.
-  Se expresa sobre el precio de venta y puede
-  modificarse solo con permiso suficiente.}
 
-  {RF-08, RC-07: el margen bruto puede ser
-  negativo; no se impone rentabilidad mínima
-  distinta de las políticas indicadas.}
+}
 
-  {RN-02: el 35 % mide coste / precioVenta;
-  porcentajeMargen mide margen / precioVenta.
-  No son el mismo indicador.}
-end note
+package "Tipo compartido" #F8FAFC {
+enum EstadoRegistro {
+  ACTIVO
+  INACTIVO
+}
+}
+
+Usuario "0..*" -left- "1" Rol : tieneRol
+Rol "0..*" -down- "0..*" Permiso : concede
+Usuario "0..*" -down- "0..*" Permiso : tienePermisoAdicional
+Proveedor "1" -- "0..*" PrecioCompra : ofrece
+Ingrediente "1" -- "0..*" PrecioCompra : tienePrecio
+Ingrediente "1" -- "0..*" Lote : tieneLote
+Lote "1" -- "0..*" MovimientoStock : recibeMovimiento
+Plato "0..1" -- "1" Receta : tieneReceta
+Subreceta "0..1" -- "1" Receta : tieneReceta
+Receta "1" *-- "1..*" ComponenteReceta : seComponeDe
+ComponenteReceta "0..*" -- "0..1" Ingrediente : utilizaIngrediente
+ComponenteReceta "0..*" -- "0..1" Subreceta : utilizaSubreceta
+Merma "0..*" -- "0..1" Lote : afectaLote
+Merma "0..*" -- "0..1" Plato : afectaPlato
+Merma "0..1" -left- "0..1" MovimientoStock : originaSalida
+MovimientoStock "0..*" -- "0..1\nplatoDestino" Plato : seDestinaA
+Plato "1" -- "0..*" PeriodoOferta : tienePeriodoOferta
+PeriodoOferta "1" -- "0..1" AutorizacionCarta : tieneAutorizacion
+Usuario "1" -- "0..*" AutorizacionCarta : emite
 
 legend bottom
-Los periodos y autorizaciones aportan los hechos necesarios para comprobar RN-02 y RN-04.
+Un único diagrama: 15 entidades, 19 asociaciones y 5 enumerados.
+0..1 = opcional; 0..* = cero o más; 1..* = uno o más; 1 = exactamente uno.
+La multiplicidad junto a una clase indica cuántos objetos de ella corresponden a uno del otro extremo.
+/atributo = derivado; [0..1] = atributo opcional; rombo negro = composición.
+Las notas entre llaves expresan restricciones del modelo y citan los requisitos que las justifican.
+Los paquetes de colores solo organizan visualmente el diagrama.
 endlegend
 @enduml
