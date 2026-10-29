@@ -1,0 +1,468 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" type="device" version="24.7.17" compressed="false">
+  <diagram id="01_precio_seleccionado" name="01 · Precio de referencia de un ingrediente">
+    <mxGraphModel dx="1400" dy="1080" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1320" pageHeight="1080" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="01 · Precio de referencia de un ingrediente" style="text;html=1;align=left;fontSize=26;fontStyle=1;fontColor=#12334C;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="55" y="25" width="1200" height="45" />
+        </mxCell>
+        <mxCell id="subtitle" value="Instantánea: 29/10/2026, 12:00 · Dos proveedores, un único precio seleccionado." style="text;html=1;align=left;fontSize=15;fontColor=#475569;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="55" y="75" width="1200" height="40" />
+        </mxCell>
+        <mxCell id="edge0" value="tienePrecio" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="harina" target="precioA">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="640" y="350" />
+              <mxPoint x="280" y="350" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge1" value="ofrece" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="proveedorA" target="precioA">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge2" value="tienePrecio" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="harina" target="precioB">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="640" y="350" />
+              <mxPoint x="1000" y="350" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge3" value="ofrece" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="proveedorB" target="precioB">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="harina" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="490" y="150" width="300" height="123" />
+        </mxCell>
+        <mxCell id="harina_head" value="&lt;u&gt;harina : Ingrediente&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="harina">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="harina_attrs" value="nombre = &amp;quot;Harina&amp;quot;&lt;br&gt;unidadMedida = &amp;quot;kg&amp;quot;&lt;br&gt;estado = ACTIVO" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="harina">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="87" />
+        </mxCell>
+        <mxCell id="precioA" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="130" y="420" width="300" height="173" />
+        </mxCell>
+        <mxCell id="precioA_head" value="&lt;u&gt;precioA : PrecioCompra&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="precioA">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="precioA_attrs" value="precioCompra = 1.20&lt;br&gt;unidadPrecio = &amp;quot;kg&amp;quot;&lt;br&gt;fechaInicioVigencia = 01/10/2026&lt;br&gt;fechaFinVigencia = sin valor&lt;br&gt;seleccionadoParaCosteo = true" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="precioA">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="137" />
+        </mxCell>
+        <mxCell id="proveedorA" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="130" y="760" width="300" height="98" />
+        </mxCell>
+        <mxCell id="proveedorA_head" value="&lt;u&gt;proveedorA : Proveedor&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="proveedorA">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="proveedorA_attrs" value="nombre = &amp;quot;Distribuciones Norte&amp;quot;&lt;br&gt;estado = ACTIVO" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="proveedorA">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="62" />
+        </mxCell>
+        <mxCell id="precioB" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="850" y="420" width="300" height="173" />
+        </mxCell>
+        <mxCell id="precioB_head" value="&lt;u&gt;precioB : PrecioCompra&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="precioB">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="precioB_attrs" value="precioCompra = 1.40&lt;br&gt;unidadPrecio = &amp;quot;kg&amp;quot;&lt;br&gt;fechaInicioVigencia = 01/10/2026&lt;br&gt;fechaFinVigencia = sin valor&lt;br&gt;seleccionadoParaCosteo = false" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="precioB">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="137" />
+        </mxCell>
+        <mxCell id="proveedorB" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="850" y="760" width="300" height="98" />
+        </mxCell>
+        <mxCell id="proveedorB_head" value="&lt;u&gt;proveedorB : Proveedor&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="proveedorB">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="proveedorB_attrs" value="nombre = &amp;quot;Suministros Sur&amp;quot;&lt;br&gt;estado = ACTIVO" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="proveedorB">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="62" />
+        </mxCell>
+        <mxCell id="note0" value="D-01: solo precioA está seleccionado.&lt;br&gt;Ambos precios están vigentes.&lt;br&gt;0.5 kg × 1.20 €/kg = 0.60 €.&lt;br&gt;El proveedor B no interviene en ese cálculo." style="rounded=0;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=14;fontSize=14;fillColor=#FFFBEB;strokeColor=#D6B563;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="450" y="660" width="380" height="135" />
+        </mxCell>
+        <mxCell id="legend" value="VÁLIDO · Vista parcial: atributos y objetos no relevantes omitidos. / = derivado. Cabecera subrayada = objeto UML." style="text;html=1;align=left;fontSize=13;fontColor=#475569;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="55" y="1025" width="1210" height="35" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="02_coste_subreceta" name="02 · Coste de un plato que utiliza una subreceta">
+    <mxGraphModel dx="1400" dy="1250" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1320" pageHeight="1250" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="02 · Coste de un plato que utiliza una subreceta" style="text;html=1;align=left;fontSize=26;fontStyle=1;fontColor=#12334C;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="55" y="25" width="1200" height="45" />
+        </mxCell>
+        <mxCell id="subtitle" value="Instantánea: 29/10/2026, 12:00 · Rendimiento de salsa: 1.5 kg por elaboración." style="text;html=1;align=left;fontSize=15;fontColor=#475569;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="55" y="75" width="1200" height="40" />
+        </mxCell>
+        <mxCell id="edge0" value="tieneReceta" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;" edge="1" parent="1" source="degustacion" target="recetaPlato">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge1" value="seComponeDe" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=diamondThin;startFill=1;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;" edge="1" parent="1" source="recetaPlato" target="porcionSalsa">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge2" value="utilizaSubreceta" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="porcionSalsa" target="salsa">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge3" value="tieneReceta" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;" edge="1" parent="1" source="salsa" target="recetaSalsa">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge4" value="seComponeDe" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=diamondThin;startFill=1;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;" edge="1" parent="1" source="recetaSalsa" target="tomateSalsa">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge5" value="utilizaIngrediente" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="tomateSalsa" target="tomate">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge6" value="tienePrecio" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;" edge="1" parent="1" source="tomate" target="precioTomate">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge7" value="ofrece" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;" edge="1" parent="1" source="huerta" target="precioTomate">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="degustacion" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="70" y="150" width="300" height="173" />
+        </mxCell>
+        <mxCell id="degustacion_head" value="&lt;u&gt;degustacion : Plato&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="degustacion">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="degustacion_attrs" value="nombre = &amp;quot;Degustación de salsa&amp;quot;&lt;br&gt;precioVenta = 3.00&lt;br&gt;/costeProduccion = 0.60&lt;br&gt;/margenBruto = 2.40&lt;br&gt;/porcentajeMargen = 80" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="degustacion">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="137" />
+        </mxCell>
+        <mxCell id="recetaPlato" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="490" y="150" width="300" height="98" />
+        </mxCell>
+        <mxCell id="recetaPlato_head" value="&lt;u&gt;recetaPlato : Receta&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="recetaPlato">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="recetaPlato_attrs" value="estado = ACTIVO&lt;br&gt;/costeElaboracion = 0.60" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="recetaPlato">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="62" />
+        </mxCell>
+        <mxCell id="porcionSalsa" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="910" y="150" width="300" height="98" />
+        </mxCell>
+        <mxCell id="porcionSalsa_head" value="&lt;u&gt;porcionSalsa : ComponenteReceta&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="porcionSalsa">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="porcionSalsa_attrs" value="cantidad = 0.15&lt;br&gt;unidadMedida = &amp;quot;kg&amp;quot;" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="porcionSalsa">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="62" />
+        </mxCell>
+        <mxCell id="tomateSalsa" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="70" y="510" width="300" height="98" />
+        </mxCell>
+        <mxCell id="tomateSalsa_head" value="&lt;u&gt;tomateSalsa : ComponenteReceta&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="tomateSalsa">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="tomateSalsa_attrs" value="cantidad = 2.00&lt;br&gt;unidadMedida = &amp;quot;kg&amp;quot;" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="tomateSalsa">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="62" />
+        </mxCell>
+        <mxCell id="recetaSalsa" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="490" y="510" width="300" height="98" />
+        </mxCell>
+        <mxCell id="recetaSalsa_head" value="&lt;u&gt;recetaSalsa : Receta&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="recetaSalsa">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="recetaSalsa_attrs" value="estado = ACTIVO&lt;br&gt;/costeElaboracion = 6.00" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="recetaSalsa">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="62" />
+        </mxCell>
+        <mxCell id="salsa" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="910" y="510" width="300" height="148" />
+        </mxCell>
+        <mxCell id="salsa_head" value="&lt;u&gt;salsa : Subreceta&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="salsa">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="salsa_attrs" value="nombre = &amp;quot;Salsa de tomate&amp;quot;&lt;br&gt;cantidadRendimiento = 1.50&lt;br&gt;unidadRendimiento = &amp;quot;kg&amp;quot;&lt;br&gt;/costeUnitario = 4.00" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="salsa">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="112" />
+        </mxCell>
+        <mxCell id="tomate" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="70" y="870" width="300" height="98" />
+        </mxCell>
+        <mxCell id="tomate_head" value="&lt;u&gt;tomate : Ingrediente&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="tomate">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="tomate_attrs" value="nombre = &amp;quot;Tomate&amp;quot;&lt;br&gt;unidadMedida = &amp;quot;kg&amp;quot;" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="tomate">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="62" />
+        </mxCell>
+        <mxCell id="precioTomate" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="490" y="870" width="300" height="173" />
+        </mxCell>
+        <mxCell id="precioTomate_head" value="&lt;u&gt;precioTomate : PrecioCompra&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="precioTomate">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="precioTomate_attrs" value="precioCompra = 3.00&lt;br&gt;unidadPrecio = &amp;quot;kg&amp;quot;&lt;br&gt;fechaInicioVigencia = 01/10/2026&lt;br&gt;fechaFinVigencia = sin valor&lt;br&gt;seleccionadoParaCosteo = true" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="precioTomate">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="137" />
+        </mxCell>
+        <mxCell id="huerta" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="910" y="870" width="300" height="98" />
+        </mxCell>
+        <mxCell id="huerta_head" value="&lt;u&gt;huerta : Proveedor&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="huerta">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="huerta_attrs" value="nombre = &amp;quot;Huerta Local&amp;quot;&lt;br&gt;estado = ACTIVO" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="huerta">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="62" />
+        </mxCell>
+        <mxCell id="note0" value="Coste de salsa: 2 kg × 3 €/kg = 6 €.&lt;br&gt;Coste unitario: 6 € / 1.5 kg = 4 €/kg.&lt;br&gt;Coste de plato: 0.15 kg × 4 €/kg = 0.60 €." style="rounded=0;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=14;fontSize=14;fillColor=#FFFBEB;strokeColor=#D6B563;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="410" y="700" width="460" height="120" />
+        </mxCell>
+        <mxCell id="legend" value="VÁLIDO · Vista parcial: atributos y objetos no relevantes omitidos. / = derivado. Cabecera subrayada = objeto UML." style="text;html=1;align=left;fontSize=13;fontColor=#475569;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="55" y="1195" width="1210" height="35" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="03_merma_lote" name="03 · Merma de ingrediente y saldo del lote">
+    <mxGraphModel dx="1400" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1320" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="03 · Merma de ingrediente y saldo del lote" style="text;html=1;align=left;fontSize=26;fontStyle=1;fontColor=#12334C;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="55" y="25" width="1200" height="45" />
+        </mxCell>
+        <mxCell id="subtitle" value="Instantánea: 29/10/2026, 10:00 · Una entrada de 10 kg y una merma de 2 kg." style="text;html=1;align=left;fontSize=15;fontColor=#475569;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="55" y="75" width="1200" height="40" />
+        </mxCell>
+        <mxCell id="edge0" value="tieneLote" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;" edge="1" parent="1" source="arroz" target="loteArroz">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge1" value="recibeMovimiento" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="loteArroz" target="entradaArroz">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="640" y="440" />
+              <mxPoint x="220" y="440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge2" value="recibeMovimiento" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="loteArroz" target="salidaMerma">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge3" value="originaSalida" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;" edge="1" parent="1" source="mermaArroz" target="salidaMerma">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge4" value="afectaLote" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;exitX=0.5;exitY=0;entryX=1;entryY=0.4;" edge="1" parent="1" source="mermaArroz" target="loteArroz">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1060" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arroz" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="70" y="150" width="300" height="123" />
+        </mxCell>
+        <mxCell id="arroz_head" value="&lt;u&gt;arroz : Ingrediente&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="arroz">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="arroz_attrs" value="nombre = &amp;quot;Arroz&amp;quot;&lt;br&gt;unidadMedida = &amp;quot;kg&amp;quot;&lt;br&gt;/cantidadTotalDisponible = 8.00" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="arroz">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="87" />
+        </mxCell>
+        <mxCell id="loteArroz" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="490" y="150" width="300" height="198" />
+        </mxCell>
+        <mxCell id="loteArroz_head" value="&lt;u&gt;loteArroz : Lote&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="loteArroz">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="loteArroz_attrs" value="identificadorLote = &amp;quot;ARR-001&amp;quot;&lt;br&gt;fechaEntrada = 28/10/2026 09:00&lt;br&gt;fechaCaducidad = 28/10/2027 09:00&lt;br&gt;fresco = false&lt;br&gt;aptoParaConsumo = true&lt;br&gt;/cantidad = 8.00" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="loteArroz">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="162" />
+        </mxCell>
+        <mxCell id="entradaArroz" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="70" y="530" width="300" height="148" />
+        </mxCell>
+        <mxCell id="entradaArroz_head" value="&lt;u&gt;entradaArroz : MovimientoStock&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="entradaArroz">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="entradaArroz_attrs" value="tipo = ENTRADA&lt;br&gt;cantidad = 10.00&lt;br&gt;fechaMovimiento = 28/10/2026 09:00&lt;br&gt;finalidadSalida = sin valor" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="entradaArroz">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="112" />
+        </mxCell>
+        <mxCell id="salidaMerma" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="490" y="530" width="300" height="148" />
+        </mxCell>
+        <mxCell id="salidaMerma_head" value="&lt;u&gt;salidaMerma : MovimientoStock&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="salidaMerma">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="salidaMerma_attrs" value="tipo = SALIDA&lt;br&gt;cantidad = 2.00&lt;br&gt;fechaMovimiento = 29/10/2026 10:00&lt;br&gt;finalidadSalida = MERMA" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="salidaMerma">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="112" />
+        </mxCell>
+        <mxCell id="mermaArroz" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="910" y="530" width="300" height="148" />
+        </mxCell>
+        <mxCell id="mermaArroz_head" value="&lt;u&gt;mermaArroz : Merma&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="mermaArroz">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="mermaArroz_attrs" value="cantidadDesperdiciada = 2.00&lt;br&gt;fechaMerma = 29/10/2026 10:00&lt;br&gt;motivo = &amp;quot;Envase roto y derrame&amp;quot;&lt;br&gt;costePerdida = 4.00" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="mermaArroz">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="112" />
+        </mxCell>
+        <mxCell id="note0" value="Saldo del lote = 10 − 2 = 8 kg. Es el único lote de arroz.&lt;br&gt;La merma origina una única salida; no se resta otra vez.&lt;br&gt;Valoración aplicable al registro: 2 €/kg → pérdida de 4 €.&lt;br&gt;Sin plato destino. El precio de valoración se omite en esta vista parcial." style="rounded=0;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=14;fontSize=14;fillColor=#FFFBEB;strokeColor=#D6B563;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="270" y="830" width="740" height="145" />
+        </mxCell>
+        <mxCell id="legend" value="VÁLIDO · Vista parcial: atributos y objetos no relevantes omitidos. / = derivado. Cabecera subrayada = objeto UML." style="text;html=1;align=left;fontSize=13;fontColor=#475569;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="55" y="1045" width="1210" height="35" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="04_rechazo_lote_fresco" name="04 · Rechazo de un lote fresco al cumplir 72 horas">
+    <mxGraphModel dx="1400" dy="1050" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1320" pageHeight="1050" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="04 · Rechazo de un lote fresco al cumplir 72 horas" style="text;html=1;align=left;fontSize=26;fontStyle=1;fontColor=#12334C;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="55" y="25" width="1200" height="45" />
+        </mxCell>
+        <mxCell id="subtitle" value="Instante del intento: 29/10/2026, 10:00 · La fecha de caducidad todavía no se ha alcanzado." style="text;html=1;align=left;fontSize=15;fontColor=#475569;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="55" y="75" width="1200" height="40" />
+        </mxCell>
+        <mxCell id="edge0" value="tieneLote" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;" edge="1" parent="1" source="lechuga" target="loteLechuga">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge1" value="recibeMovimiento · PROPUESTO" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#B91C1C;dashed=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="loteLechuga" target="salidaPropuesta">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge2" value="seDestinaA · PROPUESTO" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#B91C1C;dashed=1;exitX=1;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="1" source="salidaPropuesta" target="ensalada">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1060" y="655" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lechuga" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="70" y="150" width="300" height="98" />
+        </mxCell>
+        <mxCell id="lechuga_head" value="&lt;u&gt;lechuga : Ingrediente&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="lechuga">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="lechuga_attrs" value="nombre = &amp;quot;Lechuga&amp;quot;&lt;br&gt;unidadMedida = &amp;quot;kg&amp;quot;" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="lechuga">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="62" />
+        </mxCell>
+        <mxCell id="loteLechuga" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="490" y="150" width="300" height="198" />
+        </mxCell>
+        <mxCell id="loteLechuga_head" value="&lt;u&gt;loteLechuga : Lote&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="loteLechuga">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="loteLechuga_attrs" value="identificadorLote = &amp;quot;LEC-001&amp;quot;&lt;br&gt;fechaEntrada = 26/10/2026 10:00&lt;br&gt;fechaCaducidad = 05/11/2026 10:00&lt;br&gt;fresco = true&lt;br&gt;aptoParaConsumo = true&lt;br&gt;/cantidad = 3.00" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="loteLechuga">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="162" />
+        </mxCell>
+        <mxCell id="ensalada" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="910" y="150" width="300" height="123" />
+        </mxCell>
+        <mxCell id="ensalada_head" value="&lt;u&gt;ensalada : Plato&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="ensalada">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="ensalada_attrs" value="nombre = &amp;quot;Ensalada verde&amp;quot;&lt;br&gt;menuDelDia = true&lt;br&gt;estado = ACTIVO" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="ensalada">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="87" />
+        </mxCell>
+        <mxCell id="salidaPropuesta" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B91C1C;strokeWidth=1.8;dashed=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="490" y="580" width="300" height="148" />
+        </mxCell>
+        <mxCell id="salidaPropuesta_head" value="&lt;u&gt;salidaPropuesta : MovimientoStock&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#FEF2F2;strokeColor=#B91C1C;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="salidaPropuesta">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="salidaPropuesta_attrs" value="tipo = SALIDA&lt;br&gt;cantidad = 0.20&lt;br&gt;fechaMovimiento = 29/10/2026 10:00&lt;br&gt;finalidadSalida = ELABORACION" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="salidaPropuesta">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="112" />
+        </mxCell>
+        <mxCell id="note0" value="RN-03: t = entrada + 72 h.&lt;br&gt;A partir de ese instante&lt;br&gt;no se permite elaborar.&lt;br&gt;Que no haya caducado y&lt;br&gt;sea menú del día no&lt;br&gt;elimina esta prohibición." style="rounded=0;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=14;fontSize=14;fillColor=#FEF2F2;strokeColor=#FCA5A5;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="70" y="430" width="300" height="200" />
+        </mxCell>
+        <mxCell id="note1" value="Objeto y enlaces rojos discontinuos = intento, no estado persistido.&lt;br&gt;No se registra la salida. El lote conserva 3 kg de existencia física." style="rounded=0;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=14;fontSize=14;fillColor=#FEF2F2;strokeColor=#FCA5A5;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="270" y="850" width="740" height="100" />
+        </mxCell>
+        <mxCell id="legend" value="RECHAZADO · Vista parcial: atributos y objetos no relevantes omitidos. / = derivado. Cabecera subrayada = objeto UML." style="text;html=1;align=left;fontSize=13;fontColor=#475569;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="55" y="995" width="1210" height="35" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="05_carta_autorizada" name="05 · Incorporación a la carta con autorización">
+    <mxGraphModel dx="1400" dy="1270" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1320" pageHeight="1270" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="05 · Incorporación a la carta con autorización" style="text;html=1;align=left;fontSize=26;fontStyle=1;fontColor=#12334C;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="55" y="25" width="1200" height="45" />
+        </mxCell>
+        <mxCell id="subtitle" value="Instantánea: 15/10/2026, 12:00 · Prueba previa de 14 días y coste del 40 % del precio de venta." style="text;html=1;align=left;fontSize=15;fontColor=#475569;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="55" y="75" width="1200" height="40" />
+        </mxCell>
+        <mxCell id="edge0" value="tienePeriodoOferta" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;" edge="1" parent="1" source="lasana" target="pruebaLasana">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge1" value="tienePeriodoOferta" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="lasana" target="cartaLasana">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge2" value="tieneAutorizacion" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;" edge="1" parent="1" source="cartaLasana" target="aprobacionLasana">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge3" value="emite" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;" edge="1" parent="1" source="ana" target="aprobacionLasana">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="edge4" value="tieneRol" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="ana" target="rolAdmin">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="lasana" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="70" y="150" width="300" height="148" />
+        </mxCell>
+        <mxCell id="lasana_head" value="&lt;u&gt;lasana : Plato&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="lasana">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="lasana_attrs" value="nombre = &amp;quot;Lasaña&amp;quot;&lt;br&gt;precioVenta = 10.00&lt;br&gt;/costeProduccion = 4.00&lt;br&gt;estado = ACTIVO" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="lasana">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="112" />
+        </mxCell>
+        <mxCell id="pruebaLasana" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="490" y="150" width="300" height="123" />
+        </mxCell>
+        <mxCell id="pruebaLasana_head" value="&lt;u&gt;pruebaLasana : PeriodoOferta&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="pruebaLasana">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="pruebaLasana_attrs" value="tipo = SUGERENCIA_CHEF&lt;br&gt;fechaInicio = 01/10/2026 12:00&lt;br&gt;fechaFin = 15/10/2026 12:00" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="pruebaLasana">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="87" />
+        </mxCell>
+        <mxCell id="cartaLasana" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="70" y="540" width="300" height="123" />
+        </mxCell>
+        <mxCell id="cartaLasana_head" value="&lt;u&gt;cartaLasana : PeriodoOferta&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="cartaLasana">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="cartaLasana_attrs" value="tipo = CARTA_PERMANENTE&lt;br&gt;fechaInicio = 15/10/2026 12:00&lt;br&gt;fechaFin = sin valor" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="cartaLasana">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="87" />
+        </mxCell>
+        <mxCell id="aprobacionLasana" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="490" y="540" width="300" height="123" />
+        </mxCell>
+        <mxCell id="aprobacionLasana_head" value="&lt;u&gt;aprobacionLasana : AutorizacionCarta&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="aprobacionLasana">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="aprobacionLasana_attrs" value="fechaAutorizacion = 15/10/2026 11:00&lt;br&gt;costeEvaluado = 4.00&lt;br&gt;precioVentaEvaluado = 10.00" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="aprobacionLasana">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="87" />
+        </mxCell>
+        <mxCell id="ana" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="910" y="540" width="300" height="98" />
+        </mxCell>
+        <mxCell id="ana_head" value="&lt;u&gt;ana : Usuario&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="ana">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="ana_attrs" value="nombre = &amp;quot;Ana&amp;quot;&lt;br&gt;estado = ACTIVO" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="ana">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="62" />
+        </mxCell>
+        <mxCell id="rolAdmin" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="910" y="870" width="300" height="73" />
+        </mxCell>
+        <mxCell id="rolAdmin_head" value="&lt;u&gt;rolAdmin : Rol&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="rolAdmin">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        </mxCell>
+        <mxCell id="rolAdmin_attrs" value="nombre = ADMINISTRADOR" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="rolAdmin">
+          <mxGeometry as="geometry" x="0" y="36" width="300" height="37" />
+        </mxCell>
+        <mxCell id="note0" value="RN-04: del 01/10 al 15/10,&lt;br&gt;a la misma hora, pasan 14 días.&lt;br&gt;RN-02: 4 / 10 × 100 = 40 %.&lt;br&gt;Como 40 % &amp;gt; 35 %, se exige&lt;br&gt;autorización previa." style="rounded=0;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=14;fontSize=14;fillColor=#FFFBEB;strokeColor=#D6B563;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="860" y="150" width="400" height="180" />
+        </mxCell>
+        <mxCell id="note1" value="Ana es administradora al autorizar. La evaluación sigue vigente al alta.&lt;br&gt;La autorización es una hora anterior a la incorporación.&lt;br&gt;La receta, sus componentes y los precios se omiten en esta vista parcial;&lt;br&gt;se supone verificado el coste de 4 € con precios seleccionados vigentes." style="rounded=0;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=14;fontSize=14;fillColor=#FFFBEB;strokeColor=#D6B563;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="70" y="900" width="720" height="160" />
+        </mxCell>
+        <mxCell id="legend" value="VÁLIDO · Vista parcial: atributos y objetos no relevantes omitidos. / = derivado. Cabecera subrayada = objeto UML." style="text;html=1;align=left;fontSize=13;fontColor=#475569;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="55" y="1215" width="1210" height="35" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
