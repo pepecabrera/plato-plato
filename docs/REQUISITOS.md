@@ -131,9 +131,10 @@ El sistema deberá conservar el histórico de precios de los ingredientes.
 El sistema deberá almacenar la siguiente información sobre los platos:
 
 - Nombre.
-- Imagen.
+- Imagen (opcional).
 - Descripción.
 - Categoría (entrante, plato principal, postre, etc.).
+- Menú del día.
 - Precio de venta.
 - Estado del plato (activo/inactivo), para permitir su gestión por temporadas.
 
@@ -157,6 +158,7 @@ El sistema deberá almacenar la siguiente información sobre los lotes de ingred
 - Cantidad.
 - Fecha de entrada.
 - Fecha de caducidad.
+- Fresco (bool).
 - Ubicación en el almacén.
 
 ### RI-08 — Movimientos de stock
@@ -176,7 +178,11 @@ El sistema deberá almacenar información sobre las mermas producidas en el rest
 - Cantidad desperdiciada.
 - Fecha de la merma.
 - Motivo de la merma (caducidad, deterioro, elaboración incorrecta, plato desechado, etc.).
-- Coste de la pérdida.
+- Coste de la pérdida, cuando se conozca.
+
+### RI-10 - Oferta y autorizaciones
+
+El sistema almacenará los periodos de oferta de cada plato, indicando su tipo —sugerencia del chef o carta permanente— y sus fechas de inicio y finalización. Para cada incorporación a la carta permanente conservará la autorización correspondiente, su emisor, fecha, coste evaluado y precio de venta evaluado.
 
 ---
 
@@ -222,7 +228,7 @@ El sistema deberá permitir registrar y consultar los movimientos de stock de lo
 
 ### RF-10 — Gestión de mermas
 
-El sistema deberá permitir registrar y consultar las mermas producidas, indicando el elemento afectado, la cantidad, el motivo y la fecha de la pérdida.
+El sistema deberá permitir registrar y consultar las mermas producidas, indicando el elemento afectado, la cantidad, el motivo y la fecha de la pérdida. Se permitirá registrar movimientos con fecha pasada, siempre que no provoquen saldos negativos en el momento afectado ni en momentos posteriores.
 
 ### RF-11 — Alertas de sobrecostes
 
@@ -278,7 +284,7 @@ Los elementos que formen parte de información histórica no deberán eliminarse
 
 ### RC-10 — Permisos según el rol
 
-Cada usuario únicamente podrá realizar las operaciones que correspondan a los permisos asociados a su rol.
+Cada usuario únicamente podrá realizar las operaciones que correspondan a los permisos asociados a su rol más los permisos adicionales del usuario.
 
 ### RC-11 — Coste calculable
 
@@ -298,19 +304,17 @@ Las reglas de negocio representan políticas internas adoptadas por Plato-Plató
 
 Los lotes de ingredientes perecederos a los que les queden menos de 48 horas para alcanzar su fecha de caducidad solo podrán destinarse a la elaboración de platos del menú del día, siempre que sigan siendo aptos para el consumo.
 
-### RN-02 — Revisión de rentabilidad
+### RN-02 — Incorporación a la carta
 
-Los platos cuyo coste de elaboración supere el 35 % de su precio de venta deberán ser autorizados por un administrador antes de incorporarse a la carta.
+Toda incorporación de un plato a la carta permanente deberá ser autorizada previamente por un administrador, con independencia de su relación entre coste de elaboración y precio de venta. La autorización registrará el administrador, la fecha, el coste evaluado y el precio de venta evaluado. No podrá autorizarse un plato cuyo coste no sea calculable.
 
 ### RN-03 — Política interna de frescura
 
-Los ingredientes catalogados por el restaurante como frescos no podrán utilizarse una vez transcurridas 72 horas desde la recepción de su lote, aunque su fecha de caducidad sea posterior.
+Los lotes catalogados por el restaurante como frescos no podrán utilizarse una vez transcurridas 72 horas desde la recepción de su lote, aunque su fecha de caducidad sea posterior.
 
 ### RN-04 — Prueba de nuevos platos
 
 Todo plato de nueva creación deberá ofrecerse inicialmente durante un mínimo de catorce días como sugerencia del chef antes de poder incorporarse a la carta permanente.
-
-**Observación sobre el alcance:** para implementar RN-01, RN-04 y RN-05 es necesario ampliar los requisitos de información y funcionales actuales con, respectivamente, la identificación de los platos del menú del día; el registro de ventas por plato; y el estado y las fechas del período de prueba de cada plato. RN-02 requiere registrar la autorización, y RN-03 clasificar los ingredientes frescos. Estas ampliaciones quedan pendientes de concretar si se aprueban las reglas.
 
 ---
 
