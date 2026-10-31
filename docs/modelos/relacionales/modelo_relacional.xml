@@ -1,0 +1,1032 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" pages="6">
+  <diagram id="relacional-00" name="00 Vista global">
+    <mxGraphModel dx="2515" dy="1953" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1848" pageHeight="1847" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="00_title" parent="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;spacingLeft=8;" value="PLATO-PLATÓ | MODELO RELACIONAL&#xa;00 Vista global&#xa;17 relaciones · Conexiones entre PK y FK; atributos completos en las vistas siguientes.&#xa;31/10/2026 · v1.0" vertex="1">
+          <mxGeometry height="125" width="1768.5" x="40" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Roles" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#E7EDFA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="Roles" vertex="1">
+          <mxGeometry height="87.75" width="160.5" x="1236.25" y="496.07" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Roles_idRol" parent="00_Roles" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idRol : ID" vertex="1">
+          <mxGeometry height="49.75" width="160.5" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Permisos" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#E7EDFA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="Permisos" vertex="1">
+          <mxGeometry height="87.75" width="198.75" x="822.25" y="476.57" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Permisos_idPermiso" parent="00_Permisos" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idPermiso : ID" vertex="1">
+          <mxGeometry height="49.75" width="198.75" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Usuarios" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#E7EDFA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="Usuarios" vertex="1">
+          <mxGeometry height="130.13" width="195.37" x="823.94" y="617.39" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Usuarios_idUsuario" parent="00_Usuarios" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idUsuario : ID" vertex="1">
+          <mxGeometry height="46.06" width="195.37" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Usuarios_idRol" parent="00_Usuarios" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK       idRol : ID" vertex="1">
+          <mxGeometry height="46.06" width="195.37" y="84.06" as="geometry" />
+        </mxCell>
+        <mxCell id="00_PermisosRol" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#E7EDFA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="PermisosRol" vertex="1">
+          <mxGeometry height="172.5" width="226.88" x="231.99" y="305.2" as="geometry" />
+        </mxCell>
+        <mxCell id="00_PermisosRol_idPermisoRol" parent="00_PermisosRol" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idPermisoRol : ID" vertex="1">
+          <mxGeometry height="44.83" width="226.88" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="00_PermisosRol_idRol" parent="00_PermisosRol" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK/AK    idRol : ID" vertex="1">
+          <mxGeometry height="44.83" width="226.88" y="82.83" as="geometry" />
+        </mxCell>
+        <mxCell id="00_PermisosRol_idPermiso" parent="00_PermisosRol" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK/AK    idPermiso : ID" vertex="1">
+          <mxGeometry height="44.83" width="226.88" y="127.67" as="geometry" />
+        </mxCell>
+        <mxCell id="00_PermisosAdicionalesUsuario" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#E7EDFA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="PermisosAdicionalesUsuario" vertex="1">
+          <mxGeometry height="172.5" width="274.13" x="208.37" y="560.2" as="geometry" />
+        </mxCell>
+        <mxCell id="00_PermisosAdicionalesUsuario_idPermisoAdicional" parent="00_PermisosAdicionalesUsuario" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idPermisoAdicional : ID" vertex="1">
+          <mxGeometry height="44.83" width="274.13" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="00_PermisosAdicionalesUsuario_idUsuario" parent="00_PermisosAdicionalesUsuario" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK/AK    idUsuario : ID" vertex="1">
+          <mxGeometry height="44.83" width="274.13" y="82.83" as="geometry" />
+        </mxCell>
+        <mxCell id="00_PermisosAdicionalesUsuario_idPermiso" parent="00_PermisosAdicionalesUsuario" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK/AK    idPermiso : ID" vertex="1">
+          <mxGeometry height="44.83" width="274.13" y="127.67" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Proveedores" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#DEF1E9;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="Proveedores" vertex="1">
+          <mxGeometry height="87.75" width="215.62" x="1589.54" y="991.07" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Proveedores_idProveedor" parent="00_Proveedores" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idProveedor : ID" vertex="1">
+          <mxGeometry height="49.75" width="215.62" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Ingredientes" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#DEF1E9;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="Ingredientes" vertex="1">
+          <mxGeometry height="87.75" width="222.37" x="1586.16" y="1276.07" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Ingredientes_idIngrediente" parent="00_Ingredientes" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idIngrediente : ID" vertex="1">
+          <mxGeometry height="49.75" width="222.37" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="00_PreciosCompra" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#DEF1E9;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="PreciosCompra" vertex="1">
+          <mxGeometry height="172.5" width="248.25" x="1192.38" y="948.7" as="geometry" />
+        </mxCell>
+        <mxCell id="00_PreciosCompra_idPrecioCompra" parent="00_PreciosCompra" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idPrecioCompra : ID" vertex="1">
+          <mxGeometry height="44.83" width="248.25" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="00_PreciosCompra_idProveedor" parent="00_PreciosCompra" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK       idProveedor : ID" vertex="1">
+          <mxGeometry height="44.83" width="248.25" y="82.83" as="geometry" />
+        </mxCell>
+        <mxCell id="00_PreciosCompra_idIngrediente" parent="00_PreciosCompra" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK       idIngrediente : ID" vertex="1">
+          <mxGeometry height="44.83" width="248.25" y="127.67" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Platos" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#FFF0DA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="Platos" vertex="1">
+          <mxGeometry height="87.75" width="174" x="1229.5" y="1174.07" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Platos_idPlato" parent="00_Platos" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idPlato : ID" vertex="1">
+          <mxGeometry height="49.75" width="174" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Subrecetas" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#FFF0DA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="Subrecetas" vertex="1">
+          <mxGeometry height="87.75" width="214.5" x="1209.25" y="808.07" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Subrecetas_idSubreceta" parent="00_Subrecetas" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idSubreceta : ID" vertex="1">
+          <mxGeometry height="49.75" width="214.5" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Recetas" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#FFF0DA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="Recetas" vertex="1">
+          <mxGeometry height="172.5" width="229.12" x="807.06" y="800.2" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Recetas_idReceta" parent="00_Recetas" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idReceta : ID" vertex="1">
+          <mxGeometry height="44.83" width="229.12" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Recetas_idPlato" parent="00_Recetas" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK/UQ    idPlato ? : ID" vertex="1">
+          <mxGeometry height="44.83" width="229.12" y="82.83" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Recetas_idSubreceta" parent="00_Recetas" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK/UQ    idSubreceta ? : ID" vertex="1">
+          <mxGeometry height="44.83" width="229.12" y="127.67" as="geometry" />
+        </mxCell>
+        <mxCell id="00_ComponentesReceta" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#FFF0DA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="ComponentesReceta" vertex="1">
+          <mxGeometry height="214.88" width="237" x="226.93" y="1043.01" as="geometry" />
+        </mxCell>
+        <mxCell id="00_ComponentesReceta_idComponente" parent="00_ComponentesReceta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idComponente : ID" vertex="1">
+          <mxGeometry height="44.22" width="237" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="00_ComponentesReceta_idReceta" parent="00_ComponentesReceta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK/UQ    idReceta : ID" vertex="1">
+          <mxGeometry height="44.22" width="237" y="82.22" as="geometry" />
+        </mxCell>
+        <mxCell id="00_ComponentesReceta_idIngrediente" parent="00_ComponentesReceta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK/UQ    idIngrediente ? : ID" vertex="1">
+          <mxGeometry height="44.22" width="237" y="126.44" as="geometry" />
+        </mxCell>
+        <mxCell id="00_ComponentesReceta_idSubreceta" parent="00_ComponentesReceta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK/UQ    idSubreceta ? : ID" vertex="1">
+          <mxGeometry height="44.22" width="237" y="170.66" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Lotes" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#E0EFF9;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="Lotes" vertex="1">
+          <mxGeometry height="130.13" width="222.37" x="1205.31" y="1419.89" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Lotes_idLote" parent="00_Lotes" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idLote : ID" vertex="1">
+          <mxGeometry height="46.06" width="222.37" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Lotes_idIngrediente" parent="00_Lotes" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK       idIngrediente : ID" vertex="1">
+          <mxGeometry height="46.06" width="222.37" y="84.06" as="geometry" />
+        </mxCell>
+        <mxCell id="00_MovimientosStock" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#E0EFF9;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="MovimientosStock" vertex="1">
+          <mxGeometry height="172.5" width="250.5" x="796.38" y="1634.2" as="geometry" />
+        </mxCell>
+        <mxCell id="00_MovimientosStock_idMovimiento" parent="00_MovimientosStock" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idMovimiento : ID" vertex="1">
+          <mxGeometry height="44.83" width="250.5" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="00_MovimientosStock_idLote" parent="00_MovimientosStock" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK       idLote : ID" vertex="1">
+          <mxGeometry height="44.83" width="250.5" y="82.83" as="geometry" />
+        </mxCell>
+        <mxCell id="00_MovimientosStock_idPlatoDestino" parent="00_MovimientosStock" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK       idPlatoDestino ? : ID" vertex="1">
+          <mxGeometry height="44.83" width="250.5" y="127.67" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Mermas" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#E0EFF9;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="Mermas" vertex="1">
+          <mxGeometry height="214.88" width="239.25" x="225.8" y="1404.51" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Mermas_idMerma" parent="00_Mermas" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idMerma : ID" vertex="1">
+          <mxGeometry height="44.22" width="239.25" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Mermas_idLote" parent="00_Mermas" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK       idLote ? : ID" vertex="1">
+          <mxGeometry height="44.22" width="239.25" y="82.22" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Mermas_idPlato" parent="00_Mermas" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK       idPlato ? : ID" vertex="1">
+          <mxGeometry height="44.22" width="239.25" y="126.44" as="geometry" />
+        </mxCell>
+        <mxCell id="00_Mermas_idMovimiento" parent="00_Mermas" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK/UQ    idMovimiento ? : ID" vertex="1">
+          <mxGeometry height="44.22" width="239.25" y="170.66" as="geometry" />
+        </mxCell>
+        <mxCell id="00_PeriodosOferta" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#EFE5F7;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="PeriodosOferta" vertex="1">
+          <mxGeometry height="130.13" width="243.75" x="799.75" y="1025.39" as="geometry" />
+        </mxCell>
+        <mxCell id="00_PeriodosOferta_idPeriodoOferta" parent="00_PeriodosOferta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idPeriodoOferta : ID" vertex="1">
+          <mxGeometry height="46.06" width="243.75" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="00_PeriodosOferta_idPlato" parent="00_PeriodosOferta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK       idPlato : ID" vertex="1">
+          <mxGeometry height="46.06" width="243.75" y="84.06" as="geometry" />
+        </mxCell>
+        <mxCell id="00_AutorizacionesCarta" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#EFE5F7;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="AutorizacionesCarta" vertex="1">
+          <mxGeometry height="172.5" width="243.75" x="223.56" y="794.2" as="geometry" />
+        </mxCell>
+        <mxCell id="00_AutorizacionesCarta_idAutorizacion" parent="00_AutorizacionesCarta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idAutorizacion : ID" vertex="1">
+          <mxGeometry height="44.83" width="243.75" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="00_AutorizacionesCarta_idPeriodoOferta" parent="00_AutorizacionesCarta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK/AK    idPeriodoOferta : ID" vertex="1">
+          <mxGeometry height="44.83" width="243.75" y="82.83" as="geometry" />
+        </mxCell>
+        <mxCell id="00_AutorizacionesCarta_idEmisor" parent="00_AutorizacionesCarta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK       idEmisor : ID" vertex="1">
+          <mxGeometry height="44.83" width="243.75" y="127.67" as="geometry" />
+        </mxCell>
+        <mxCell id="00_fk_0" edge="1" parent="1" source="00_Usuarios_idRol" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_Roles_idRol" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1019.32" y="724.82" />
+              <mxPoint x="1183.93" y="600.62" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_1" edge="1" parent="1" source="00_PermisosRol_idRol" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_Roles_idRol" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="458.88" y="412.63" />
+              <mxPoint x="1046.88" y="449.95" />
+              <mxPoint x="1046.88" y="449.95" />
+              <mxPoint x="1046.88" y="449.95" />
+              <mxPoint x="1185.46" y="531.32" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_2" edge="1" parent="1" source="00_PermisosRol_idPermiso" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_Permisos_idPermiso" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="458.88" y="455.02" />
+              <mxPoint x="747.12" y="523.72" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_3" edge="1" parent="1" source="00_PermisosAdicionalesUsuario_idUsuario" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_Usuarios_idUsuario" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="482.5" y="667.63" />
+              <mxPoint x="749.78" y="679.24" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_4" edge="1" parent="1" source="00_PermisosAdicionalesUsuario_idPermiso" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_Permisos_idPermiso" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="482.5" y="710.02" />
+              <mxPoint x="751.99" y="576.46" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_5" edge="1" parent="1" source="00_PreciosCompra_idProveedor" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_Proveedores_idProveedor" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1440.62" y="1056.13" />
+              <mxPoint x="1540.75" y="1056.13" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_6" edge="1" parent="1" source="00_PreciosCompra_idIngrediente" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_Ingredientes_idIngrediente" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1440.62" y="1098.52" />
+              <mxPoint x="1552" y="1284.26" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_7" edge="1" parent="1" source="00_Recetas_idPlato" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_Platos_idPlato" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1036.18" y="907.63" />
+              <mxPoint x="1189.53" y="1170.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_8" edge="1" parent="1" source="00_Recetas_idSubreceta" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_Subrecetas_idSubreceta" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1036.18" y="950.02" />
+              <mxPoint x="1159.39" y="895.28" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_9" edge="1" parent="1" source="00_ComponentesReceta_idReceta" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_Recetas_idReceta" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="463.93" y="1150.45" />
+              <mxPoint x="743.32" y="918.25" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_10" edge="1" parent="1" source="00_ComponentesReceta_idIngrediente" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_Ingredientes_idIngrediente" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="463.93" y="1192.82" />
+              <mxPoint x="1450.24" y="1323.17" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_11" edge="1" parent="1" source="00_ComponentesReceta_idSubreceta" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_Subrecetas_idSubreceta" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="463.93" y="1235.2" />
+              <mxPoint x="1046.88" y="1181.95" />
+              <mxPoint x="1046.88" y="1181.95" />
+              <mxPoint x="1046.88" y="1181.95" />
+              <mxPoint x="1174.54" y="939.14" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_12" edge="1" parent="1" source="00_Lotes_idIngrediente" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_Ingredientes_idIngrediente" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1427.68" y="1527.32" />
+              <mxPoint x="1545.7" y="1388.57" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_13" edge="1" parent="1" source="00_MovimientosStock_idLote" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_Lotes_idLote" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1046.88" y="1741.64" />
+              <mxPoint x="1169.26" y="1543.36" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_14" edge="1" parent="1" source="00_MovimientosStock_idPlatoDestino" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_Platos_idPlato" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1046.88" y="1784.01" />
+              <mxPoint x="1198.81" y="1330.7" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_15" edge="1" parent="1" source="00_Mermas_idLote" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_Lotes_idLote" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="465.07" y="1511.95" />
+              <mxPoint x="1096.84" y="1488.91" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_16" edge="1" parent="1" source="00_Mermas_idPlato" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_Platos_idPlato" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="465.07" y="1554.32" />
+              <mxPoint x="1123" y="1283.05" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_17" edge="1" parent="1" source="00_Mermas_idMovimiento" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_MovimientosStock_idMovimiento" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="465.07" y="1596.7" />
+              <mxPoint x="724.42" y="1676.99" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_18" edge="1" parent="1" source="00_PeriodosOferta_idPlato" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_Platos_idPlato" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1043.5" y="1132.82" />
+              <mxPoint x="1178.38" y="1209.92" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_19" edge="1" parent="1" source="00_AutorizacionesCarta_idPeriodoOferta" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_PeriodosOferta_idPeriodoOferta" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="467.32" y="901.63" />
+              <mxPoint x="731" y="1051.4" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_fk_20" edge="1" parent="1" source="00_AutorizacionesCarta_idEmisor" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="00_Usuarios_idUsuario" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="467.32" y="944.02" />
+              <mxPoint x="755.17" y="732.88" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="00_legend" parent="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK primaria · AK alternativa · FK ajena · UQ unicidad informada · ? admite NULL&#xa;Flechas: FK → tabla referenciada. [referencia] no añade tablas.&#xa;Restricciones completas y dominios: documento Markdown." vertex="1">
+          <mxGeometry height="60.75" width="610.87" x="40" y="191.57" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="relacional-01" name="01 Acceso y permisos">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1595" pageHeight="1108" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="01_title" value="PLATO-PLATÓ | MODELO RELACIONAL&#xa;01 Acceso y permisos&#xa;Cinco tablas · Permisos efectivos = rol + adicionales.&#xa;31/10/2026 · v1.0" parent="1" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="40" y="40" width="1515.3" height="125" />
+        </mxCell>
+        <mxCell id="01_Roles" value="Roles" parent="1" vertex="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#E7EDFA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="1331.88" y="630.81" width="223.5" height="169.13" />
+        </mxCell>
+        <mxCell id="01_Roles_idRol" value="PK       idRol : ID" parent="01_Roles" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="38.0" width="223.5" height="43.71" />
+        </mxCell>
+        <mxCell id="01_Roles_nombre" value="AK       nombre : TipoRol" parent="01_Roles" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="81.71" width="223.5" height="43.71" />
+        </mxCell>
+        <mxCell id="01_Roles_constraint_0" value="AK(nombre)" parent="01_Roles" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="125.42" width="223.5" height="43.71" />
+        </mxCell>
+        <mxCell id="01_Permisos" value="Permisos" parent="1" vertex="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#E7EDFA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="857.69" y="465.81" width="267.38" height="169.13" />
+        </mxCell>
+        <mxCell id="01_Permisos_idPermiso" value="PK       idPermiso : ID" parent="01_Permisos" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="38.0" width="267.38" height="43.71" />
+        </mxCell>
+        <mxCell id="01_Permisos_nombre" value="AK       nombre : TextoCorto" parent="01_Permisos" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="81.71" width="267.38" height="43.71" />
+        </mxCell>
+        <mxCell id="01_Permisos_constraint_0" value="AK(nombre)" parent="01_Permisos" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="125.42" width="267.38" height="43.71" />
+        </mxCell>
+        <mxCell id="01_Usuarios" value="Usuarios" parent="1" vertex="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#E7EDFA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="796.38" y="686.87" width="390.0" height="381.0" />
+        </mxCell>
+        <mxCell id="01_Usuarios_idUsuario" value="PK       idUsuario : ID" parent="01_Usuarios" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="38.0" width="390.0" height="42.88" />
+        </mxCell>
+        <mxCell id="01_Usuarios_nombre" value="-        nombre : TextoCorto" parent="01_Usuarios" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="80.88" width="390.0" height="42.88" />
+        </mxCell>
+        <mxCell id="01_Usuarios_correoElectronico" value="AK       correoElectronico : Correo" parent="01_Usuarios" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="123.75" width="390.0" height="42.88" />
+        </mxCell>
+        <mxCell id="01_Usuarios_contrasenaProtegida" value="-        contrasenaProtegida : Texto" parent="01_Usuarios" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="166.63" width="390.0" height="42.88" />
+        </mxCell>
+        <mxCell id="01_Usuarios_estado" value="-        estado : EstadoRegistro" parent="01_Usuarios" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="209.5" width="390.0" height="42.88" />
+        </mxCell>
+        <mxCell id="01_Usuarios_fechaCreacion" value="-        fechaCreacion : Instante" parent="01_Usuarios" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="252.38" width="390.0" height="42.88" />
+        </mxCell>
+        <mxCell id="01_Usuarios_idRol" value="FK       idRol : ID" parent="01_Usuarios" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="295.25" width="390.0" height="42.88" />
+        </mxCell>
+        <mxCell id="01_Usuarios_constraint_0" value="AK(correoElectronico)" parent="01_Usuarios" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="338.13" width="390.0" height="42.88" />
+        </mxCell>
+        <mxCell id="01_PermisosRol" value="PermisosRol" parent="1" vertex="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#E7EDFA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="217.93" y="305.13" width="255.0" height="211.5" />
+        </mxCell>
+        <mxCell id="01_PermisosRol_idPermisoRol" value="PK       idPermisoRol : ID" parent="01_PermisosRol" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="38.0" width="255.0" height="43.37" />
+        </mxCell>
+        <mxCell id="01_PermisosRol_idRol" value="FK/AK    idRol : ID" parent="01_PermisosRol" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="81.37" width="255.0" height="43.37" />
+        </mxCell>
+        <mxCell id="01_PermisosRol_idPermiso" value="FK/AK    idPermiso : ID" parent="01_PermisosRol" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="124.75" width="255.0" height="43.37" />
+        </mxCell>
+        <mxCell id="01_PermisosRol_constraint_0" value="AK(idRol, idPermiso)" parent="01_PermisosRol" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="168.12" width="255.0" height="43.37" />
+        </mxCell>
+        <mxCell id="01_PermisosAdicionalesUsuario" value="PermisosAdicionalesUsuario" parent="1" vertex="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#E7EDFA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="194.31" y="594.63" width="302.25" height="211.5" />
+        </mxCell>
+        <mxCell id="01_PermisosAdicionalesUsuario_idPermisoAdicional" value="PK       idPermisoAdicional : ID" parent="01_PermisosAdicionalesUsuario" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="38.0" width="302.25" height="43.37" />
+        </mxCell>
+        <mxCell id="01_PermisosAdicionalesUsuario_idUsuario" value="FK/AK    idUsuario : ID" parent="01_PermisosAdicionalesUsuario" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="81.37" width="302.25" height="43.37" />
+        </mxCell>
+        <mxCell id="01_PermisosAdicionalesUsuario_idPermiso" value="FK/AK    idPermiso : ID" parent="01_PermisosAdicionalesUsuario" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="124.75" width="302.25" height="43.37" />
+        </mxCell>
+        <mxCell id="01_PermisosAdicionalesUsuario_constraint_0" value="AK(idUsuario, idPermiso)" parent="01_PermisosAdicionalesUsuario" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="168.12" width="302.25" height="43.37" />
+        </mxCell>
+        <mxCell id="01_fk_0" value="" edge="1" parent="1" source="01_Usuarios_idRol" target="01_Roles_idRol" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1186.38" y="1006.19" />
+              <mxPoint x="1300.78" y="762.21" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="01_fk_1" value="" edge="1" parent="1" source="01_PermisosRol_idRol" target="01_Roles_idRol" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="472.93" y="412.56" />
+              <mxPoint x="1186.38" y="439.38" />
+              <mxPoint x="1186.38" y="439.38" />
+              <mxPoint x="1186.38" y="439.38" />
+              <mxPoint x="1297.78" y="635.75" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="01_fk_2" value="" edge="1" parent="1" source="01_PermisosRol_idPermiso" target="01_Permisos_idPermiso" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="472.93" y="454.94" />
+              <mxPoint x="779.47" y="515.44" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="01_fk_3" value="" edge="1" parent="1" source="01_PermisosAdicionalesUsuario_idUsuario" target="01_Usuarios_idUsuario" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="496.57" y="702.06" />
+              <mxPoint x="728.15" y="740.59" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="01_fk_4" value="" edge="1" parent="1" source="01_PermisosAdicionalesUsuario_idPermiso" target="01_Permisos_idPermiso" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="496.57" y="744.44" />
+              <mxPoint x="786.79" y="572.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="01_legend" value="PK primaria · AK alternativa · FK ajena · UQ unicidad informada · ? admite NULL&#xa;Flechas: FK → tabla referenciada. [referencia] no añade tablas.&#xa;Restricciones completas y dominios: documento Markdown." parent="1" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="40.0" y="191.5" width="610.87" height="60.75" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="relacional-02" name="02 Compras y precios">
+    <mxGraphModel dx="1184" dy="919" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1225" pageHeight="821" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="02_title" parent="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;spacingLeft=8;" value="PLATO-PLATÓ | MODELO RELACIONAL&#xa;02 Compras y precios&#xa;Tres tablas · Histórico de precios, vigencia y selección manual.&#xa;31/10/2026 · v1.0" vertex="1">
+          <mxGeometry height="125" width="1145.25" x="40" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="02_Proveedores" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#DEF1E9;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="Proveedores" vertex="1">
+          <mxGeometry height="257.25" width="388.88" x="796.38" y="213.25" as="geometry" />
+        </mxCell>
+        <mxCell id="02_Proveedores_idProveedor" parent="02_Proveedores" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idProveedor : ID" vertex="1">
+          <mxGeometry height="43.85" width="388.88" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="02_Proveedores_nombre" parent="02_Proveedores" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="-        nombre : TextoCorto" vertex="1">
+          <mxGeometry height="43.85" width="388.88" y="81.85" as="geometry" />
+        </mxCell>
+        <mxCell id="02_Proveedores_informacionContacto" parent="02_Proveedores" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="-        informacionContacto : Texto" vertex="1">
+          <mxGeometry height="43.85" width="388.88" y="125.7" as="geometry" />
+        </mxCell>
+        <mxCell id="02_Proveedores_formaPago" parent="02_Proveedores" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="-        formaPago : TextoCorto" vertex="1">
+          <mxGeometry height="43.85" width="388.88" y="169.55" as="geometry" />
+        </mxCell>
+        <mxCell id="02_Proveedores_estado" parent="02_Proveedores" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="-        estado : EstadoRegistro" vertex="1">
+          <mxGeometry height="43.85" width="388.88" y="213.4" as="geometry" />
+        </mxCell>
+        <mxCell id="02_Ingredientes" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#DEF1E9;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="Ingredientes" vertex="1">
+          <mxGeometry height="257.25" width="338.25" x="821.7" y="523.75" as="geometry" />
+        </mxCell>
+        <mxCell id="02_Ingredientes_idIngrediente" parent="02_Ingredientes" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idIngrediente : ID" vertex="1">
+          <mxGeometry height="43.85" width="338.25" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="02_Ingredientes_nombre" parent="02_Ingredientes" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="-        nombre : TextoCorto" vertex="1">
+          <mxGeometry height="43.85" width="338.25" y="81.85" as="geometry" />
+        </mxCell>
+        <mxCell id="02_Ingredientes_categoria" parent="02_Ingredientes" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="-        categoria : TextoCorto" vertex="1">
+          <mxGeometry height="43.85" width="338.25" y="125.7" as="geometry" />
+        </mxCell>
+        <mxCell id="02_Ingredientes_unidadMedida" parent="02_Ingredientes" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="-        unidadMedida : Unidad" vertex="1">
+          <mxGeometry height="43.85" width="338.25" y="169.55" as="geometry" />
+        </mxCell>
+        <mxCell id="02_Ingredientes_estado" parent="02_Ingredientes" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="-        estado : EstadoRegistro" vertex="1">
+          <mxGeometry height="43.85" width="338.25" y="213.4" as="geometry" />
+        </mxCell>
+        <mxCell id="02_PreciosCompra" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#DEF1E9;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="PreciosCompra" vertex="1">
+          <mxGeometry height="462.37" width="426" x="132.43" y="304.19" as="geometry" />
+        </mxCell>
+        <mxCell id="02_PreciosCompra_idPrecioCompra" parent="02_PreciosCompra" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idPrecioCompra : ID" vertex="1">
+          <mxGeometry height="42.44" width="426" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="02_PreciosCompra_idProveedor" parent="02_PreciosCompra" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK       idProveedor : ID" vertex="1">
+          <mxGeometry height="42.44" width="426" y="80.44" as="geometry" />
+        </mxCell>
+        <mxCell id="02_PreciosCompra_idIngrediente" parent="02_PreciosCompra" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK       idIngrediente : ID" vertex="1">
+          <mxGeometry height="42.44" width="426" y="122.87" as="geometry" />
+        </mxCell>
+        <mxCell id="02_PreciosCompra_precioCompra" parent="02_PreciosCompra" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="-        precioCompra : ImportePositivo" vertex="1">
+          <mxGeometry height="42.44" width="426" y="165.31" as="geometry" />
+        </mxCell>
+        <mxCell id="02_PreciosCompra_unidadPrecio" parent="02_PreciosCompra" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="-        unidadPrecio : Unidad" vertex="1">
+          <mxGeometry height="42.44" width="426" y="207.75" as="geometry" />
+        </mxCell>
+        <mxCell id="02_PreciosCompra_fechaInicioVigencia" parent="02_PreciosCompra" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="-        fechaInicioVigencia : Instante" vertex="1">
+          <mxGeometry height="42.44" width="426" y="250.18" as="geometry" />
+        </mxCell>
+        <mxCell id="02_PreciosCompra_fechaFinVigencia" parent="02_PreciosCompra" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="-        fechaFinVigencia ? : Instante" vertex="1">
+          <mxGeometry height="42.44" width="426" y="292.62" as="geometry" />
+        </mxCell>
+        <mxCell id="02_PreciosCompra_seleccionadoParaCosteo" parent="02_PreciosCompra" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="-        seleccionadoParaCosteo : Booleano" vertex="1">
+          <mxGeometry height="42.44" width="426" y="335.06" as="geometry" />
+        </mxCell>
+        <mxCell id="02_PreciosCompra_constraint_0" parent="02_PreciosCompra" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="R-05 - ver Markdown" vertex="1">
+          <mxGeometry height="42.44" width="426" y="377.5" as="geometry" />
+        </mxCell>
+        <mxCell id="02_PreciosCompra_constraint_1" parent="02_PreciosCompra" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="R-06 - ver Markdown" vertex="1">
+          <mxGeometry height="42.44" width="426" y="419.93" as="geometry" />
+        </mxCell>
+        <mxCell id="02_fk_0" edge="1" parent="1" source="02_PreciosCompra_idProveedor" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="02_Proveedores_idProveedor" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="558.43" y="411.62" />
+              <mxPoint x="738.99" y="310.47" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="02_fk_1" edge="1" parent="1" source="02_PreciosCompra_idIngrediente" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="02_Ingredientes_idIngrediente" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="558.43" y="454" />
+              <mxPoint x="759.99" y="557.22" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="02_legend" parent="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK primaria · AK alternativa · FK ajena · UQ unicidad informada · ? admite NULL&#xa;Flechas: FK → tabla referenciada. [referencia] no añade tablas.&#xa;Restricciones completas y dominios: documento Markdown." vertex="1">
+          <mxGeometry height="60.75" width="610.87" x="40" y="191.5" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="relacional-03" name="03 Platos y recetas">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1797" pageHeight="971" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="03_title" value="PLATO-PLATÓ | MODELO RELACIONAL&#xa;03 Platos y recetas&#xa;Cuatro tablas · Propietario y componente exclusivos; subrecetas sin stock.&#xa;31/10/2026 · v1.0" parent="1" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="40" y="40" width="1716.75" height="125" />
+        </mxCell>
+        <mxCell id="03_Platos" value="Platos" parent="1" vertex="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#FFF0DA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="1307.12" y="237.07" width="449.63" height="426.75" />
+        </mxCell>
+        <mxCell id="03_Platos_idPlato" value="PK       idPlato : ID" parent="03_Platos" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="38.0" width="449.63" height="43.19" />
+        </mxCell>
+        <mxCell id="03_Platos_nombre" value="-        nombre : TextoCorto" parent="03_Platos" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="81.19" width="449.63" height="43.19" />
+        </mxCell>
+        <mxCell id="03_Platos_imagen" value="-        imagen : Texto" parent="03_Platos" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="124.39" width="449.63" height="43.19" />
+        </mxCell>
+        <mxCell id="03_Platos_descripcion" value="-        descripcion : Texto" parent="03_Platos" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="167.58" width="449.63" height="43.19" />
+        </mxCell>
+        <mxCell id="03_Platos_categoria" value="-        categoria : TextoCorto" parent="03_Platos" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="210.78" width="449.63" height="43.19" />
+        </mxCell>
+        <mxCell id="03_Platos_menuDelDia" value="-        menuDelDia : Booleano" parent="03_Platos" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="253.97" width="449.63" height="43.19" />
+        </mxCell>
+        <mxCell id="03_Platos_precioVenta" value="-        precioVenta ? : ImportePositivo" parent="03_Platos" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="297.17" width="449.63" height="43.19" />
+        </mxCell>
+        <mxCell id="03_Platos_estado" value="-        estado : EstadoRegistro" parent="03_Platos" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="340.36" width="449.63" height="43.19" />
+        </mxCell>
+        <mxCell id="03_Platos_porcentajeMargenObjetivo" value="-        porcentajeMargenObjetivo ? : Porcentaje" parent="03_Platos" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="383.56" width="449.63" height="43.19" />
+        </mxCell>
+        <mxCell id="03_Subrecetas" value="Subrecetas" parent="1" vertex="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#FFF0DA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="1327.93" y="716.5" width="408.0" height="214.88" />
+        </mxCell>
+        <mxCell id="03_Subrecetas_idSubreceta" value="PK       idSubreceta : ID" parent="03_Subrecetas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="38.0" width="408.0" height="44.22" />
+        </mxCell>
+        <mxCell id="03_Subrecetas_nombre" value="-        nombre : TextoCorto" parent="03_Subrecetas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="82.22" width="408.0" height="44.22" />
+        </mxCell>
+        <mxCell id="03_Subrecetas_cantidadRendimiento" value="-        cantidadRendimiento : CantidadPositiva" parent="03_Subrecetas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="126.44" width="408.0" height="44.22" />
+        </mxCell>
+        <mxCell id="03_Subrecetas_unidadRendimiento" value="-        unidadRendimiento : Unidad" parent="03_Subrecetas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="170.66" width="408.0" height="44.22" />
+        </mxCell>
+        <mxCell id="03_Recetas" value="Recetas" parent="1" vertex="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#FFF0DA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="796.38" y="191.51" width="365.25" height="370.87" />
+        </mxCell>
+        <mxCell id="03_Recetas_idReceta" value="PK       idReceta : ID" parent="03_Recetas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="38.0" width="365.25" height="41.61" />
+        </mxCell>
+        <mxCell id="03_Recetas_estado" value="-        estado : EstadoRegistro" parent="03_Recetas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="79.61" width="365.25" height="41.61" />
+        </mxCell>
+        <mxCell id="03_Recetas_idPlato" value="FK/UQ    idPlato ? : ID" parent="03_Recetas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="121.22" width="365.25" height="41.61" />
+        </mxCell>
+        <mxCell id="03_Recetas_idSubreceta" value="FK/UQ    idSubreceta ? : ID" parent="03_Recetas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="162.83" width="365.25" height="41.61" />
+        </mxCell>
+        <mxCell id="03_Recetas_constraint_0" value="UQ(idPlato)" parent="03_Recetas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="204.44" width="365.25" height="41.61" />
+        </mxCell>
+        <mxCell id="03_Recetas_constraint_1" value="UQ(idSubreceta)" parent="03_Recetas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="246.05" width="365.25" height="41.61" />
+        </mxCell>
+        <mxCell id="03_Recetas_constraint_2" value="R-01 - ver Markdown" parent="03_Recetas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="287.65" width="365.25" height="41.61" />
+        </mxCell>
+        <mxCell id="03_Recetas_constraint_3" value="R-02 - ver Markdown" parent="03_Recetas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="329.26" width="365.25" height="41.61" />
+        </mxCell>
+        <mxCell id="03_ComponentesReceta" value="ComponentesReceta" parent="1" vertex="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#FFF0DA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="152.12" y="444.63" width="386.63" height="455.63" />
+        </mxCell>
+        <mxCell id="03_ComponentesReceta_idComponente" value="PK       idComponente : ID" parent="03_ComponentesReceta" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="38.0" width="386.63" height="41.76" />
+        </mxCell>
+        <mxCell id="03_ComponentesReceta_idReceta" value="FK/UQ    idReceta : ID" parent="03_ComponentesReceta" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="79.76" width="386.63" height="41.76" />
+        </mxCell>
+        <mxCell id="03_ComponentesReceta_cantidad" value="-        cantidad : CantidadPositiva" parent="03_ComponentesReceta" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="121.53" width="386.63" height="41.76" />
+        </mxCell>
+        <mxCell id="03_ComponentesReceta_unidadMedida" value="-        unidadMedida : Unidad" parent="03_ComponentesReceta" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="163.29" width="386.63" height="41.76" />
+        </mxCell>
+        <mxCell id="03_ComponentesReceta_idIngrediente" value="FK/UQ    idIngrediente ? : ID" parent="03_ComponentesReceta" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="205.05" width="386.63" height="41.76" />
+        </mxCell>
+        <mxCell id="03_ComponentesReceta_idSubreceta" value="FK/UQ    idSubreceta ? : ID" parent="03_ComponentesReceta" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="246.82" width="386.63" height="41.76" />
+        </mxCell>
+        <mxCell id="03_ComponentesReceta_constraint_0" value="UQ(idReceta, idIngrediente)" parent="03_ComponentesReceta" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="288.58" width="386.63" height="41.76" />
+        </mxCell>
+        <mxCell id="03_ComponentesReceta_constraint_1" value="UQ(idReceta, idSubreceta)" parent="03_ComponentesReceta" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="330.34" width="386.63" height="41.76" />
+        </mxCell>
+        <mxCell id="03_ComponentesReceta_constraint_2" value="R-03 - ver Markdown" parent="03_ComponentesReceta" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="372.1" width="386.63" height="41.76" />
+        </mxCell>
+        <mxCell id="03_ComponentesReceta_constraint_3" value="R-04 - ver Markdown" parent="03_ComponentesReceta" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="413.87" width="386.63" height="41.76" />
+        </mxCell>
+        <mxCell id="03_Ingredientes" value="Ingredientes [referencia]" parent="1" vertex="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#DEF1E9;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="862.94" y="615.07" width="232.12" height="87.75" />
+        </mxCell>
+        <mxCell id="03_Ingredientes_idIngrediente" value="PK       idIngrediente : ID" parent="03_Ingredientes" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="38.0" width="232.12" height="49.75" />
+        </mxCell>
+        <mxCell id="03_fk_0" value="" edge="1" parent="1" source="03_Recetas_idPlato" target="03_Platos_idPlato" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1161.62" y="341.31" />
+              <mxPoint x="1260.47" y="314.69" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="03_fk_1" value="" edge="1" parent="1" source="03_Recetas_idSubreceta" target="03_Subrecetas_idSubreceta" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1161.62" y="383.69" />
+              <mxPoint x="1295.88" y="704.85" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="03_fk_2" value="" edge="1" parent="1" source="03_ComponentesReceta_idReceta" target="03_Recetas_idReceta" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="538.75" y="552.06" />
+              <mxPoint x="744.89" y="315.61" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="03_fk_3" value="" edge="1" parent="1" source="03_ComponentesReceta_idIngrediente" target="03_Ingredientes_idIngrediente" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="538.75" y="679.19" />
+              <mxPoint x="790.28" y="679.91" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="03_fk_4" value="" edge="1" parent="1" source="03_ComponentesReceta_idSubreceta" target="03_Subrecetas_idSubreceta" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="538.75" y="721.56" />
+              <mxPoint x="1215.14" y="772.99" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="03_legend" value="PK primaria · AK alternativa · FK ajena · UQ unicidad informada · ? admite NULL&#xa;Flechas: FK → tabla referenciada. [referencia] no añade tablas.&#xa;Restricciones completas y dominios: documento Markdown." parent="1" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="40.0" y="331.57" width="610.87" height="60.75" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="relacional-04" name="04 Lotes, stock y mermas">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2072" pageHeight="1162" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="04_title" value="PLATO-PLATÓ | MODELO RELACIONAL&#xa;04 Lotes, stock y mermas&#xa;Tres tablas · Stock derivado de movimientos; correspondencia merma-salida.&#xa;31/10/2026 · v1.0" parent="1" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="40" y="40" width="1992.0" height="125" />
+        </mxCell>
+        <mxCell id="04_Lotes" value="Lotes" parent="1" vertex="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#E0EFF9;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="1317.26" y="464.69" width="337.12" height="423.37" />
+        </mxCell>
+        <mxCell id="04_Lotes_idLote" value="PK       idLote : ID" parent="04_Lotes" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="38.0" width="337.12" height="42.82" />
+        </mxCell>
+        <mxCell id="04_Lotes_identificadorLote" value="AK       identificadorLote : TextoCorto" parent="04_Lotes" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="80.82" width="337.12" height="42.82" />
+        </mxCell>
+        <mxCell id="04_Lotes_idIngrediente" value="FK       idIngrediente : ID" parent="04_Lotes" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="123.64" width="337.12" height="42.82" />
+        </mxCell>
+        <mxCell id="04_Lotes_fechaEntrada" value="-        fechaEntrada : Instante" parent="04_Lotes" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="166.46" width="337.12" height="42.82" />
+        </mxCell>
+        <mxCell id="04_Lotes_fechaCaducidad" value="-        fechaCaducidad ? : Instante" parent="04_Lotes" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="209.28" width="337.12" height="42.82" />
+        </mxCell>
+        <mxCell id="04_Lotes_ubicacionAlmacen" value="-        ubicacionAlmacen : TextoCorto" parent="04_Lotes" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="252.09" width="337.12" height="42.82" />
+        </mxCell>
+        <mxCell id="04_Lotes_fresco" value="-        fresco : Booleano" parent="04_Lotes" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="294.91" width="337.12" height="42.82" />
+        </mxCell>
+        <mxCell id="04_Lotes_aptoParaConsumo" value="-        aptoParaConsumo : Booleano" parent="04_Lotes" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="337.73" width="337.12" height="42.82" />
+        </mxCell>
+        <mxCell id="04_Lotes_constraint_0" value="AK(identificadorLote)" parent="04_Lotes" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="380.55" width="337.12" height="42.82" />
+        </mxCell>
+        <mxCell id="04_MovimientosStock" value="MovimientosStock" parent="1" vertex="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#E0EFF9;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="796.38" y="701.87" width="375.38" height="420.0" />
+        </mxCell>
+        <mxCell id="04_MovimientosStock_idMovimiento" value="PK       idMovimiento : ID" parent="04_MovimientosStock" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="38.0" width="375.38" height="42.44" />
+        </mxCell>
+        <mxCell id="04_MovimientosStock_idLote" value="FK       idLote : ID" parent="04_MovimientosStock" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="80.44" width="375.38" height="42.44" />
+        </mxCell>
+        <mxCell id="04_MovimientosStock_tipo" value="-        tipo : TipoMovimiento" parent="04_MovimientosStock" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="122.89" width="375.38" height="42.44" />
+        </mxCell>
+        <mxCell id="04_MovimientosStock_cantidad" value="-        cantidad : CantidadFirmada" parent="04_MovimientosStock" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="165.33" width="375.38" height="42.44" />
+        </mxCell>
+        <mxCell id="04_MovimientosStock_fechaMovimiento" value="-        fechaMovimiento : Instante" parent="04_MovimientosStock" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="207.78" width="375.38" height="42.44" />
+        </mxCell>
+        <mxCell id="04_MovimientosStock_finalidadSalida" value="-        finalidadSalida ? : FinalidadSalida" parent="04_MovimientosStock" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="250.22" width="375.38" height="42.44" />
+        </mxCell>
+        <mxCell id="04_MovimientosStock_idPlatoDestino" value="FK       idPlatoDestino ? : ID" parent="04_MovimientosStock" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="292.67" width="375.38" height="42.44" />
+        </mxCell>
+        <mxCell id="04_MovimientosStock_constraint_0" value="R-08 - ver Markdown" parent="04_MovimientosStock" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="335.11" width="375.38" height="42.44" />
+        </mxCell>
+        <mxCell id="04_MovimientosStock_constraint_1" value="R-09 - ver Markdown" parent="04_MovimientosStock" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="377.56" width="375.38" height="42.44" />
+        </mxCell>
+        <mxCell id="04_Mermas" value="Mermas" parent="1" vertex="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#E0EFF9;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="109.93" y="304.19" width="471.0" height="462.37" />
+        </mxCell>
+        <mxCell id="04_Mermas_idMerma" value="PK       idMerma : ID" parent="04_Mermas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="38.0" width="471.0" height="42.44" />
+        </mxCell>
+        <mxCell id="04_Mermas_cantidadDesperdiciada" value="-        cantidadDesperdiciada : CantidadPositiva" parent="04_Mermas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="80.44" width="471.0" height="42.44" />
+        </mxCell>
+        <mxCell id="04_Mermas_fechaMerma" value="-        fechaMerma : Instante" parent="04_Mermas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="122.87" width="471.0" height="42.44" />
+        </mxCell>
+        <mxCell id="04_Mermas_motivo" value="-        motivo : Texto" parent="04_Mermas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="165.31" width="471.0" height="42.44" />
+        </mxCell>
+        <mxCell id="04_Mermas_costePerdida" value="-        costePerdida : ImporteNoNegativo" parent="04_Mermas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="207.75" width="471.0" height="42.44" />
+        </mxCell>
+        <mxCell id="04_Mermas_idLote" value="FK       idLote ? : ID" parent="04_Mermas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="250.18" width="471.0" height="42.44" />
+        </mxCell>
+        <mxCell id="04_Mermas_idPlato" value="FK       idPlato ? : ID" parent="04_Mermas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="292.62" width="471.0" height="42.44" />
+        </mxCell>
+        <mxCell id="04_Mermas_idMovimiento" value="FK/UQ    idMovimiento ? : ID" parent="04_Mermas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="335.06" width="471.0" height="42.44" />
+        </mxCell>
+        <mxCell id="04_Mermas_constraint_0" value="UQ(idMovimiento)" parent="04_Mermas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="377.5" width="471.0" height="42.44" />
+        </mxCell>
+        <mxCell id="04_Mermas_constraint_1" value="R-10 - ver Markdown" parent="04_Mermas" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="419.93" width="471.0" height="42.44" />
+        </mxCell>
+        <mxCell id="04_Ingredientes" value="Ingredientes [referencia]" parent="1" vertex="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#DEF1E9;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="1799.84" y="550.0" width="232.12" height="87.75" />
+        </mxCell>
+        <mxCell id="04_Ingredientes_idIngrediente" value="PK       idIngrediente : ID" parent="04_Ingredientes" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="38.0" width="232.12" height="49.75" />
+        </mxCell>
+        <mxCell id="04_Platos" value="Platos [referencia]" parent="1" vertex="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#FFF0DA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="1396.2" y="947.5" width="179.25" height="87.75" />
+        </mxCell>
+        <mxCell id="04_Platos_idPlato" value="PK       idPlato : ID" parent="04_Platos" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="0" y="38.0" width="179.25" height="49.75" />
+        </mxCell>
+        <mxCell id="04_fk_0" value="" edge="1" parent="1" source="04_Lotes_idIngrediente" target="04_Ingredientes_idIngrediente" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1654.3" y="614.5" />
+              <mxPoint x="1752.25" y="614.88" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="04_fk_1" value="" edge="1" parent="1" source="04_MovimientosStock_idLote" target="04_Lotes_idLote" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1171.75" y="809.31" />
+              <mxPoint x="1284.14" y="593.35" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="04_fk_2" value="" edge="1" parent="1" source="04_MovimientosStock_idPlatoDestino" target="04_Platos_idPlato" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1171.75" y="1021.19" />
+              <mxPoint x="1336.0" y="1014.88" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="04_fk_3" value="" edge="1" parent="1" source="04_Mermas_idLote" target="04_Lotes_idLote" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="580.93" y="581.12" />
+              <mxPoint x="1209.36" y="537.28" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="04_fk_4" value="" edge="1" parent="1" source="04_Mermas_idPlato" target="04_Platos_idPlato" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="580.93" y="623.5" />
+              <mxPoint x="1171.75" y="674.88" />
+              <mxPoint x="1171.75" y="674.88" />
+              <mxPoint x="1171.75" y="674.88" />
+              <mxPoint x="1317.25" y="914.88" />
+              <mxPoint x="1317.25" y="914.88" />
+              <mxPoint x="1317.25" y="914.88" />
+              <mxPoint x="1368.37" y="978.13" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="04_fk_5" value="" edge="1" parent="1" source="04_Mermas_idMovimiento" target="04_MovimientosStock_idMovimiento" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="580.93" y="665.88" />
+              <mxPoint x="741.49" y="741.19" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="04_legend" value="PK primaria · AK alternativa · FK ajena · UQ unicidad informada · ? admite NULL&#xa;Flechas: FK → tabla referenciada. [referencia] no añade tablas.&#xa;Restricciones completas y dominios: documento Markdown." parent="1" vertex="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;">
+          <mxGeometry as="geometry" x="40.0" y="191.5" width="610.87" height="60.75" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="relacional-05" name="05 Oferta y autorización">
+    <mxGraphModel dx="1437" dy="1116" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1470" pageHeight="739" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="05_title" parent="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=18;fontStyle=1;align=left;verticalAlign=middle;spacingLeft=8;" value="PLATO-PLATÓ | MODELO RELACIONAL&#xa;05 Oferta y autorización&#xa;Dos tablas · Prueba previa de 14 días y autorización de toda incorporación a carta.&#xa;31/10/2026 · v1.0" vertex="1">
+          <mxGeometry height="125" width="1390.12" x="40" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="05_PeriodosOferta" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#EFE5F7;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="PeriodosOferta" vertex="1">
+          <mxGeometry height="335.25" width="309" x="796.38" y="191.48" as="geometry" />
+        </mxCell>
+        <mxCell id="05_PeriodosOferta_idPeriodoOferta" parent="05_PeriodosOferta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idPeriodoOferta : ID" vertex="1">
+          <mxGeometry height="42.46" width="309" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="05_PeriodosOferta_idPlato" parent="05_PeriodosOferta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK       idPlato : ID" vertex="1">
+          <mxGeometry height="42.46" width="309" y="80.46" as="geometry" />
+        </mxCell>
+        <mxCell id="05_PeriodosOferta_tipo" parent="05_PeriodosOferta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="-        tipo : TipoOferta" vertex="1">
+          <mxGeometry height="42.46" width="309" y="122.93" as="geometry" />
+        </mxCell>
+        <mxCell id="05_PeriodosOferta_fechaInicio" parent="05_PeriodosOferta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="-        fechaInicio : Instante" vertex="1">
+          <mxGeometry height="42.46" width="309" y="165.39" as="geometry" />
+        </mxCell>
+        <mxCell id="05_PeriodosOferta_fechaFin" parent="05_PeriodosOferta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="-        fechaFin ? : Instante" vertex="1">
+          <mxGeometry height="42.46" width="309" y="207.86" as="geometry" />
+        </mxCell>
+        <mxCell id="05_PeriodosOferta_constraint_0" parent="05_PeriodosOferta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="R-13 - ver Markdown" vertex="1">
+          <mxGeometry height="42.46" width="309" y="250.32" as="geometry" />
+        </mxCell>
+        <mxCell id="05_PeriodosOferta_constraint_1" parent="05_PeriodosOferta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="R-14 - ver Markdown" vertex="1">
+          <mxGeometry height="42.46" width="309" y="292.79" as="geometry" />
+        </mxCell>
+        <mxCell id="05_AutorizacionesCarta" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#EFE5F7;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="AutorizacionesCarta" vertex="1">
+          <mxGeometry height="377.62" width="455.25" x="117.8" y="321.8" as="geometry" />
+        </mxCell>
+        <mxCell id="05_AutorizacionesCarta_idAutorizacion" parent="05_AutorizacionesCarta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idAutorizacion : ID" vertex="1">
+          <mxGeometry height="42.45" width="455.25" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="05_AutorizacionesCarta_idPeriodoOferta" parent="05_AutorizacionesCarta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK/AK    idPeriodoOferta : ID" vertex="1">
+          <mxGeometry height="42.45" width="455.25" y="80.45" as="geometry" />
+        </mxCell>
+        <mxCell id="05_AutorizacionesCarta_idEmisor" parent="05_AutorizacionesCarta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="FK       idEmisor : ID" vertex="1">
+          <mxGeometry height="42.45" width="455.25" y="122.91" as="geometry" />
+        </mxCell>
+        <mxCell id="05_AutorizacionesCarta_fechaAutorizacion" parent="05_AutorizacionesCarta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="-        fechaAutorizacion : Instante" vertex="1">
+          <mxGeometry height="42.45" width="455.25" y="165.36" as="geometry" />
+        </mxCell>
+        <mxCell id="05_AutorizacionesCarta_costeEvaluado" parent="05_AutorizacionesCarta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="-        costeEvaluado : ImporteNoNegativo" vertex="1">
+          <mxGeometry height="42.45" width="455.25" y="207.81" as="geometry" />
+        </mxCell>
+        <mxCell id="05_AutorizacionesCarta_precioVentaEvaluado" parent="05_AutorizacionesCarta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="-        precioVentaEvaluado : ImportePositivo" vertex="1">
+          <mxGeometry height="42.45" width="455.25" y="250.26" as="geometry" />
+        </mxCell>
+        <mxCell id="05_AutorizacionesCarta_constraint_0" parent="05_AutorizacionesCarta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="AK(idPeriodoOferta)" vertex="1">
+          <mxGeometry height="42.45" width="455.25" y="292.72" as="geometry" />
+        </mxCell>
+        <mxCell id="05_AutorizacionesCarta_constraint_1" parent="05_AutorizacionesCarta" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=13;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="R-15 - ver Markdown" vertex="1">
+          <mxGeometry height="42.45" width="455.25" y="335.17" as="geometry" />
+        </mxCell>
+        <mxCell id="05_Platos" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#FFF0DA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="Platos [referencia]" vertex="1">
+          <mxGeometry height="87.75" width="179.25" x="1250.88" y="234.24" as="geometry" />
+        </mxCell>
+        <mxCell id="05_Platos_idPlato" parent="05_Platos" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idPlato : ID" vertex="1">
+          <mxGeometry height="49.75" width="179.25" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="05_Usuarios" parent="1" style="swimlane;html=0;startSize=38;horizontal=1;rounded=0;collapsible=0;whiteSpace=wrap;fillColor=#E7EDFA;swimlaneFillColor=#ffffff;strokeColor=#A6B3C4;fontFamily=Arial;fontSize=18;fontStyle=1;align=center;" value="Usuarios [referencia]" vertex="1">
+          <mxGeometry height="87.75" width="202.88" x="849.44" y="579.24" as="geometry" />
+        </mxCell>
+        <mxCell id="05_Usuarios_idUsuario" parent="05_Usuarios" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK       idUsuario : ID" vertex="1">
+          <mxGeometry height="49.75" width="202.88" y="38" as="geometry" />
+        </mxCell>
+        <mxCell id="05_fk_0" edge="1" parent="1" source="05_PeriodosOferta_idPlato" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="05_Platos_idPlato" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1105.38" y="298.93" />
+              <mxPoint x="1203.28" y="299.19" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="05_fk_1" edge="1" parent="1" source="05_AutorizacionesCarta_idPeriodoOferta" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="05_PeriodosOferta_idPeriodoOferta" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="573.07" y="429.25" />
+              <mxPoint x="744.04" y="297.03" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="05_fk_2" edge="1" parent="1" source="05_AutorizacionesCarta_idEmisor" style="edgeStyle=none;rounded=0;html=0;endArrow=open;endFill=0;strokeColor=#8191A5;strokeWidth=1.3;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="05_Usuarios_idUsuario" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="573.07" y="471.61" />
+              <mxPoint x="788.46" y="606.2" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="05_legend" parent="1" style="text;html=0;whiteSpace=wrap;overflow=hidden;strokeColor=none;fillColor=none;fontFamily=Arial;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=8;" value="PK primaria · AK alternativa · FK ajena · UQ unicidad informada · ? admite NULL&#xa;Flechas: FK → tabla referenciada. [referencia] no añade tablas.&#xa;Restricciones completas y dominios: documento Markdown." vertex="1">
+          <mxGeometry height="60.75" width="610.87" x="40" y="208.74" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

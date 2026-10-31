@@ -306,11 +306,7 @@ Los platos cuyo coste de elaboración supere el 35 % de su precio de venta deber
 
 Los ingredientes catalogados por el restaurante como frescos no podrán utilizarse una vez transcurridas 72 horas desde la recepción de su lote, aunque su fecha de caducidad sea posterior.
 
-### RN-04 — Rotación de platos poco demandados
-
-Los platos que registren menos de diez ventas semanales durante tres semanas consecutivas deberán retirarse temporalmente de la carta hasta que el encargado revise su continuidad.
-
-### RN-05 — Prueba de nuevos platos
+### RN-04 — Prueba de nuevos platos
 
 Todo plato de nueva creación deberá ofrecerse inicialmente durante un mínimo de catorce días como sugerencia del chef antes de poder incorporarse a la carta permanente.
 
