@@ -73,6 +73,10 @@ El sistema deberá permitir gestionar los costes asociados a los ingredientes, r
 
 El sistema deberá permitir gestionar la información relacionada con proveedores, precios de compra, stock y mermas, con el objetivo de mejorar el control de los costes y reducir las pérdidas del restaurante.
 
+### RG-03 - Gestión de usuarios y permisos
+
+El sistema deberá permitir gestionar los usuarios, sus roles y sus permisos de acceso, garantizando que cada trabajador pueda realizar únicamente las operaciones autorizadas según su perfil y los permisos adicionales que tenga asignados.
+
 ---
 
 ## 3.3. Requisitos detallados
@@ -92,7 +96,7 @@ El sistema deberá almacenar la siguiente información sobre los usuarios:
 - Estado de la cuenta (activa/inactiva).
 - Fecha de creación.
 
-El sistema deberá disponer, asimismo, de información sobre los roles existentes y los permisos asociados a cada uno.
+El sistema deberá disponer, asimismo, de información sobre los roles existentes y los permisos asociados a cada uno, además de permitir añadir permisos adicionales a cada usuario.
 
 ### RI-02 — Proveedores
 
@@ -123,6 +127,7 @@ El sistema deberá almacenar información sobre los precios de compra de los ing
 - Unidad a la que corresponde el precio.
 - Fecha de inicio de vigencia.
 - Fecha de finalización de vigencia, cuando corresponda.
+- Indicar si dicho precio está o no seleccionado para el cálculo de costes.
 
 El sistema deberá conservar el histórico de precios de los ingredientes.
 
@@ -157,7 +162,7 @@ El sistema deberá almacenar la siguiente información sobre los lotes de ingred
 - Identificador del lote.
 - Cantidad.
 - Fecha de entrada.
-- Fecha de caducidad.
+- Fecha de caducidad (opcional).
 - Fresco (bool).
 - Ubicación en el almacén.
 
@@ -192,7 +197,7 @@ Los requisitos funcionales describen las operaciones y comportamientos que el si
 
 ### RF-01 — Gestión de usuarios
 
-El sistema deberá permitir a los usuarios autorizados registrar, modificar, consultar, activar y desactivar cuentas de usuario, así como asignarles un rol.
+El sistema deberá permitir a los usuarios autorizados registrar, modificar, consultar, activar y desactivar cuentas de usuario, así como asignarles un rol o permisos adicionales.
 
 ### RF-02 — Gestión de proveedores
 
@@ -322,7 +327,7 @@ Todo plato de nueva creación deberá ofrecerse inicialmente durante un mínimo 
 
 ### RNF-01 — Control de acceso
 
-El sistema deberá permitir el acceso únicamente a usuarios registrados y autenticados, aplicando los permisos correspondientes a su rol.
+El sistema deberá permitir el acceso únicamente a usuarios registrados y autenticados, aplicando los permisos correspondientes a su rol más los permisos adicionales.
 
 ### RNF-02 — Seguridad de las credenciales
 
@@ -338,8 +343,70 @@ El sistema deberá ofrecer tiempos de respuesta adecuados en las operaciones hab
 
 ### RNF-05 — Usabilidad
 
-La interfaz deberá permitir a los usuarios consultar y gestionar la información relacionada con costes, platos, recetas e ingredientes de forma clara e intuitiva.
+El sistema deberá proporcionar operaciones que permitan consultar y gestionar la información de forma estructurada, facilitando su integración con una posible interfaz de usuario sin necesidad de que esta acceda directamente a la base de datos.
 
 ### RNF-06 — Integridad de los datos
 
 El sistema deberá garantizar la integridad y consistencia de la información almacenada, evitando registros que incumplan las relaciones y restricciones definidas en el sistema.
+
+## 3.4. Matriz de trazabilidad
+
+La siguiente matriz establece la relación entre los requisitos generales y los requisitos detallados del sistema, permitiendo identificar qué objetivos justifican cada requisito.
+
+| Requisito | RG-01 | RG-02 | RG-03 |
+|---|:---:|:---:|:---:|
+| **Requisitos de información** | | | |
+| RI-01 — Usuarios y roles | | | ● |
+| RI-02 — Proveedores | | ● | |
+| RI-03 — Ingredientes | ○ | ● | |
+| RI-04 — Precios de ingredientes | ● | ● | |
+| RI-05 — Platos | ● | | |
+| RI-06 — Recetas | ● | | |
+| RI-07 — Lotes | | ● | |
+| RI-08 — Movimientos de stock | | ● | |
+| RI-09 — Mermas | | ● | |
+| RI-10 — Oferta y autorizaciones | ○ | | ○ |
+| **Requisitos funcionales** | | | |
+| RF-01 — Gestión de usuarios | | | ● |
+| RF-02 — Gestión de proveedores | | ● | |
+| RF-03 — Gestión de ingredientes | ○ | ● | |
+| RF-04 — Gestión de precios | ● | ● | |
+| RF-05 — Gestión de platos | ● | | |
+| RF-06 — Gestión de recetas | ● | | |
+| RF-07 — Cálculo de escandallos | ● | | |
+| RF-08 — Cálculo de rentabilidad | ● | | |
+| RF-09 — Gestión de stock | | ● | |
+| RF-10 — Gestión de mermas | | ● | |
+| RF-11 — Alertas de sobrecostes | ● | | |
+| RF-12 — Alertas de caducidad | | ● | |
+| RF-13 — Comparación de proveedores | ● | ● | |
+| **Reglas de conducta** | | | |
+| RC-01 — Cantidades de las recetas | ● | | |
+| RC-02 — Componentes de una receta | ● | | |
+| RC-03 — Precios válidos | ● | ● | |
+| RC-04 — Precios vigentes | ● | ● | |
+| RC-05 — Cálculo del coste | ● | | |
+| RC-06 — Actualización del coste | ● | | |
+| RC-07 — Margen bruto | ● | | |
+| RC-08 — Margen objetivo | ● | | |
+| RC-09 — Integridad del histórico | ○ | ○ | |
+| RC-10 — Permisos según el rol | | | ● |
+| RC-11 — Coste calculable | ● | | |
+| RC-12 — Recetas cíclicas | ● | | |
+| **Reglas de negocio** | | | |
+| RN-01 — Aprovechamiento de ingredientes próximos a caducar | | ● | |
+| RN-02 — Incorporación a la carta | ● | | ● |
+| RN-03 — Política interna de frescura | | ● | |
+| RN-04 — Prueba de nuevos platos | | | |
+| **Requisitos no funcionales** | | | |
+| RNF-01 — Control de acceso | | | ● |
+| RNF-02 — Seguridad de las credenciales | | | ● |
+| RNF-03 — Disponibilidad | ○ | ○ | ○ |
+| RNF-04 — Rendimiento | ○ | ○ | ○ |
+| RNF-05 — Usabilidad e integración | ○ | ○ | ○ |
+| RNF-06 — Integridad de los datos | ○ | ○ | ○ |
+
+**Leyenda:**
+- ● Relación directa.
+- ○ Relación complementaria o transversal.
+- Celda vacía: sin relación significativa.
