@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
-<mxfile host="app.diagrams.net" type="device" version="24.7.17" compressed="false">
+<mxfile host="Electron" compressed="false" pages="5">
   <diagram id="01_precio_seleccionado" name="01 · Precio de referencia de un ingrediente">
     <mxGraphModel dx="1400" dy="1080" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1320" pageHeight="1080" math="0" shadow="0">
       <root>
@@ -374,93 +373,93 @@
     </mxGraphModel>
   </diagram>
   <diagram id="05_carta_autorizada" name="05 · Incorporación a la carta con autorización">
-    <mxGraphModel dx="1400" dy="1270" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1320" pageHeight="1270" math="0" shadow="0">
+    <mxGraphModel dx="1964" dy="1267" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1320" pageHeight="1270" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="title" value="05 · Incorporación a la carta con autorización" style="text;html=1;align=left;fontSize=26;fontStyle=1;fontColor=#12334C;" vertex="1" parent="1">
-          <mxGeometry as="geometry" x="55" y="25" width="1200" height="45" />
+        <mxCell id="title" parent="1" style="text;html=1;align=left;fontSize=26;fontStyle=1;fontColor=#12334C;" value="05 · Incorporación a la carta con autorización" vertex="1">
+          <mxGeometry height="45" width="1200" x="55" y="25" as="geometry" />
         </mxCell>
-        <mxCell id="subtitle" value="Instantánea: 15/10/2026, 12:00 · Prueba previa de 14 días y coste del 40 % del precio de venta." style="text;html=1;align=left;fontSize=15;fontColor=#475569;" vertex="1" parent="1">
-          <mxGeometry as="geometry" x="55" y="75" width="1200" height="40" />
+        <mxCell id="subtitle" parent="1" style="text;html=1;align=left;fontSize=15;fontColor=#475569;" value="Instantánea: 15/10/2026, 12:00 · Prueba previa de 14 días y coste del 40 % del precio de venta." vertex="1">
+          <mxGeometry height="40" width="1200" x="55" y="75" as="geometry" />
         </mxCell>
-        <mxCell id="edge0" value="tienePeriodoOferta" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;" edge="1" parent="1" source="lasana" target="pruebaLasana">
-          <mxGeometry as="geometry" relative="1" />
+        <mxCell id="edge0" edge="1" parent="1" source="lasana" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;" target="pruebaLasana" value="tienePeriodoOferta">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="edge1" value="tienePeriodoOferta" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="lasana" target="cartaLasana">
-          <mxGeometry as="geometry" relative="1" />
+        <mxCell id="edge1" edge="1" parent="1" source="lasana" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="cartaLasana" value="tienePeriodoOferta">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="edge2" value="tieneAutorizacion" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;" edge="1" parent="1" source="cartaLasana" target="aprobacionLasana">
-          <mxGeometry as="geometry" relative="1" />
+        <mxCell id="edge2" edge="1" parent="1" source="cartaLasana" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;" target="aprobacionLasana" value="tieneAutorizacion">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="edge3" value="emite" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;" edge="1" parent="1" source="ana" target="aprobacionLasana">
-          <mxGeometry as="geometry" relative="1" />
+        <mxCell id="edge3" edge="1" parent="1" source="ana" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;" target="aprobacionLasana" value="emite">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="edge4" value="tieneRol" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="ana" target="rolAdmin">
-          <mxGeometry as="geometry" relative="1" />
+        <mxCell id="edge4" edge="1" parent="1" source="ana" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=none;endArrow=none;strokeWidth=1.8;fontSize=13;labelBackgroundColor=#FFFFFF;strokeColor=#475569;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="rolAdmin" value="tieneRol">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="lasana" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
-          <mxGeometry as="geometry" x="70" y="150" width="300" height="148" />
+        <mxCell id="lasana" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" value="" vertex="1">
+          <mxGeometry height="148" width="300" x="70" y="150" as="geometry" />
         </mxCell>
-        <mxCell id="lasana_head" value="&lt;u&gt;lasana : Plato&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="lasana">
-          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        <mxCell id="lasana_head" parent="lasana" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" value="&lt;u&gt;lasana : Plato&lt;/u&gt;" vertex="1">
+          <mxGeometry height="36" width="300" as="geometry" />
         </mxCell>
-        <mxCell id="lasana_attrs" value="nombre = &amp;quot;Lasaña&amp;quot;&lt;br&gt;precioVenta = 10.00&lt;br&gt;/costeProduccion = 4.00&lt;br&gt;estado = ACTIVO" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="lasana">
-          <mxGeometry as="geometry" x="0" y="36" width="300" height="112" />
+        <mxCell id="lasana_attrs" parent="lasana" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" value="nombre = &amp;quot;Lasaña&amp;quot;&lt;br&gt;precioVenta = 10.00&lt;br&gt;/costeProduccion = 4.00&lt;br&gt;estado = ACTIVO" vertex="1">
+          <mxGeometry height="112" width="300" y="36" as="geometry" />
         </mxCell>
-        <mxCell id="pruebaLasana" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
-          <mxGeometry as="geometry" x="490" y="150" width="300" height="123" />
+        <mxCell id="pruebaLasana" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" value="" vertex="1">
+          <mxGeometry height="123" width="300" x="490" y="150" as="geometry" />
         </mxCell>
-        <mxCell id="pruebaLasana_head" value="&lt;u&gt;pruebaLasana : PeriodoOferta&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="pruebaLasana">
-          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        <mxCell id="pruebaLasana_head" parent="pruebaLasana" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" value="&lt;u&gt;pruebaLasana : PeriodoOferta&lt;/u&gt;" vertex="1">
+          <mxGeometry height="36" width="300" as="geometry" />
         </mxCell>
-        <mxCell id="pruebaLasana_attrs" value="tipo = SUGERENCIA_CHEF&lt;br&gt;fechaInicio = 01/10/2026 12:00&lt;br&gt;fechaFin = 15/10/2026 12:00" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="pruebaLasana">
-          <mxGeometry as="geometry" x="0" y="36" width="300" height="87" />
+        <mxCell id="pruebaLasana_attrs" parent="pruebaLasana" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" value="tipo = SUGERENCIA_CHEF&lt;br&gt;fechaInicio = 01/10/2026 12:00&lt;br&gt;fechaFin = 15/10/2026 12:00" vertex="1">
+          <mxGeometry height="87" width="300" y="36" as="geometry" />
         </mxCell>
-        <mxCell id="cartaLasana" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
-          <mxGeometry as="geometry" x="70" y="540" width="300" height="123" />
+        <mxCell id="cartaLasana" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" value="" vertex="1">
+          <mxGeometry height="123" width="300" x="70" y="540" as="geometry" />
         </mxCell>
-        <mxCell id="cartaLasana_head" value="&lt;u&gt;cartaLasana : PeriodoOferta&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="cartaLasana">
-          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        <mxCell id="cartaLasana_head" parent="cartaLasana" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" value="&lt;u&gt;cartaLasana : PeriodoOferta&lt;/u&gt;" vertex="1">
+          <mxGeometry height="36" width="300" as="geometry" />
         </mxCell>
-        <mxCell id="cartaLasana_attrs" value="tipo = CARTA_PERMANENTE&lt;br&gt;fechaInicio = 15/10/2026 12:00&lt;br&gt;fechaFin = sin valor" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="cartaLasana">
-          <mxGeometry as="geometry" x="0" y="36" width="300" height="87" />
+        <mxCell id="cartaLasana_attrs" parent="cartaLasana" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" value="tipo = CARTA_PERMANENTE&lt;br&gt;fechaInicio = 15/10/2026 12:00&lt;br&gt;fechaFin = sin valor" vertex="1">
+          <mxGeometry height="87" width="300" y="36" as="geometry" />
         </mxCell>
-        <mxCell id="aprobacionLasana" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
-          <mxGeometry as="geometry" x="490" y="540" width="300" height="123" />
+        <mxCell id="aprobacionLasana" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" value="" vertex="1">
+          <mxGeometry height="123" width="300" x="490" y="540" as="geometry" />
         </mxCell>
-        <mxCell id="aprobacionLasana_head" value="&lt;u&gt;aprobacionLasana : AutorizacionCarta&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="aprobacionLasana">
-          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        <mxCell id="aprobacionLasana_head" parent="aprobacionLasana" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" value="&lt;u&gt;aprobacionLasana : AutorizacionCarta&lt;/u&gt;" vertex="1">
+          <mxGeometry height="36" width="300" as="geometry" />
         </mxCell>
-        <mxCell id="aprobacionLasana_attrs" value="fechaAutorizacion = 15/10/2026 11:00&lt;br&gt;costeEvaluado = 4.00&lt;br&gt;precioVentaEvaluado = 10.00" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="aprobacionLasana">
-          <mxGeometry as="geometry" x="0" y="36" width="300" height="87" />
+        <mxCell id="aprobacionLasana_attrs" parent="aprobacionLasana" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" value="fechaAutorizacion = 15/10/2026 11:00&lt;br&gt;costeEvaluado = 4.00&lt;br&gt;precioVentaEvaluado = 10.00" vertex="1">
+          <mxGeometry height="87" width="300" y="36" as="geometry" />
         </mxCell>
-        <mxCell id="ana" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
-          <mxGeometry as="geometry" x="910" y="540" width="300" height="98" />
+        <mxCell id="ana" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" value="" vertex="1">
+          <mxGeometry height="98" width="300" x="910" y="540" as="geometry" />
         </mxCell>
-        <mxCell id="ana_head" value="&lt;u&gt;ana : Usuario&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="ana">
-          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        <mxCell id="ana_head" parent="ana" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" value="&lt;u&gt;ana : Usuario&lt;/u&gt;" vertex="1">
+          <mxGeometry height="36" width="300" as="geometry" />
         </mxCell>
-        <mxCell id="ana_attrs" value="nombre = &amp;quot;Ana&amp;quot;&lt;br&gt;estado = ACTIVO" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="ana">
-          <mxGeometry as="geometry" x="0" y="36" width="300" height="62" />
+        <mxCell id="ana_attrs" parent="ana" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" value="nombre = &amp;quot;Ana&amp;quot;&lt;br&gt;estado = ACTIVO" vertex="1">
+          <mxGeometry height="62" width="300" y="36" as="geometry" />
         </mxCell>
-        <mxCell id="rolAdmin" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" vertex="1" parent="1">
-          <mxGeometry as="geometry" x="910" y="870" width="300" height="73" />
+        <mxCell id="rolAdmin" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#245772;strokeWidth=1.8;" value="" vertex="1">
+          <mxGeometry height="73" width="300" x="910" y="870" as="geometry" />
         </mxCell>
-        <mxCell id="rolAdmin_head" value="&lt;u&gt;rolAdmin : Rol&lt;/u&gt;" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="rolAdmin">
-          <mxGeometry as="geometry" x="0" y="0" width="300" height="36" />
+        <mxCell id="rolAdmin_head" parent="rolAdmin" style="rounded=0;html=1;whiteSpace=wrap;fillColor=#EDF6FA;strokeColor=#245772;fontSize=14;align=center;verticalAlign=middle;" value="&lt;u&gt;rolAdmin : Rol&lt;/u&gt;" vertex="1">
+          <mxGeometry height="36" width="300" as="geometry" />
         </mxCell>
-        <mxCell id="rolAdmin_attrs" value="nombre = ADMINISTRADOR" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" vertex="1" parent="rolAdmin">
-          <mxGeometry as="geometry" x="0" y="36" width="300" height="37" />
+        <mxCell id="rolAdmin_attrs" parent="rolAdmin" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=12;spacingTop=9;fontSize=13;fontColor=#1E293B;" value="nombre = ADMINISTRADOR" vertex="1">
+          <mxGeometry height="37" width="300" y="36" as="geometry" />
         </mxCell>
-        <mxCell id="note0" value="RN-04: del 01/10 al 15/10,&lt;br&gt;a la misma hora, pasan 14 días.&lt;br&gt;RN-02: 4 / 10 × 100 = 40 %.&lt;br&gt;Como 40 % &amp;gt; 35 %, se exige&lt;br&gt;autorización previa." style="rounded=0;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=14;fontSize=14;fillColor=#FFFBEB;strokeColor=#D6B563;" vertex="1" parent="1">
-          <mxGeometry as="geometry" x="860" y="150" width="400" height="180" />
+        <mxCell id="note0" parent="1" style="rounded=0;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=14;fontSize=14;fillColor=#FFFBEB;strokeColor=#D6B563;" value="RN-04: del 01/10 al 15/10,&lt;br&gt;a la misma hora, pasan 14 días.&lt;br&gt;RN-02: 4 / 10 × 100 = 40 %.&lt;br&gt;Como 40 % &amp;gt; 35 %, se exige&lt;br&gt;autorización previa (esto lo hemos cambiado, ahora se exige autorización previa en todos los casos)." vertex="1">
+          <mxGeometry height="180" width="400" x="860" y="150" as="geometry" />
         </mxCell>
-        <mxCell id="note1" value="Ana es administradora al autorizar. La evaluación sigue vigente al alta.&lt;br&gt;La autorización es una hora anterior a la incorporación.&lt;br&gt;La receta, sus componentes y los precios se omiten en esta vista parcial;&lt;br&gt;se supone verificado el coste de 4 € con precios seleccionados vigentes." style="rounded=0;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=14;fontSize=14;fillColor=#FFFBEB;strokeColor=#D6B563;" vertex="1" parent="1">
-          <mxGeometry as="geometry" x="70" y="900" width="720" height="160" />
+        <mxCell id="note1" parent="1" style="rounded=0;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=14;fontSize=14;fillColor=#FFFBEB;strokeColor=#D6B563;" value="Ana es administradora al autorizar. La evaluación sigue vigente al alta.&lt;br&gt;La autorización es una hora anterior a la incorporación.&lt;br&gt;La receta, sus componentes y los precios se omiten en esta vista parcial;&lt;br&gt;se supone verificado el coste de 4 € con precios seleccionados vigentes." vertex="1">
+          <mxGeometry height="160" width="720" x="70" y="900" as="geometry" />
         </mxCell>
-        <mxCell id="legend" value="VÁLIDO · Vista parcial: atributos y objetos no relevantes omitidos. / = derivado. Cabecera subrayada = objeto UML." style="text;html=1;align=left;fontSize=13;fontColor=#475569;" vertex="1" parent="1">
-          <mxGeometry as="geometry" x="55" y="1215" width="1210" height="35" />
+        <mxCell id="legend" parent="1" style="text;html=1;align=left;fontSize=13;fontColor=#475569;" value="VÁLIDO · Vista parcial: atributos y objetos no relevantes omitidos. / = derivado. Cabecera subrayada = objeto UML." vertex="1">
+          <mxGeometry height="35" width="1210" x="55" y="1215" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
