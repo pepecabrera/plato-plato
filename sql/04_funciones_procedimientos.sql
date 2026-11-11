@@ -222,4 +222,72 @@ BEGIN
         COMMIT;
     END;
 END$$
+
+-- RC-14 y S-07: alta definitiva de una merma de lote O de plato.
+-- El coste es el importe historico total comunicado; NULL significa desconocido.
+-- La merma de lote y su salida se confirman juntas; la de plato no descuenta stock.
+CREATE OR REPLACE PROCEDURE sp_registrar_merma(
+    IN p_usuario INT UNSIGNED, IN p_lote INT UNSIGNED, IN p_plato INT UNSIGNED,
+    IN p_cantidad DECIMAL(14,4), IN p_fecha DATETIME(6),
+    IN p_motivo VARCHAR(25), IN p_detalle VARCHAR(500), IN p_coste DECIMAL(14,2))
+MODIFIES SQL DATA
+BEGIN
+    DECLARE v_lote INT UNSIGNED;
+    DECLARE v_plato INT UNSIGNED;
+    DECLARE v_entrada DATETIME(6);
+    DECLARE v_primera DATETIME(6);
+    DECLARE v_movimiento INT UNSIGNED DEFAULT NULL;
+    DECLARE v_merma INT UNSIGNED;
+    IF @@in_transaction THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Llamar fuera de una transaccion'; END IF;
+    IF NOT fn_tiene_permiso(p_usuario,'REGISTRAR_MERMAS') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Sin permiso REGISTRAR_MERMAS';
+    END IF;
+    IF (p_lote IS NULL AND p_plato IS NULL) OR (p_lote IS NOT NULL AND p_plato IS NOT NULL) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='La merma debe afectar a un lote o a un plato, exclusivamente';
+    END IF;
+    IF p_cantidad IS NULL OR p_cantidad<=0 OR p_fecha IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Se requieren cantidad positiva y fecha de merma';
+    END IF;
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    BEGIN
+        DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+        START TRANSACTION;
+        IF p_lote IS NOT NULL THEN
+            SELECT id_lote,fecha_entrada INTO v_lote,v_entrada
+            FROM lotes WHERE id_lote=p_lote FOR UPDATE;
+            IF v_lote IS NULL OR p_fecha<v_entrada THEN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Lote inexistente o merma anterior a su recepcion';
+            END IF;
+            SELECT MIN(fecha_movimiento) INTO v_primera
+            FROM movimientos_stock WHERE id_lote=p_lote;
+            IF v_primera IS NULL OR p_fecha<v_primera OR NOT EXISTS(
+                SELECT 1 FROM movimientos_stock WHERE id_lote=p_lote
+                AND fecha_movimiento=v_primera AND tipo='ENTRADA'
+            ) THEN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='La merma requiere una entrada previa del lote';
+            END IF;
+            INSERT INTO movimientos_stock(id_lote,tipo,cantidad,fecha_movimiento,finalidad_salida,id_plato_destino)
+            VALUES(p_lote,'SALIDA',p_cantidad,p_fecha,'MERMA',NULL);
+            SET v_movimiento=LAST_INSERT_ID();
+            IF EXISTS(SELECT 1 FROM (
+                SELECT SUM(CASE WHEN tipo='SALIDA' THEN -cantidad ELSE cantidad END)
+                       OVER(ORDER BY fecha_movimiento,id_movimiento ROWS UNBOUNDED PRECEDING) saldo
+                FROM movimientos_stock WHERE id_lote=p_lote
+            ) s WHERE saldo<0) THEN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='La merma deja saldo negativo en el historial';
+            END IF;
+        ELSE
+            SELECT id_plato INTO v_plato FROM platos WHERE id_plato=p_plato FOR UPDATE;
+            IF v_plato IS NULL THEN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Plato inexistente';
+            END IF;
+        END IF;
+        INSERT INTO mermas(cantidad_desperdiciada,fecha_merma,motivo,detalle_motivo,coste_perdida,
+                           id_lote,id_plato,id_movimiento)
+        VALUES(p_cantidad,p_fecha,p_motivo,p_detalle,p_coste,p_lote,p_plato,v_movimiento);
+        SET v_merma=LAST_INSERT_ID();
+        COMMIT;
+    END;
+    SELECT v_merma AS id_merma,v_movimiento AS id_movimiento;
+END$$
 DELIMITER ;

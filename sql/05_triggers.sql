@@ -144,4 +144,16 @@ BEFORE DELETE ON autorizaciones_carta FOR EACH ROW
 BEGIN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RN-02: no se puede eliminar una autorizacion';
 END$$
+
+-- RC-09 y S-07: las mermas registradas son definitivas, sin edicion ni borrado. Más adelante se puede implementar un sistema de edición de mermas.
+CREATE OR REPLACE TRIGGER trg_merma_bu_historico
+BEFORE UPDATE ON mermas FOR EACH ROW
+BEGIN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Merma definitiva: no se permite modificar';
+END$$
+CREATE OR REPLACE TRIGGER trg_merma_bd_historico
+BEFORE DELETE ON mermas FOR EACH ROW
+BEGIN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Merma definitiva: no se permite eliminar';
+END$$
 DELIMITER ;

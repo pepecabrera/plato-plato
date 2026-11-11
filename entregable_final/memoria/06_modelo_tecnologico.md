@@ -35,8 +35,6 @@ El archivo `sql/01_tablas.sql` crea una base nueva `plato_plato` y sus 17 tablas
 
 Una receta puede quedar temporalmente sin componentes: el procedimiento que registra la receta completa debe verificar su mínimo 1..*. El DDL no garantiza autorización para cada periodo de carta. El procedimiento de incorporación debe insertar periodo y autorización en una transacción y gestionar el error; los privilegios deben impedir eludirlo mediante escrituras directas.
 
-Para la merma de lote se prevé un trigger BEFORE INSERT que cree el movimiento y asigne NEW.id_movimiento antes de validar la referencia. El bloque de inventario debe probarlo: este DDL no crea el trigger ni acepta una merma de lote sin movimiento. No debe intentarse completar esa referencia mediante un trigger AFTER INSERT que actualice la misma merma.
-
 Toda validación entre filas necesita una estrategia de concurrencia. Comprobar mediante SELECT sin acordar bloqueos no garantiza por sí solo que dos operaciones simultáneas mantengan saldos y periodos válidos.
 
 ## 6.2. Poblado de la base de datos mediante sentencias INSERT
@@ -169,6 +167,7 @@ Los costes y márgenes actuales se calculan al consultarlos y no se almacenan en
 | `sp_registrar_sugerencia` | Registra un periodo de oferta como sugerencia del chef. |
 | `sp_incorporar_carta` | Registra conjuntamente un periodo de carta permanente y su autorización. |
 | `sp_cerrar_periodo` | Cierra o acorta un periodo de oferta respetando las restricciones del historial. |
+| `sp_registrar_merma` | Dar de alta una merma de plato o de lote. |
 
 Los procedimientos de escritura gestionan sus propias transacciones y deben invocarse fuera de una transacción ya abierta. Si una comprobación falla, ejecutan `ROLLBACK` y propagan el error mediante `RESIGNAL`.
 
@@ -182,7 +181,7 @@ Para los usuarios distintos del administrador, se comprueban los permisos `CONSU
 
 El identificador de usuario recibido por un procedimiento no demuestra su identidad: la autenticación corresponde a la aplicación. Las cuentas operativas deben utilizar los procedimientos autorizados y no disponer de escrituras directas que permitan eludir sus comprobaciones.
 
-Este archivo no implementa el registro automático de mermas. El procedimiento de movimientos rechaza las salidas con finalidad `MERMA` para evitar crear una salida sin su correspondiente registro de merma. Ese flujo requiere una implementación específica.
+sp_registrar_merma exige el permiso REGISTRAR_MERMAS. Para una merma de lote, bloquea el lote, comprueba los saldos históricos y registra conjuntamente la salida y la merma, revirtiendo ambas ante cualquier error. Para una merma de plato no genera movimientos de stock. El coste recibido representa el importe histórico total; admite NULL cuando se desconoce. Las mermas registradas son definitivas.
 
 Tampoco impide introducir ciclos al editar recetas ni solapamientos de precios. La detección de ciclos durante el cálculo evita devolver un coste válido para una composición cíclica, pero no sustituye la validación de su registro.
 
@@ -222,6 +221,8 @@ El trigger `trg_periodo_bi_negocio` impide solapamientos entre periodos de ofert
 Cada incorporación a la carta requiere autorización, pero la prueba previa solo se exige para la primera incorporación.
 
 Los triggers adicionales impiden modificar o eliminar movimientos y autorizaciones. También protegen los periodos de oferta frente a eliminaciones o cambios de plato, tipo y fecha inicial. Se permite cerrar o acortar un periodo, pero no modificar las fechas finales de las sugerencias cuando ya existe una incorporación a la carta.
+
+Por ejemplo, los triggers trg_merma_bu_historico y trg_merma_bd_historico rechazan cualquier modificación o eliminación de mermas.
 
 ### Ejecución y validación
 
@@ -286,7 +287,7 @@ Se cargan los mismos registros que en el apartado 6.2 (3 roles, 7 permisos, 4 us
 
 Las rutinas pueden recrearse cuantas veces se desee (cada una se elimina con `DROP ... IF EXISTS` antes de crearse), pero la carga solo se ejecuta una vez: si la base ya contiene datos, el procedimiento principal se detiene sin modificar nada.
 
-La creación de la merma de lote se realiza dentro de `pob_registrar_merma_lote`, que inserta primero la salida y después la merma con su `id_movimiento`. Si el trigger de inventario previsto para RC-14 (apartado 6.5) crea esa salida de forma automática, deberá ajustarse este procedimiento para insertar la merma sin movimiento y delegar en el trigger, evitando duplicar la salida.
+La creación de la merma de lote se realiza dentro de `pob_registrar_merma_lote`, que inserta primero la salida y después la merma con su `id_movimiento`.
 
 El script se ha comprobado en MariaDB 10.11 sobre una base creada con `01_tablas.sql`: la carga completa coincide con la de `02_datos.sql` salvo las dos fechas indicadas, y los casos de error (referencia inexistente, saldo negativo, solape de precios, solape de periodos, emisor no administrador y segunda ejecución) detienen la carga sin dejar datos parciales.
 
