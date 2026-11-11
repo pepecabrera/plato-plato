@@ -38,3 +38,66 @@ Una receta puede quedar temporalmente sin componentes: el procedimiento que regi
 Para la merma de lote se prevé un trigger BEFORE INSERT que cree el movimiento y asigne NEW.id_movimiento antes de validar la referencia. El bloque de inventario debe probarlo: este DDL no crea el trigger ni acepta una merma de lote sin movimiento. No debe intentarse completar esa referencia mediante un trigger AFTER INSERT que actualice la misma merma.
 
 Toda validación entre filas necesita una estrategia de concurrencia. Comprobar mediante SELECT sin acordar bloqueos no garantiza por sí solo que dos operaciones simultáneas mantengan saldos y periodos válidos.
+
+## 6.2. Poblado de la base de datos mediante sentencias INSERT
+
+El poblado inicial se realiza mediante el archivo `02_datos.sql`, que contiene sentencias `INSERT` con datos ficticios y coherentes para comprobar las relaciones del modelo y disponer de ejemplos para las consultas y los siguientes apartados del proyecto.
+
+### Datos incluidos
+
+| Área | Registros incluidos |
+| --- | --- |
+| Acceso | 3 roles, 7 permisos, 4 usuarios, 14 asignaciones de permisos a roles y 1 permiso adicional de usuario. |
+| Unidades | 6 unidades: gramos, kilogramos, mililitros, litros, unidades y raciones. |
+| Compras | 3 proveedores, 8 ingredientes y 10 precios de compra. |
+| Cocina | 3 recetas, 2 platos y 11 componentes de receta. |
+| Inventario | 8 lotes y 22 movimientos de stock. |
+| Mermas | 3 mermas: dos de ingredientes y una de un plato elaborado. |
+| Oferta | 4 periodos de oferta y 2 autorizaciones de incorporación a carta. |
+
+Los usuarios representan los perfiles de administrador, encargado y empleado. Uno de los empleados está inactivo y otro dispone del permiso adicional de consultar costes. Estas asignaciones representan permisos de la aplicación; no conceden privilegios del servidor MariaDB.
+
+Los proveedores e ingredientes incluyen registros activos e inactivos. Los precios permiten comparar dos proveedores para el tomate y consultar un precio histórico cerrado. Cada ingrediente activo tiene un único precio seleccionado para costeo; el perejil, inactivo, solo conserva un precio histórico. Los importes se expresan en euros.
+
+Se incluyen las recetas de salsa de tomate, pasta con tomate y tortilla de patatas. La salsa es una subreceta utilizada por la pasta y rinde 1 kg por elaboración, considerando la reducción durante la cocción. Las recetas de pasta y tortilla producen cuatro raciones cada una. Los componentes utilizan gramos y mililitros aunque los ingredientes se valoren por kilogramo o litro, lo que permite probar conversiones dentro de la misma magnitud.
+
+Los platos tienen precio de venta y margen objetivo. La pasta pertenece al menú del día. No se insertan costes calculados ni márgenes reales en la tabla de platos, ya que esos resultados se obtendrán posteriormente.
+
+### Inventario y mermas
+
+Los movimientos incluyen entradas, salidas para elaboración, salidas por merma y ajustes de inventario positivos y negativos. Las cantidades se expresan en la unidad del ingrediente asociado al lote. Las salidas de elaboración corresponden a ocho raciones de pasta y cuatro de tortilla, incluyendo el consumo proporcional de ingredientes de la salsa.
+
+Se registran 2 kg de tomate retirados por caducidad, 0,5 kg retirados por deterioro y una ración de pasta desechada. Las mermas de lote están asociadas a sus movimientos de salida, con la misma cantidad y fecha. La merma de pasta no vuelve a descontar ingredientes, porque su consumo ya se registró durante la elaboración.
+
+El lote caducado queda sin existencias y marcado como no apto para consumo. Ningún lote presenta saldo negativo. Los saldos esperados al terminar el script son:
+
+| Lote | Saldo |
+| --- | ---: |
+| TOM-20261109 | 8,06 kg |
+| CEB-20261109 | 4,56 kg |
+| ACE-20261109 | 2,84 l |
+| SAL-20261109 | 0,98 kg |
+| PAS-20261109 | 4,20 kg |
+| PAT-20261109 | 7,00 kg |
+| HUE-20261109 | 26 ud |
+| TOM-20261101 | 0,00 kg |
+
+El saldo se obtiene sumando entradas y ajustes con su signo y restando las salidas. No se almacena directamente en los lotes. Los ajustes de ejemplo representan diferencias detectadas en el recuento físico; el esquema actual no dispone de un campo para documentar su motivo.
+
+### Oferta y autorizaciones
+
+Cada plato pasa por un periodo de sugerencia del chef antes de incorporarse a la carta permanente. Los intervalos de un mismo plato no se solapan y la incorporación está autorizada por la usuaria administradora después de iniciarse la prueba y antes del inicio de la carta permanente.
+
+Las autorizaciones conservan costes evaluados por ración de 0,72 € para la pasta y 0,84 € para la tortilla, redondeados a dos decimales, junto con sus precios de venta. Son importes históricos del ejemplo, no resultados que el script calcule automáticamente.
+
+### Ejecución y alcance
+
+El archivo se ejecuta una sola vez después de `01_tablas.sql`, sobre las tablas vacías de `plato_plato`. Utiliza identificadores explícitos para que las referencias entre registros sean claras. No elimina datos ni está diseñado para ejecutarse repetidamente: una segunda ejecución produciría conflictos de claves.
+
+Los registros se insertan respetando las dependencias de claves foráneas, dentro de una transacción. El cliente debe detenerse ante el primer error y ejecutar `ROLLBACK` en esa misma conexión; no debe continuar hasta `COMMIT` si una sentencia falla. Un error de sentencia no implica por sí solo que MariaDB revierta toda la transacción.
+
+Las fechas son fijas y representan hora local de Europe/Madrid. El conjunto describe un escenario de demostración de octubre y noviembre de 2026; no pretende mantener vigentes los lotes conforme avance la fecha real.
+
+Las contraseñas se han derivado fuera de SQL mediante scrypt con una sal aleatoria diferente por usuario. El formato almacenado es `scrypt$16384$8$1$sal_hex$hash_hex`, con clave derivada de 64 bytes. La contraseña de prueba de todos los usuarios es `DemoPlato2026!`. Estas credenciales son exclusivamente de demostración; la aplicación deberá implementar la verificación de este formato o sustituir los hashes por los del algoritmo que utilice.
+
+El script aporta ejemplos coherentes para el esquema recibido. No implementa procedimientos ni triggers, ni demuestra que las reglas de negocio se impongan automáticamente. Antes de dar la carga por validada debe ejecutarse en MariaDB 10.6 o superior y comprobarse junto con las reglas de los siguientes apartados.
