@@ -101,3 +101,39 @@ Las fechas son fijas y representan hora local de Europe/Madrid. El conjunto desc
 Las contraseñas se han derivado fuera de SQL mediante scrypt con una sal aleatoria diferente por usuario. El formato almacenado es `scrypt$16384$8$1$sal_hex$hash_hex`, con clave derivada de 64 bytes. La contraseña de prueba de todos los usuarios es `DemoPlato2026!`. Estas credenciales son exclusivamente de demostración; la aplicación deberá implementar la verificación de este formato o sustituir los hashes por los del algoritmo que utilice.
 
 El script aporta ejemplos coherentes para el esquema recibido. No implementa procedimientos ni triggers, ni demuestra que las reglas de negocio se impongan automáticamente. Antes de dar la carga por validada debe ejecutarse en MariaDB 10.6 o superior y comprobarse junto con las reglas de los siguientes apartados.
+
+## 6.3. Script de consultas a tablas en SQL
+
+El archivo `03_consultas.sql` contiene 27 consultas numeradas (C-01 a C-27) que se ejecutan después de `01_tablas.sql` y `02_datos.sql`. Solo lee datos: no crea objetos ni modifica filas, por lo que puede ejecutarse tantas veces como se quiera. No depende de funciones, procedimientos ni triggers; los atributos derivados (saldos, costes y márgenes) se calculan en la propia consulta a partir de las tablas.
+
+### Parámetros
+
+Al principio del script se fijan tres variables. `@ahora` es el instante en que se evalúan vigencias, saldos y plazos; se fija en el 15 de noviembre de 2026 a las 12:00, dentro del escenario de `02_datos.sql`, para que los resultados sean reproducibles, y puede sustituirse por `NOW(6)` para consultar la situación real. `@horas_aviso_caducidad` (48) y `@porcentaje_aviso_precio` (10) son los umbrales por defecto de RF-11 y RF-12 (S-08).
+
+### Consultas incluidas
+
+| Bloque | Consultas | Contenido | Requisitos |
+| --- | --- | --- | --- |
+| Acceso | C-01, C-02 | Cuentas con su rol y permisos efectivos (rol más adicionales), con su origen. | RF-01, RC-10, D-03 |
+| Compras | C-03 a C-06 | Proveedores, comparación de precios vigentes, histórico con variación y avisos de sobrecoste con los platos afectados. | RF-02, RF-04, RF-11, RF-13, RC-04 |
+| Recetas | C-07 a C-11 | Composición, subrecetas reutilizadas, escandallo detallado, coste y margen de cada plato, e ingredientes que impiden costear. | RF-06 a RF-08, RC-05 a RC-08, RC-11 |
+| Inventario | C-12 a C-16 | Saldo por lote, existencias por ingrediente, extracto de movimientos, avisos de caducidad y existencias que ya no pueden usarse. | RF-03, RF-09, RF-12, RC-13, RN-01, RN-03 |
+| Mermas | C-17 a C-20 | Detalle de pérdidas, análisis por motivo, evolución mensual con total e ingredientes con más pérdida. | RF-10, RG-02 |
+| Oferta | C-21, C-22 | Historial de periodos con su autorización y platos que ya pueden proponerse para la carta. | RI-10, RN-02, RN-04 |
+| Control | C-23 a C-27 | Reglas que el DDL no garantiza: recetas sin componentes, periodos de carta sin autorización, solapes, ciclos, saldos negativos, mermas incoherentes y plazos de RN-01 a RN-04. Deben devolver cero filas. | RC-04, RC-12 a RC-14, RC-16, RN-01 a RN-04 |
+
+Cada consulta va precedida de un comentario con su objetivo, las reglas que trata y la técnica empleada. Se usan combinaciones internas y externas, agrupaciones con `HAVING` y `WITH ROLLUP`, subconsultas escalares, correlacionadas y en `FROM`, `EXISTS` y `NOT EXISTS`, `UNION`, funciones de ventana (`RANK`, `LAG` y sumas acumuladas) y expresiones de tabla comunes recursivas. No se usa `SELECT *`.
+
+### Cálculo del coste
+
+El coste recorre las subrecetas con una CTE recursiva. Para cada receta se calcula cuántas elaboraciones de cada subreceta necesita, convirtiendo la cantidad a la unidad de rendimiento mediante `factor_a_base`. Cada ingrediente se valora con su precio seleccionado y vigente en `@ahora`, convertido a la unidad de la línea (RC-05, D-01). Solo se convierten unidades de la misma magnitud (RC-15).
+
+El coste queda en `NULL`, y no en cero, si falta un precio válido, las unidades no son compatibles, una receta no tiene componentes o existe un ciclo (RC-11). La recursión registra las recetas recorridas, de modo que termina aunque los datos contengan un ciclo. Los costes se redondean a cuatro decimales; las valoraciones y los porcentajes, a dos.
+
+Con los datos de `02_datos.sql`, el coste por ración es de 0,7232 € para la pasta con tomate y de 0,8416 € para la tortilla, que coinciden con los importes evaluados de las autorizaciones (0,72 € y 0,84 €).
+
+### Verificación
+
+El script se ha ejecutado en MariaDB 11.8 sobre la base vacía, sobre los datos de `02_datos.sql` y sobre un juego adicional de casos límite que reproduce los escenarios de la sección 4.7. En todos los casos termina sin errores ni avisos, también con `ONLY_FULL_GROUP_BY`, y deja la base sin cambios. Con los casos límite se obtienen los valores de los escenarios: precio de referencia de 1,20 €/kg, coste de la degustación de 0,60 € con un margen del 80 %, saldo de 8 kg tras la merma y rechazo del lote fresco a las 72 horas. Además, las consultas de control detectan cada incumplimiento introducido a propósito.
+
+Con los datos actuales de `02_datos.sql`, las consultas C-24 y C-27 devuelven dos filas cada una: en los dos platos, el periodo de carta permanente empieza antes de que termine su sugerencia del chef. Por ello se incumplen RC-16 y RN-04. Deben corregirse las fechas del poblado o los triggers del apartado 6.5 rechazarán esos datos.
