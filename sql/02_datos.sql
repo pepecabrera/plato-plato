@@ -14,7 +14,7 @@ INSERT INTO roles (id_rol,nombre) VALUES
 INSERT INTO permisos (id_permiso,nombre) VALUES
 (1,'GESTIONAR_USUARIOS'),(2,'GESTIONAR_PROVEEDORES'),
 (3,'GESTIONAR_RECETAS'),(4,'GESTIONAR_STOCK'),(5,'REGISTRAR_MERMAS'),
-(6,'CONSULTAR_COSTES'),(7,'AUTORIZAR_CARTA');
+(6,'CONSULTAR_COSTES'),(7,'AUTORIZAR_CARTA'),(8,'GESTIONAR_PLATOS');
 
 -- Hashes scrypt generados fuera de SQL; formato y credenciales en el documento.
 INSERT INTO usuarios
@@ -25,7 +25,7 @@ INSERT INTO usuarios
 (4,'Luis García','luis@plato-plato.example','scrypt$16384$8$1$d4e441aed4c865c692eb909616be609e$9c6608326e86dfd227607becfe41c2b1da51f4fbedfb85f270418d53ef3be318b815cb8e96d23660b29bda4ddbafee7e83651319efcd66fa9e1fbb5263130c33','2026-09-01 09:00:00',3,'INACTIVO');
 
 INSERT INTO roles_permisos (id_rol,id_permiso) VALUES
-(1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),
+(1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),
 (2,2),(2,3),(2,4),(2,5),(2,6),(3,4),(3,5);
 
 INSERT INTO permisos_adicionales_usuario (id_usuario,id_permiso) VALUES (3,6);
