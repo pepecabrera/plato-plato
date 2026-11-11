@@ -137,3 +137,101 @@ Con los datos de `02_datos.sql`, el coste por ración es de 0,7232 € para la p
 El script se ha ejecutado en MariaDB 11.8 sobre la base vacía, sobre los datos de `02_datos.sql` y sobre un juego adicional de casos límite que reproduce los escenarios de la sección 4.7. En todos los casos termina sin errores ni avisos, también con `ONLY_FULL_GROUP_BY`, y deja la base sin cambios. Con los casos límite se obtienen los valores de los escenarios: precio de referencia de 1,20 €/kg, coste de la degustación de 0,60 € con un margen del 80 %, saldo de 8 kg tras la merma y rechazo del lote fresco a las 72 horas. Además, las consultas de control detectan cada incumplimiento introducido a propósito.
 
 Con los datos actuales de `02_datos.sql`, las consultas C-24 y C-27 devuelven dos filas cada una: en los dos platos, el periodo de carta permanente empieza antes de que termine su sugerencia del chef. Por ello se incumplen RC-16 y RN-04. Deben corregirse las fechas del poblado o los triggers del apartado 6.5 rechazarán esos datos.
+
+
+
+
+## 6.4. Script de creación de funciones y procedimientos
+
+El archivo `sql/04_funciones_procedimientos.sql` contiene las funciones y los procedimientos necesarios para calcular costes y márgenes, consultar existencias y gestionar movimientos de inventario y periodos de oferta.
+
+### Funciones
+
+| Función | Finalidad |
+|---|---|
+| `fn_convertir` | Convierte cantidades entre unidades de la misma magnitud, como gramos y kilogramos. |
+| `fn_coste_ingrediente` | Calcula el coste de una cantidad de ingrediente utilizando su precio seleccionado y vigente en la fecha indicada. |
+| `fn_coste_receta` | Calcula el coste por unidad de rendimiento de una receta, incluyendo sus subrecetas. |
+| `fn_coste_plato` | Obtiene el coste de producción de una ración del plato. |
+| `fn_margen_plato` | Calcula la diferencia entre el precio de venta y el coste de producción por ración. |
+| `fn_stock_lote` | Obtiene el saldo de un lote hasta una fecha, sumando entradas y ajustes y restando salidas. |
+| `fn_tiene_permiso` | Comprueba si un usuario activo dispone del permiso requerido mediante su rol o sus permisos adicionales. |
+
+El cálculo de costes utiliza las cantidades de los componentes, las conversiones de unidades, los rendimientos de las recetas y los precios de compra seleccionados y vigentes. Las subrecetas se recorren mediante una expresión común de tabla recursiva (`WITH RECURSIVE`).
+
+Cuando falta un precio válido, existen unidades incompatibles, una receta está vacía o se detecta un ciclo, el coste devuelve `NULL`, en lugar de sustituirse por cero. El recorrido admite hasta 64 enlaces de subrecetas; si necesita superar ese límite, también devuelve `NULL`.
+
+Los costes y márgenes actuales se calculan al consultarlos y no se almacenan en la tabla de platos. De esta forma, reflejan los cambios en los precios aplicables y en la composición de las recetas. Los cálculos intermedios utilizan `DECIMAL(30,8)` y los importes se redondean a dos decimales al presentarlos o guardar una evaluación histórica.
+
+### Procedimientos
+
+| Procedimiento | Finalidad |
+|---|---|
+| `sp_consultar_escandallo` | Muestra el coste unitario, el precio de venta, el margen bruto y el porcentaje de margen de un plato. |
+| `sp_registrar_movimiento` | Registra una entrada, salida o ajuste y comprueba que no provoque saldos negativos en el historial del lote. |
+| `sp_registrar_sugerencia` | Registra un periodo de oferta como sugerencia del chef. |
+| `sp_incorporar_carta` | Registra conjuntamente un periodo de carta permanente y su autorización. |
+| `sp_cerrar_periodo` | Cierra o acorta un periodo de oferta respetando las restricciones del historial. |
+
+Los procedimientos de escritura gestionan sus propias transacciones y deben invocarse fuera de una transacción ya abierta. Si una comprobación falla, ejecutan `ROLLBACK` y propagan el error mediante `RESIGNAL`.
+
+El procedimiento de movimientos bloquea el lote durante la operación. Comprueba que ningún movimiento sea anterior a su recepción, que el primero sea una entrada y que todos los saldos acumulados sean no negativos. Esta última comprobación incluye los movimientos posteriores al que se registra, por lo que también permite detectar inconsistencias al introducir movimientos con fecha pasada.
+
+Los procedimientos de oferta bloquean el plato para coordinar las operaciones sobre sus periodos. La incorporación a la carta inserta primero el periodo y después su autorización dentro de una misma transacción. Si la autorización falla, también se deshace la creación del periodo.
+
+Para los usuarios distintos del administrador, se comprueban los permisos `CONSULTAR_COSTES`, `GESTIONAR_STOCK` y `GESTIONAR_PLATOS`, según la operación. Estos nombres deben coordinarse con los datos iniciales de permisos. La incorporación a la carta exige específicamente un administrador activo.
+
+### Alcance
+
+El identificador de usuario recibido por un procedimiento no demuestra su identidad: la autenticación corresponde a la aplicación. Las cuentas operativas deben utilizar los procedimientos autorizados y no disponer de escrituras directas que permitan eludir sus comprobaciones.
+
+Este archivo no implementa el registro automático de mermas. El procedimiento de movimientos rechaza las salidas con finalidad `MERMA` para evitar crear una salida sin su correspondiente registro de merma. Ese flujo requiere una implementación específica.
+
+Tampoco impide introducir ciclos al editar recetas ni solapamientos de precios. La detección de ciclos durante el cálculo evita devolver un coste válido para una composición cíclica, pero no sustituye la validación de su registro.
+
+## 6.5. Script de creación de triggers asociados a reglas de negocio
+
+El archivo `sql/05_triggers.sql` contiene los triggers que aplican las reglas RN-01 a RN-04 y protegen los datos históricos relacionados. Las operaciones que incumplen una comprobación se rechazan mediante `SIGNAL SQLSTATE '45000'`, acompañado de un mensaje explicativo.
+
+### Reglas implementadas
+
+| Regla | Aplicación |
+|---|---|
+| **RN-01. Aprovechamiento de ingredientes próximos a caducar** | Antes de registrar una salida para elaboración, se comprueba que el lote sea apto y no esté caducado. Cuando restan menos de 48 horas para su caducidad, solo puede destinarse a un plato del menú del día. |
+| **RN-02. Incorporación a la carta** | La autorización debe proceder de un administrador activo, corresponder a un periodo de carta permanente y tener una fecha no posterior a su inicio. Además, se exige un coste calculable y un precio de venta. |
+| **RN-03. Política interna de frescura** | Se impide elaborar con un lote fresco desde el instante de recepción más 72 horas, incluido. |
+| **RN-04. Prueba de nuevos platos** | La primera incorporación a carta requiere un periodo cerrado de sugerencia del chef de al menos 14 días consecutivos, finalizado a más tardar al comenzar la carta permanente. |
+
+### Comprobaciones sobre los lotes
+
+El trigger `trg_movimiento_bi_negocio` aplica RN-01 y RN-03 únicamente a movimientos de tipo `SALIDA` cuya finalidad sea `ELABORACION`.
+
+Las comprobaciones utilizan la fecha del movimiento. Exactamente a 48 horas de la caducidad todavía no se aplica la limitación del menú del día. En cambio, exactamente a las 72 horas desde la recepción ya se prohíbe utilizar un lote fresco.
+
+Las salidas por merma no se consideran elaboración, por lo que estas reglas no impiden retirar un producto caducado o que haya superado el plazo de frescura.
+
+### Autorización e incorporación a la carta
+
+El trigger `trg_autorizacion_bi_negocio` comprueba el administrador, el periodo, las fechas y la disponibilidad de un coste calculable y un precio de venta. Calcula y guarda `coste_evaluado` y `precio_venta_evaluado`, sustituyendo los valores proporcionados en la inserción.
+
+Estos importes se conservan como información histórica. No se exige un margen mínimo ni que el precio de venta supere el coste, porque RN-02 no establece ese requisito.
+
+La obligatoriedad de que cada incorporación tenga una autorización se completa mediante `sp_incorporar_carta`. El procedimiento inserta el periodo y su autorización en una única transacción. Para impedir que se eluda este flujo, las cuentas operativas no deben disponer de escritura directa sobre ambas tablas.
+
+### Periodos de prueba y protección del historial
+
+El trigger `trg_periodo_bi_negocio` impide solapamientos entre periodos de oferta y comprueba la prueba previa exigida por RN-04. Los catorce días deben pertenecer a un único periodo cerrado de sugerencia del chef.
+
+Cada incorporación a la carta requiere autorización, pero la prueba previa solo se exige para la primera incorporación.
+
+Los triggers adicionales impiden modificar o eliminar movimientos y autorizaciones. También protegen los periodos de oferta frente a eliminaciones o cambios de plato, tipo y fecha inicial. Se permite cerrar o acortar un periodo, pero no modificar las fechas finales de las sugerencias cuando ya existe una incorporación a la carta.
+
+### Ejecución y validación
+
+Los archivos se ejecutan con las tablas ya creadas, primero `sql/04_funciones_procedimientos.sql` y después `sql/05_triggers.sql`. Ambos deben estar instalados antes de utilizar los procedimientos.
+
+La instalación de triggers no comprueba retroactivamente los datos que ya existían. Tampoco garantiza por sí sola todas las reglas pendientes del proyecto, como el registro automático de mermas o la validación de cambios en las unidades de medida.
+
+Se ejecutaron 48 casos secuenciales en una base temporal con MariaDB 13.0.2, incluyendo cálculos de costes, límites temporales, autorizaciones, saldos y reversión de operaciones rechazadas. Tras revisar los cierres `END IF`, se volvió a comprobar la creación de los nueve triggers sin errores de sintaxis.
+
+Queda pendiente verificar la versión de MariaDB utilizada en clase, la integración con los demás scripts, los privilegios de las cuentas operativas y la concurrencia con varias conexiones. Estas comprobaciones no sustituyen las pruebas del apartado 6.7.
