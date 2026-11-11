@@ -235,3 +235,60 @@ La instalación de triggers no comprueba retroactivamente los datos que ya exist
 Se ejecutaron 48 casos secuenciales en una base temporal con MariaDB 13.0.2, incluyendo cálculos de costes, límites temporales, autorizaciones, saldos y reversión de operaciones rechazadas. Tras revisar los cierres `END IF`, se volvió a comprobar la creación de los nueve triggers sin errores de sintaxis.
 
 Queda pendiente verificar la versión de MariaDB utilizada en clase, la integración con los demás scripts, los privilegios de las cuentas operativas y la concurrencia con varias conexiones. Estas comprobaciones no sustituyen las pruebas del apartado 6.7.
+
+## 6.6. Script de poblado de la base de datos mediante procedimientos (opcional)
+
+El archivo `sql/06_poblado_procedimientos.sql` carga el mismo escenario de demostración que `02_datos.sql`, pero mediante procedimientos almacenados en lugar de sentencias `INSERT` directas. Es una **alternativa** al apartado 6.2: se ejecuta sobre las tablas vacías tras `01_tablas.sql` y no debe combinarse con `02_datos.sql` sobre la misma base.
+
+### Diferencias respecto al poblado con INSERT
+
+| Aspecto | 6.2 (`02_datos.sql`) | 6.6 (`06_poblado_procedimientos.sql`) |
+| --- | --- | --- |
+| Identificadores | Explícitos en cada `INSERT`. | Autogenerados; las referencias se resuelven por clave natural (nombre, correo, identificador de lote). |
+| Reutilización | Sentencias de un solo uso. | Procedimientos de alta que pueden volver a invocarse con otros datos. |
+| Validación | Solo `CHECK`, claves y restricciones del DDL. | Además, comprobaciones entre filas antes de insertar (ver más abajo). |
+| Atomicidad | Transacción gestionada por el cliente, que debe detenerse al primer error. | Transacción gestionada por el procedimiento principal, con `ROLLBACK` automático ante cualquier error. |
+| Mermas de lote | Salida y merma insertadas por separado, enlazadas con IDs fijos. | Un único procedimiento crea la salida y la merma enlazada. |
+
+### Estructura de rutinas
+
+Todas las rutinas llevan el prefijo `pob_` para no colisionar con las de los apartados 6.4 y 6.5.
+
+| Nivel | Rutinas | Función |
+| --- | --- | --- |
+| Resolución | `pob_id_rol`, `pob_id_permiso`, `pob_id_usuario`, `pob_id_proveedor`, `pob_id_ingrediente`, `pob_id_receta`, `pob_id_plato`, `pob_id_lote` | Convierten una clave natural en su identificador; si no existe, detienen la carga con un mensaje claro. |
+| Cálculo | `pob_saldo_lote` | Saldo de un lote: entradas y ajustes con signo menos salidas. |
+| Alta | `pob_alta_rol`, `pob_alta_permiso`, `pob_alta_usuario`, `pob_conceder_permiso_rol`, `pob_conceder_permiso_usuario`, `pob_alta_unidad`, `pob_alta_proveedor`, `pob_alta_ingrediente`, `pob_alta_precio_compra`, `pob_alta_receta`, `pob_alta_plato`, `pob_alta_componente`, `pob_alta_lote`, `pob_registrar_movimiento`, `pob_registrar_merma_lote`, `pob_registrar_merma_plato`, `pob_alta_periodo_oferta`, `pob_alta_autorizacion_carta` | Insertan una fila o un hecho de negocio por llamada. |
+| Bloque | `pob_bloque_acceso`, `pob_bloque_unidades`, `pob_bloque_compras`, `pob_bloque_cocina`, `pob_bloque_inventario_y_mermas`, `pob_bloque_oferta` | Agrupan los datos del escenario por área, respetando el orden de las claves foráneas. |
+| Principal | `pob_poblar_base_datos` | Comprueba que las tablas están vacías, abre la transacción, invoca los bloques en orden, confirma y devuelve el recuento de filas por tabla. |
+
+### Reglas comprobadas durante la carga
+
+Los procedimientos de alta validan, antes de insertar, reglas que el DDL no puede garantizar por sí solo:
+
+- **RC-04:** las vigencias de precio de un mismo proveedor e ingrediente no se solapan.
+- **RC-13:** una salida o un ajuste no deja el saldo del lote en negativo.
+- **RC-14:** la merma de un lote crea de forma atómica su salida con finalidad `MERMA`, con la misma cantidad y fecha, y la enlaza.
+- **RC-16:** un plato no tiene dos periodos de oferta simultáneos, sean o no del mismo tipo.
+- **RC-17:** el primer movimiento de un lote es su entrada y ningún movimiento es anterior a ella.
+- **RN-02:** la autorización de carta la emite un administrador con cuenta activa, antes del inicio del periodo de carta.
+
+Cualquier incumplimiento lanza un error (`SQLSTATE 45000`) con un mensaje que identifica la regla, y el procedimiento principal revierte toda la carga. La concurrencia no se trata aquí: se asume una carga inicial de un solo usuario sobre tablas vacías.
+
+### Datos cargados
+
+Se cargan los mismos registros que en el apartado 6.2 (3 roles, 7 permisos, 4 usuarios, 3 proveedores, 8 ingredientes, 10 precios, 3 recetas, 2 platos, 11 componentes, 8 lotes, 22 movimientos, 3 mermas, 4 periodos de oferta y 2 autorizaciones), con los mismos identificadores resultantes y los mismos saldos finales. Los movimientos se insertan en el orden cronológico del escenario, por lo que el resultado es equivalente al del poblado con `INSERT`.
+
+**Fechas de la carta permanente.** Este script usa como inicio de la carta permanente el 15/10/2026 para la pasta y el 24/10/2026 para la tortilla, es decir, el instante en que termina su periodo de sugerencia del chef. Con ello se cumplen RC-16 (sin solapes) y RN-04 (sugerencia cerrada de 14 días, terminada a más tardar cuando empieza la carta). Las autorizaciones conservan sus fechas originales, que siguen siendo previas al alta en carta.
+
+### Ejecución y alcance
+
+1. Ejecutar `01_tablas.sql`.
+2. Ejecutar `06_poblado_procedimientos.sql` con un cliente que admita `DELIMITER` (cliente `mariadb`, DBeaver o MySQL Workbench). El script crea las rutinas y, al final, invoca `CALL pob_poblar_base_datos();`.
+3. Comprobar el recuento devuelto por el procedimiento principal.
+
+Las rutinas pueden recrearse cuantas veces se desee (cada una se elimina con `DROP ... IF EXISTS` antes de crearse), pero la carga solo se ejecuta una vez: si la base ya contiene datos, el procedimiento principal se detiene sin modificar nada.
+
+La creación de la merma de lote se realiza dentro de `pob_registrar_merma_lote`, que inserta primero la salida y después la merma con su `id_movimiento`. Si el trigger de inventario previsto para RC-14 (apartado 6.5) crea esa salida de forma automática, deberá ajustarse este procedimiento para insertar la merma sin movimiento y delegar en el trigger, evitando duplicar la salida.
+
+El script se ha comprobado en MariaDB 10.11 sobre una base creada con `01_tablas.sql`: la carga completa coincide con la de `02_datos.sql` salvo las dos fechas indicadas, y los casos de error (referencia inexistente, saldo negativo, solape de precios, solape de periodos, emisor no administrador y segunda ejecución) detienen la carga sin dejar datos parciales.
