@@ -291,37 +291,73 @@ La creación de la merma de lote se realiza dentro de `pob_registrar_merma_lote`
 
 El script se ha comprobado en MariaDB 10.11 sobre una base creada con `01_tablas.sql`: la carga completa coincide con la de `02_datos.sql` salvo las dos fechas indicadas, y los casos de error (referencia inexistente, saldo negativo, solape de precios, solape de periodos, emisor no administrador y segunda ejecución) detienen la carga sin dejar datos parciales.
 
-# 6.7. Script de creación de pruebas y llamadas
+## 6.7. Script de creación de pruebas y llamadas
 
-El archivo `sql/07_pruebas.sql` crea dos procedimientos auxiliares, ejecuta 66 comprobaciones y elimina las rutinas auxiliares al finalizar. Está adaptado a la instantánea `3d25a51` de la rama `docs/entregable-final`, que contiene únicamente `01_tablas.sql` y `02_datos.sql`.
+El archivo `sql/07_pruebas.sql` contiene las pruebas del esquema, los datos, las funciones, los procedimientos y los triggers. No necesita otros archivos de pruebas ni un ejecutor Python.
 
-## Método y cobertura
+### Organización y cobertura
 
-Se comprueban los recuentos de las 17 tablas del poblado original, 37 operaciones válidas o inválidas, los ocho saldos de inventario y cuatro propiedades de coherencia de datos. Las operaciones abarcan claves únicas y foráneas, valores obligatorios, dominios, cantidades, precios, márgenes, exclusividad de componentes, ciclos directos, movimientos, mermas y fechas.
+El script selecciona el bloque de pruebas según la presencia de triggers:
 
-`pp67_caso` ejecuta una sentencia con SQL preparado, captura el código de error mediante un manejador y lo compara con el código esperado. Esperar un rechazo no basta: un error de sintaxis o una columna inexistente no se considera éxito. Cada operación se revierte a un punto de guardado. `pp67_comprobar` registra el resultado de una condición, considerando NULL como fallo. Las llamadas `CALL` incluidas ejecutan los casos.
+| Bloque | Preparación | Comprobaciones |
+|---|---|---:|
+| Esquema y poblado | Archivos 01 y 02, sin triggers. | 66 |
+| Funciones, triggers y procedimientos | Archivos 01, 02, 04 y 05. | 88 |
 
-Los resultados se guardan en una tabla temporal MEMORY para conservarlos al revertir la transacción. Se muestran el detalle y los totales por resultado. Un FALLO no interrumpe la suite: debe revisarse la tabla de resultados; el código de salida del cliente no certifica que todas las pruebas hayan pasado.
+El conjunto define 154 comprobaciones y cuatro entradas informativas PENDIENTE. Si detecta triggers pero falta alguno de los esperados o alguna rutina necesaria, rechaza la ejecución de negocio.
 
-## Ejecución
+Las pruebas del esquema comprueban recuentos, claves, campos obligatorios, dominios, cantidades, precios, componentes, saldos y coherencia del poblado.
 
-En una instancia de MariaDB 10.6 o superior dedicada a pruebas, cargar una vez `01_tablas.sql` y después `02_datos.sql`. Ejecutar `07_pruebas.sql` completo en la misma base `plato_plato`, con las comprobaciones de integridad activadas. No ejecutar sobre una base con trabajo real ni dentro de una transacción pendiente: crear o eliminar procedimientos produce commits implícitos. Se necesitan permisos de creación, ejecución y eliminación de rutinas, tablas temporales y acceso a las tablas.
+Las pruebas de funciones comprueban conversiones, costes de ingredientes y subrecetas, márgenes, stock por fecha y permisos. También verifican la propagación de NULL cuando faltan precios, existen unidades incompatibles, una subreceta está vacía o se detecta un ciclo indirecto.
 
-Las escrituras de prueba se revierten; los contadores AUTO_INCREMENT pueden avanzar. Las rutinas con prefijo `pp67_` quedan reservadas para esta suite. Si se interrumpe la ejecución, realizar ROLLBACK o cerrar la conexión antes de volver a ejecutar. La tabla temporal desaparece al cerrar la conexión. El script elimina y recrea sus auxiliares para permitir otra ejecución.
+Las pruebas de triggers comprueban la protección del historial, los periodos de oferta, las autorizaciones y las reglas temporales. Incluyen los límites exactos de 48 y 72 horas y un periodo de sugerencia de 14 días.
 
-## Hallazgos del poblado recibido
+Las pruebas de procedimientos comprueban permisos, movimientos, mermas, sugerencias, incorporación a carta y cierre de periodos. Verifican que una merma de lote genere su salida enlazada y que una merma de plato no vuelva a descontar ingredientes.
 
-Por inspección del SQL se esperan dos comprobaciones fallidas:
+### Método
 
-- RC-16: los intervalos de sugerencia y carta se solapan en ambos platos. La pasta tiene sugerencia del 1 al 15 de octubre y carta desde el 8; la tortilla, sugerencia del 10 al 24 y carta desde el 17.
-- RN-04: ambos platos pasan a carta a los siete días, antes de completar los catorce requeridos.
+El script crea procedimientos auxiliares con prefijo `pp67_`.
 
-Una corrección posible, que debe acordarse con el responsable del 6.2, es mantener los periodos de sugerencia, pasar la pasta a carta el 16 de octubre y autorizarla el 15 a las 18:00; pasar la tortilla a carta el 25 y autorizarla el 24 a las 18:00. No se modifica aquí el trabajo del 6.2. La memoria actual afirma que no hay solapamientos, pero las fechas del SQL contradicen esa afirmación.
+`pp67_caso` ejecuta una sentencia y compara el código de error obtenido con el esperado. En los rechazos de negocio también comprueba el prefijo del mensaje, evitando aprobar una prueba por una regla distinta.
 
-## Límites y validación
+Las operaciones directas compatibles se ejecutan en una transacción que se revierte después de cada caso. Las llamadas a procedimientos autónomos se realizan sin una transacción exterior, porque estos procedimientos gestionan sus propias transacciones.
 
-No se ha ejecutado la suite en MariaDB en el entorno de preparación; se ha revisado estáticamente. Los resultados previstos no son resultados observados. Debe conservarse la salida real al validarla en el entorno del equipo.
+`pp67_comprobar` registra condiciones y considera NULL como fallo. Los resultados se almacenan en una tabla temporal MEMORY, que los conserva al revertir las operaciones.
 
-El ZIP recibido no contiene funciones, procedimientos de negocio ni triggers. Las pruebas del 6.4 y del 6.5, así como las de concurrencia, se identifican explícitamente como PENDIENTE. Los procedimientos de este archivo son auxiliares de prueba, no la implementación del 6.4. Comprobar que los datos existentes son coherentes no demuestra que el servidor impida insertar datos incoherentes.
+Se comprueba expresamente que un error al insertar una merma no deje su salida guardada y que una autorización fallida tampoco deje creado el periodo de carta.
 
-Al integrar las rutinas de negocio se debe adaptar la suite a sus firmas y errores reales. Faltan, entre otros: conversiones de unidades y costes recursivos con NULL, ciclos indirectos, vigencias solapadas, saldos históricos y concurrencia, creación atómica de mermas, frescura de 72 horas, caducidad próxima de 48 horas, autorización por administrador y prueba previa de 14 días. Las pruebas negativas deberán incluir INSERT y UPDATE y las fronteras temporales exactas. No se consideran aprobadas por ausencia de implementación.
+Al finalizar se muestran el detalle y los totales. Si existe algún FALLO, se lanza un error SQL. Las entradas PENDIENTE no se consideran pruebas aprobadas.
+
+### Ejecución
+
+Utilizar una instancia MariaDB 10.6 o superior dedicada a pruebas. No ejecutar sobre una base con datos reales ni dentro de una transacción de trabajo.
+
+1. Crear una copia desechable mediante `01_tablas.sql`.
+2. Cargar `02_datos.sql`.
+3. Ejecutar `07_pruebas.sql`: realizará las 66 comprobaciones del esquema.
+4. Instalar `04_funciones_procedimientos.sql` y después `05_triggers.sql`, incluyendo el procedimiento de mermas y sus triggers de protección.
+5. Volver a ejecutar `07_pruebas.sql`: realizará las 88 comprobaciones de negocio.
+
+El archivo utiliza la base `plato_plato`, por lo que debe ejecutarse en un entorno de pruebas separado del entorno de trabajo. No debe utilizarse la opción `--force`.
+
+Las pruebas de negocio crean datos auxiliares y ejecutan operaciones que confirman transacciones. Antes de repetir ese bloque debe prepararse una copia nueva. El archivo no elimina ni recrea automáticamente la base.
+
+Se necesitan permisos para crear y eliminar rutinas, crear tablas temporales y ejecutar las operaciones comprobadas. Los auxiliares se eliminan al finalizar correctamente; si ocurre un fallo, pueden permanecer hasta la siguiente ejecución o hasta eliminar la copia de pruebas.
+
+### Hallazgos actuales
+
+Los periodos actuales de sugerencia y carta del poblado no se solapan y cumplen los 14 días de prueba.
+
+La comprobación «Integracion: encargado gestiona platos» detecta que el poblado no crea ni concede `GESTIONAR_PLATOS`, aunque los procedimientos de oferta lo requieren. Se espera un FALLO hasta corregir este problema. La prueba no añade ese permiso para ocultarlo.
+
+Al modificar los permisos del poblado deben actualizarse también sus recuentos esperados.
+
+### Límites y validación
+
+El archivo se ha revisado estáticamente, pero esta versión autónoma no se ha ejecutado en MariaDB en el entorno de preparación. Los resultados previstos no equivalen a resultados observados. Debe conservarse la salida real obtenida en la versión utilizada por el equipo.
+
+Quedan como PENDIENTE las pruebas coordinadas de concurrencia, la protección completa frente a vigencias solapadas, ciclos indirectos y unidades incompatibles, los privilegios operativos y el poblado opcional 06.
+
+Detectar una composición inválida al calcular su coste no demuestra que se impida registrarla.
+
+Estas pruebas utilizan exclusivamente `02_datos.sql`. El poblado mediante procedimientos del archivo 06 debe comprobarse por separado sobre otra base vacía.
