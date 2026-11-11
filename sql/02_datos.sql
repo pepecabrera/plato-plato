@@ -139,9 +139,9 @@ INSERT INTO mermas
 -- Intervalos [inicio, fin): una sugerencia termina al incorporarse a carta.
 INSERT INTO periodos_oferta (id_periodo_oferta,id_plato,tipo,fecha_inicio,fecha_fin) VALUES
 (1,1,'SUGERENCIA_CHEF','2026-10-01 00:00:00','2026-10-15 00:00:00'),
-(2,1,'CARTA_PERMANENTE','2026-10-08 00:00:00',NULL),
+(2,1,'CARTA_PERMANENTE','2026-10-15 00:00:00',NULL),
 (3,2,'SUGERENCIA_CHEF','2026-10-10 00:00:00','2026-10-24 00:00:00'),
-(4,2,'CARTA_PERMANENTE','2026-10-17 00:00:00',NULL);
+(4,2,'CARTA_PERMANENTE','2026-10-24 00:00:00',NULL);
 
 -- Autoriza el administrador tras el periodo de prueba y antes del alta en carta.
 -- Costes por ración redondeados: pasta 0,72 €; tortilla 0,84 €.
