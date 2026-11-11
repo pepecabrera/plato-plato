@@ -124,7 +124,7 @@
         <mxCell id="componente_receta_attr_2" parent="componente_receta" style="text;html=0;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;fontFamily=Arial;fontSize=17;align=left;verticalAlign=middle;fontColor=#111111;" value="unidadMedida" vertex="1">
           <mxGeometry height="22" width="191" x="7" y="77" as="geometry" />
         </mxCell>
-        <mxCell id="componente_subreceta" edge="1" parent="elaboraciones" source="componente_receta" style="edgeStyle=none;rounded=0;html=0;endArrow=none;startArrow=none;strokeColor=#65768a;strokeWidth=1.3;fontFamily=Arial;fontSize=16;fontColor=#111111;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="receta" value="utilizareceta(recursiva">
+        <mxCell id="componente_subreceta" edge="1" parent="elaboraciones" source="componente_receta" style="edgeStyle=none;rounded=0;html=0;endArrow=none;startArrow=none;strokeColor=#65768a;strokeWidth=1.3;fontFamily=Arial;fontSize=16;fontColor=#111111;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="receta" value="utilizaReceta (recursiva)">
           <mxGeometry relative="1" x="0.1541" as="geometry">
             <mxPoint x="55" as="offset" />
             <Array as="points">
@@ -1071,7 +1071,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="detalle-inventario" name="04 Lotes, stock y mermas">
-    <mxGraphModel dx="1829" dy="1420" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1350" math="0" shadow="0">
+    <mxGraphModel dx="1734" dy="1347" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1350" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
