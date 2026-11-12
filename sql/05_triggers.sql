@@ -156,4 +156,139 @@ BEFORE DELETE ON mermas FOR EACH ROW
 BEGIN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Merma definitiva: no se permite eliminar';
 END$$
+
+-- RC-04 y RC-15 (precios). Devuelve NULL si el precio es válido; si no, el mensaje de error.
+-- p_excluir es el precio que se está modificando, para no compararlo consigo mismo.
+CREATE OR REPLACE FUNCTION fn_validar_precio(
+    p_excluir INT UNSIGNED, p_proveedor INT UNSIGNED, p_ingrediente INT UNSIGNED,
+    p_unidad VARCHAR(10), p_inicio DATETIME(6), p_fin DATETIME(6))
+RETURNS VARCHAR(100) READS SQL DATA
+BEGIN
+    IF EXISTS(SELECT 1 FROM precios_compra p
+              WHERE p.id_proveedor=p_proveedor AND p.id_ingrediente=p_ingrediente
+                AND (p_excluir IS NULL OR p.id_precio_compra<>p_excluir)
+                AND (p_fin IS NULL OR p.fecha_inicio_vigencia<p_fin)
+                AND (p.fecha_fin_vigencia IS NULL OR p_inicio<p.fecha_fin_vigencia)) THEN
+        RETURN 'RC-04: vigencias de precio solapadas';
+    END IF;
+    IF NOT EXISTS(SELECT 1 FROM ingredientes i
+                  JOIN unidades_medida ui ON ui.codigo=i.unidad_medida
+                  JOIN unidades_medida up ON up.codigo=p_unidad AND up.magnitud=ui.magnitud
+                  WHERE i.id_ingrediente=p_ingrediente) THEN
+        RETURN 'RC-15: unidad del precio incompatible con la del ingrediente';
+    END IF;
+    RETURN NULL;
+END$$
+
+-- RC-12 y RC-15 (componentes). Valida la magnitud de la línea y que no se cree un ciclo.
+-- Ciclo: la receta contenedora no debe ser alcanzable desde la subreceta que se añade.
+CREATE OR REPLACE FUNCTION fn_validar_componente(
+    p_excluir INT UNSIGNED, p_receta INT UNSIGNED, p_unidad VARCHAR(10),
+    p_ingrediente INT UNSIGNED, p_subreceta INT UNSIGNED)
+RETURNS VARCHAR(100) READS SQL DATA
+BEGIN
+    DECLARE v_linea VARCHAR(7) DEFAULT NULL;
+    DECLARE v_ref VARCHAR(7) DEFAULT NULL;
+    DECLARE v_ciclo INT DEFAULT 0;
+    SELECT magnitud INTO v_linea FROM unidades_medida WHERE codigo=p_unidad;
+    IF p_ingrediente IS NOT NULL THEN
+        SELECT u.magnitud INTO v_ref FROM ingredientes i
+        JOIN unidades_medida u ON u.codigo=i.unidad_medida WHERE i.id_ingrediente=p_ingrediente;
+    ELSEIF p_subreceta IS NOT NULL THEN
+        SELECT u.magnitud INTO v_ref FROM recetas r
+        JOIN unidades_medida u ON u.codigo=r.unidad_rendimiento WHERE r.id_receta=p_subreceta;
+    END IF;
+    IF v_linea IS NULL OR v_ref IS NULL OR v_linea<>v_ref THEN
+        RETURN 'RC-15: unidad incompatible o componente inexistente';
+    END IF;
+    IF p_subreceta IS NOT NULL THEN
+        WITH RECURSIVE alcanzadas (id_receta) AS (
+            SELECT p_subreceta
+            UNION
+            SELECT c.id_receta_componente
+            FROM alcanzadas a JOIN componentes_receta c ON c.id_receta=a.id_receta
+            WHERE c.id_receta_componente IS NOT NULL
+              AND (p_excluir IS NULL OR c.id_componente<>p_excluir)
+        )
+        SELECT COUNT(*) INTO v_ciclo FROM alcanzadas WHERE id_receta=p_receta;
+        IF v_ciclo>0 THEN RETURN 'RC-12: la receta quedaria contenida en si misma'; END IF;
+    END IF;
+    RETURN NULL;
+END$$
+
+CREATE OR REPLACE TRIGGER trg_precio_bi_negocio
+BEFORE INSERT ON precios_compra FOR EACH ROW
+BEGIN
+    DECLARE v_error VARCHAR(100);
+    SET v_error=fn_validar_precio(NULL,NEW.id_proveedor,NEW.id_ingrediente,NEW.unidad_precio,
+                                  NEW.fecha_inicio_vigencia,NEW.fecha_fin_vigencia);
+    IF v_error IS NOT NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT=v_error; END IF;
+END$$
+
+CREATE OR REPLACE TRIGGER trg_precio_bu_negocio
+BEFORE UPDATE ON precios_compra FOR EACH ROW
+BEGIN
+    DECLARE v_error VARCHAR(100);
+    SET v_error=fn_validar_precio(OLD.id_precio_compra,NEW.id_proveedor,NEW.id_ingrediente,NEW.unidad_precio,
+                                  NEW.fecha_inicio_vigencia,NEW.fecha_fin_vigencia);
+    IF v_error IS NOT NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT=v_error; END IF;
+END$$
+
+CREATE OR REPLACE TRIGGER trg_componente_bi_negocio
+BEFORE INSERT ON componentes_receta FOR EACH ROW
+BEGIN
+    DECLARE v_error VARCHAR(100);
+    SET v_error=fn_validar_componente(NULL,NEW.id_receta,NEW.unidad_medida,
+                                      NEW.id_ingrediente,NEW.id_receta_componente);
+    IF v_error IS NOT NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT=v_error; END IF;
+END$$
+
+CREATE OR REPLACE TRIGGER trg_componente_bu_negocio
+BEFORE UPDATE ON componentes_receta FOR EACH ROW
+BEGIN
+    DECLARE v_error VARCHAR(100);
+    SET v_error=fn_validar_componente(OLD.id_componente,NEW.id_receta,NEW.unidad_medida,
+                                      NEW.id_ingrediente,NEW.id_receta_componente);
+    IF v_error IS NOT NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT=v_error; END IF;
+END$$
+
+-- RC-15: una unidad en uso no puede cambiar de código, magnitud ni factor, porque
+-- reinterpretaría cantidades y precios ya registrados.
+CREATE OR REPLACE TRIGGER trg_unidad_bu_negocio
+BEFORE UPDATE ON unidades_medida FOR EACH ROW
+BEGIN
+    IF NEW.codigo<>OLD.codigo OR NEW.magnitud<>OLD.magnitud OR NEW.factor_a_base<>OLD.factor_a_base THEN
+        IF EXISTS(SELECT 1 FROM ingredientes WHERE unidad_medida=OLD.codigo)
+           OR EXISTS(SELECT 1 FROM precios_compra WHERE unidad_precio=OLD.codigo)
+           OR EXISTS(SELECT 1 FROM recetas WHERE unidad_rendimiento=OLD.codigo)
+           OR EXISTS(SELECT 1 FROM componentes_receta WHERE unidad_medida=OLD.codigo) THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RC-15: no se puede cambiar una unidad que esta en uso';
+        END IF;
+    END IF;
+END$$
+
+-- RC-15: la unidad de un ingrediente con datos relacionados no puede cambiar.
+CREATE OR REPLACE TRIGGER trg_ingrediente_bu_negocio
+BEFORE UPDATE ON ingredientes FOR EACH ROW
+BEGIN
+    IF NEW.unidad_medida<>OLD.unidad_medida THEN
+        IF EXISTS(SELECT 1 FROM lotes WHERE id_ingrediente=OLD.id_ingrediente)
+           OR EXISTS(SELECT 1 FROM precios_compra WHERE id_ingrediente=OLD.id_ingrediente)
+           OR EXISTS(SELECT 1 FROM componentes_receta WHERE id_ingrediente=OLD.id_ingrediente) THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RC-15: no se puede cambiar la unidad de un ingrediente en uso';
+        END IF;
+    END IF;
+END$$
+
+-- RC-15: el rendimiento de una subreceta en uso no puede cambiar.
+CREATE OR REPLACE TRIGGER trg_receta_bu_negocio
+BEFORE UPDATE ON recetas FOR EACH ROW
+BEGIN
+    IF NEW.unidad_rendimiento<>OLD.unidad_rendimiento OR NEW.cantidad_rendimiento<>OLD.cantidad_rendimiento THEN
+        IF EXISTS(SELECT 1 FROM componentes_receta WHERE id_receta_componente=OLD.id_receta) THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RC-15: no se puede cambiar el rendimiento de una subreceta en uso';
+        END IF;
+    END IF;
+END$$
+
 DELIMITER ;
