@@ -45,7 +45,7 @@ El poblado inicial se realiza mediante el archivo `02_datos.sql`, que contiene s
 
 | Área | Registros incluidos |
 | --- | --- |
-| Acceso | 3 roles, 7 permisos, 4 usuarios, 14 asignaciones de permisos a roles y 1 permiso adicional de usuario. |
+| Acceso | 3 roles, 8 permisos, 4 usuarios, 16 asignaciones de permisos a roles y 1 permiso adicional de usuario. |
 | Unidades | 6 unidades: gramos, kilogramos, mililitros, litros, unidades y raciones. |
 | Compras | 3 proveedores, 8 ingredientes y 10 precios de compra. |
 | Cocina | 3 recetas, 2 platos y 11 componentes de receta. |
@@ -277,7 +277,7 @@ Cualquier incumplimiento lanza un error (`SQLSTATE 45000`) con un mensaje que id
 
 ### Datos cargados
 
-Se cargan los mismos registros que en el apartado 6.2 (3 roles, 7 permisos, 4 usuarios, 3 proveedores, 8 ingredientes, 10 precios, 3 recetas, 2 platos, 11 componentes, 8 lotes, 22 movimientos, 3 mermas, 4 periodos de oferta y 2 autorizaciones), con los mismos identificadores resultantes y los mismos saldos finales. Los movimientos se insertan en el orden cronológico del escenario, por lo que el resultado es equivalente al del poblado con `INSERT`.
+Se cargan los mismos registros que en el apartado 6.2 (3 roles, 8 permisos, 4 usuarios, 3 proveedores, 8 ingredientes, 10 precios, 3 recetas, 2 platos, 11 componentes, 8 lotes, 22 movimientos, 3 mermas, 4 periodos de oferta y 2 autorizaciones), con los mismos identificadores resultantes y los mismos saldos finales. Los movimientos se insertan en el orden cronológico del escenario, por lo que el resultado es equivalente al del poblado con `INSERT`.
 
 **Fechas de la carta permanente.** Este script usa como inicio de la carta permanente el 15/10/2026 para la pasta y el 24/10/2026 para la tortilla, es decir, el instante en que termina su periodo de sugerencia del chef. Con ello se cumplen RC-16 (sin solapes) y RN-04 (sugerencia cerrada de 14 días, terminada a más tardar cuando empieza la carta). Las autorizaciones conservan sus fechas originales, que siguen siendo previas al alta en carta.
 
@@ -368,7 +368,7 @@ Se necesitan permisos para crear y eliminar rutinas, crear tablas temporales y e
 
 Los periodos actuales de sugerencia y carta del poblado no se solapan y cumplen los 14 días de prueba.
 
-La comprobación «Integracion: encargado gestiona platos» detecta que el poblado no crea ni concede `GESTIONAR_PLATOS`, aunque los procedimientos de oferta lo requieren. Se espera un FALLO hasta corregir este problema. La prueba no añade ese permiso para ocultarlo.
+Los poblados 02 y 06 crean el permiso GESTIONAR_PLATOS y lo asignan a administrador y encargado, por lo que la comprobación «Integracion: encargado gestiona platos» debe resultar OK. Los recuentos esperados son 8 permisos y 16 asignaciones de permisos a roles.
 
 Al modificar los permisos del poblado deben actualizarse también sus recuentos esperados.
 

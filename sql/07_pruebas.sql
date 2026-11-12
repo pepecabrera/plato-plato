@@ -78,9 +78,9 @@ BEGIN
 -- Cada sentencia negativa comprueba el código exacto, no cualquier error.
 -- 4025: CHECK; 1062: duplicado; 1451/1452: integridad referencial; 1048: NOT NULL.
 CALL pp67_comprobar('Carga de roles', (SELECT COUNT(*)=3 FROM roles), 'Se esperan 3 filas del poblado original');
-CALL pp67_comprobar('Carga de permisos', (SELECT COUNT(*)=7 FROM permisos), 'Se esperan 7 filas del poblado original');
+CALL pp67_comprobar('Carga de permisos', (SELECT COUNT(*)=8 FROM permisos), 'Se esperan 8 filas del poblado original');
 CALL pp67_comprobar('Carga de usuarios', (SELECT COUNT(*)=4 FROM usuarios), 'Se esperan 4 filas del poblado original');
-CALL pp67_comprobar('Carga de roles_permisos', (SELECT COUNT(*)=14 FROM roles_permisos), 'Se esperan 14 filas del poblado original');
+CALL pp67_comprobar('Carga de roles_permisos', (SELECT COUNT(*)=16 FROM roles_permisos), 'Se esperan 16 filas del poblado original');
 CALL pp67_comprobar('Carga de permisos_adicionales_usuario', (SELECT COUNT(*)=1 FROM permisos_adicionales_usuario), 'Se esperan 1 filas del poblado original');
 CALL pp67_comprobar('Carga de unidades_medida', (SELECT COUNT(*)=6 FROM unidades_medida), 'Se esperan 6 filas del poblado original');
 CALL pp67_comprobar('Carga de proveedores', (SELECT COUNT(*)=3 FROM proveedores), 'Se esperan 3 filas del poblado original');
@@ -199,7 +199,7 @@ CALL pp67_comprobar('Permiso adicional', (fn_tiene_permiso(3,'CONSULTAR_COSTES')
 CALL pp67_comprobar('Usuario inactivo', (fn_tiene_permiso(4,'REGISTRAR_MERMAS')=0), 'Resultado esperado de la regla comprobada');
 CALL pp67_comprobar('Permiso ausente en encargado', (fn_tiene_permiso(2,'GESTIONAR_USUARIOS')=0), 'Resultado esperado de la regla comprobada');
 CALL pp67_comprobar('Integracion: encargado gestiona platos', (fn_tiene_permiso(2,'GESTIONAR_PLATOS')=1), 'Resultado esperado de la regla comprobada');
--- Esta ultima comprobacion expone el permiso ausente; no se parchea el poblado.
+-- Comprueba que el poblado concede GESTIONAR_PLATOS al encargado, requisito de los procedimientos de oferta.
 START TRANSACTION;
 UPDATE precios_compra SET seleccionado_para_costeo=0 WHERE id_ingrediente=1;
 CALL pp67_comprobar('Precio ausente propaga NULL', (fn_coste_plato(1,'2026-11-10') IS NULL), 'Resultado esperado de la regla comprobada');

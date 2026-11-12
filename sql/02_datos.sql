@@ -26,7 +26,7 @@ INSERT INTO usuarios
 
 INSERT INTO roles_permisos (id_rol,id_permiso) VALUES
 (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),
-(2,2),(2,3),(2,4),(2,5),(2,6),(3,4),(3,5);
+(2,2),(2,3),(2,4),(2,5),(2,6),(2,8),(3,4),(3,5);
 
 INSERT INTO permisos_adicionales_usuario (id_usuario,id_permiso) VALUES (3,6);
 

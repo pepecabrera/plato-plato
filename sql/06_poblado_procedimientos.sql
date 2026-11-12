@@ -460,6 +460,7 @@ BEGIN
     CALL pob_alta_permiso('REGISTRAR_MERMAS');
     CALL pob_alta_permiso('CONSULTAR_COSTES');
     CALL pob_alta_permiso('AUTORIZAR_CARTA');
+    CALL pob_alta_permiso('GESTIONAR_PLATOS');
 
     -- Contraseña de demostración de todos los usuarios: DemoPlato2026!
     CALL pob_alta_usuario('Ana Martín','ana@plato-plato.example','scrypt$16384$8$1$6d5ca317a5b20f5036db04fe74a0b44b$2473e88ad74899f9f9416eadbbf1814085962af448af7345ca31a618bbc6df06e32d4ba296116c71a123730c06ca95dd5b1644a54c0011ee0fa90ca695bd2130','2026-09-01 09:00:00','ADMINISTRADOR','ACTIVO');
@@ -479,6 +480,7 @@ BEGIN
     CALL pob_conceder_permiso_rol('ENCARGADO','GESTIONAR_STOCK');
     CALL pob_conceder_permiso_rol('ENCARGADO','REGISTRAR_MERMAS');
     CALL pob_conceder_permiso_rol('ENCARGADO','CONSULTAR_COSTES');
+    CALL pob_conceder_permiso_rol('ENCARGADO','GESTIONAR_PLATOS');
     CALL pob_conceder_permiso_rol('EMPLEADO','GESTIONAR_STOCK');
     CALL pob_conceder_permiso_rol('EMPLEADO','REGISTRAR_MERMAS');
 
