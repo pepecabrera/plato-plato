@@ -265,11 +265,13 @@ Todas las rutinas llevan el prefijo `pob_` para no colisionar con las de los apa
 Los procedimientos de alta validan, antes de insertar, reglas que el DDL no puede garantizar por sí solo:
 
 - **RC-04:** las vigencias de precio de un mismo proveedor e ingrediente no se solapan.
-- **RC-13:** una salida o un ajuste no deja el saldo del lote en negativo.
+- **RC-13:** antes de insertar un movimiento se comprueban todos los saldos acumulados del lote, incluyendo el movimiento propuesto y los movimientos posteriores. Se rechaza si cualquier saldo resulta negativo.
 - **RC-14:** la merma de un lote crea de forma atómica su salida con finalidad `MERMA`, con la misma cantidad y fecha, y la enlaza.
 - **RC-16:** un plato no tiene dos periodos de oferta simultáneos, sean o no del mismo tipo.
-- **RC-17:** el primer movimiento de un lote es su entrada y ningún movimiento es anterior a ella.
+- **RC-17:** ningún movimiento puede preceder a la recepción del lote. El primero debe ser una entrada; no se admiten salidas ni ajustes anteriores a la primera entrada registrada.
 - **RN-02:** la autorización de carta la emite un administrador con cuenta activa, antes del inicio del periodo de carta.
+
+Los movimientos se ordenan por fecha y, cuando coinciden, por identificador. El movimiento propuesto se evalúa después de los ya existentes en su misma fecha. La validación se realiza antes de insertarlo y no abre ni confirma transacciones: participa en la transacción del procedimiento principal. Se mantiene la hipótesis de una carga inicial de un solo usuario.
 
 Cualquier incumplimiento lanza un error (`SQLSTATE 45000`) con un mensaje que identifica la regla, y el procedimiento principal revierte toda la carga. La concurrencia no se trata aquí: se asume una carga inicial de un solo usuario sobre tablas vacías.
 
@@ -304,7 +306,11 @@ El script selecciona el bloque de pruebas según la presencia de triggers:
 | Esquema y poblado | Archivos 01 y 02, sin triggers. | 66 |
 | Funciones, triggers y procedimientos | Archivos 01, 02, 04 y 05. | 88 |
 
-El conjunto define 154 comprobaciones y cuatro entradas informativas PENDIENTE. Si detecta triggers pero falta alguno de los esperados o alguna rutina necesaria, rechaza la ejecución de negocio.
+El archivo define 166 comprobaciones distintas: 66 del esquema, 88 de negocio y 12 adicionales del procedimiento de movimientos del poblado 06. No todas se ejecutan en cada pasada.
+
+Cuando está instalado `pob_registrar_movimiento`, se ejecutan las pruebas adicionales de salidas y ajustes retroactivos inválidos, movimientos retroactivos válidos, movimientos simultáneos, primera entrada y conservación de la transacción del llamador.
+
+Para comprobar el poblado 06, preparar una copia vacía, ejecutar 01, después 06 y finalmente 07. No cargar 02 en esa misma copia. Estas pruebas no validan por completo las demás rutinas del 06 ni la concurrencia.
 
 Las pruebas del esquema comprueban recuentos, claves, campos obligatorios, dominios, cantidades, precios, componentes, saldos y coherencia del poblado.
 

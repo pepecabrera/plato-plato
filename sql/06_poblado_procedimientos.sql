@@ -266,8 +266,9 @@ BEGIN
             p_ubicacion, p_fresco, p_apto);
 END$$
 
--- Registra un movimiento validando RC-13 (sin saldo negativo) y RC-17 (el primero es la entrada y
--- ninguno es anterior a ella). Devuelve el id generado para poder enlazar mermas.
+-- RC-13: valida todos los saldos historicos incluyendo el movimiento propuesto.
+-- RC-17: no permite salidas ni ajustes anteriores a la primera entrada.
+-- No abre ni confirma transacciones: participa en la del procedimiento principal.
 CREATE PROCEDURE pob_registrar_movimiento(
     IN p_identificador_lote VARCHAR(100), IN p_tipo VARCHAR(7), IN p_cantidad DECIMAL(14,4),
     IN p_fecha DATETIME(6), IN p_finalidad VARCHAR(11), IN p_plato_destino VARCHAR(100),
@@ -276,18 +277,40 @@ BEGIN
     DECLARE v_lote INT UNSIGNED;
     DECLARE v_plato INT UNSIGNED DEFAULT NULL;
     DECLARE v_entrada DATETIME(6);
+    DECLARE v_primera DATETIME(6);
     SET v_lote = pob_id_lote(p_identificador_lote);
     IF p_plato_destino IS NOT NULL THEN SET v_plato = pob_id_plato(p_plato_destino); END IF;
     SELECT fecha_entrada INTO v_entrada FROM lotes WHERE id_lote = v_lote;
-    IF p_fecha < v_entrada THEN
+    IF p_fecha IS NULL OR p_fecha < v_entrada THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: movimiento anterior a la entrada del lote (RC-17)';
     END IF;
-    IF p_tipo <> 'ENTRADA' AND NOT EXISTS (SELECT 1 FROM movimientos_stock WHERE id_lote = v_lote) THEN
+    SELECT MIN(fecha_movimiento) INTO v_primera FROM movimientos_stock WHERE id_lote = v_lote;
+    IF p_tipo <> 'ENTRADA' AND v_primera IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: el primer movimiento de un lote debe ser su entrada (RC-17)';
     END IF;
-    IF (p_tipo = 'SALIDA' AND pob_saldo_lote(v_lote) < p_cantidad)
-       OR (p_tipo = 'AJUSTE' AND pob_saldo_lote(v_lote) + p_cantidad < 0) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: el movimiento dejaría saldo negativo (RC-13)';
+    IF p_tipo <> 'ENTRADA' AND p_fecha < v_primera THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: no se puede anteponer una salida o ajuste a la primera entrada (RC-17)';
+    END IF;
+    -- El candidato se coloca despues de los movimientos existentes con su misma
+    -- fecha, igual que ocurrira con su nuevo AUTO_INCREMENT. Se valida ANTES de
+    -- insertar para que un rechazo no deje una fila ni siquiera con autocommit.
+    IF EXISTS (
+        SELECT 1 FROM (
+            SELECT SUM(delta) OVER (
+                ORDER BY fecha_movimiento, es_nuevo, id_movimiento
+                ROWS UNBOUNDED PRECEDING
+            ) AS saldo
+            FROM (
+                SELECT fecha_movimiento, 0 AS es_nuevo, id_movimiento,
+                       CASE WHEN tipo='SALIDA' THEN -cantidad ELSE cantidad END AS delta
+                FROM movimientos_stock WHERE id_lote=v_lote
+                UNION ALL
+                SELECT p_fecha, 1, NULL,
+                       CASE WHEN p_tipo='SALIDA' THEN -p_cantidad ELSE p_cantidad END
+            ) AS historial_propuesto
+        ) AS saldos WHERE saldo<0
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: el movimiento dejaria saldo negativo en el historial (RC-13)';
     END IF;
     INSERT INTO movimientos_stock (id_lote, tipo, cantidad, fecha_movimiento, finalidad_salida, id_plato_destino)
     VALUES (v_lote, p_tipo, p_cantidad, p_fecha, p_finalidad, v_plato);
@@ -377,7 +400,6 @@ BEGIN
     CALL pob_alta_permiso('REGISTRAR_MERMAS');
     CALL pob_alta_permiso('CONSULTAR_COSTES');
     CALL pob_alta_permiso('AUTORIZAR_CARTA');
-    CALL pob_alta_permiso('GESTIONAR_PLATOS');
 
     -- Contraseña de demostración de todos los usuarios: DemoPlato2026!
     CALL pob_alta_usuario('Ana Martín','ana@plato-plato.example','scrypt$16384$8$1$6d5ca317a5b20f5036db04fe74a0b44b$2473e88ad74899f9f9416eadbbf1814085962af448af7345ca31a618bbc6df06e32d4ba296116c71a123730c06ca95dd5b1644a54c0011ee0fa90ca695bd2130','2026-09-01 09:00:00','ADMINISTRADOR','ACTIVO');
@@ -392,7 +414,6 @@ BEGIN
     CALL pob_conceder_permiso_rol('ADMINISTRADOR','REGISTRAR_MERMAS');
     CALL pob_conceder_permiso_rol('ADMINISTRADOR','CONSULTAR_COSTES');
     CALL pob_conceder_permiso_rol('ADMINISTRADOR','AUTORIZAR_CARTA');
-    CALL pob_conceder_permiso_rol('ADMINISTRADOR','GESTIONAR_PLATOS');
     CALL pob_conceder_permiso_rol('ENCARGADO','GESTIONAR_PROVEEDORES');
     CALL pob_conceder_permiso_rol('ENCARGADO','GESTIONAR_RECETAS');
     CALL pob_conceder_permiso_rol('ENCARGADO','GESTIONAR_STOCK');

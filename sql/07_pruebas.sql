@@ -1,10 +1,11 @@
 -- 6.7. Archivo autonomo: no necesita Python ni archivos auxiliares.
--- SOLO sobre una copia desechable con 01 y 02 cargados.
+-- SOLO sobre una copia desechable con 01 y UNO de los poblados: 02 o 06.
 -- Primera ejecucion: sin 04/05, ejecuta 66 comprobaciones del esquema.
 -- Segunda ejecucion: instalar 04 y 05 completos y ejecutar de nuevo;
 -- realiza 88 comprobaciones de negocio y cuatro entradas PENDIENTE.
 -- Detecta el modo por la presencia de triggers. Rechaza instalaciones parciales.
 -- Las pruebas de negocio CONFIRMAN escrituras: recrear la copia antes de repetirlas.
+-- Si esta instalado 06, anade 12 comprobaciones de su procedimiento de movimientos.
 -- No usar --force. No ejecutar dentro de una transaccion de trabajo.
 USE plato_plato;
 -- Auxiliares: los resultados sobreviven al ROLLBACK de cada caso.
@@ -324,7 +325,47 @@ INSERT INTO pp67_resultados(prueba,resultado,detalle) VALUES
 ('Concurrencia','PENDIENTE','Esta suite es secuencial; faltan pruebas coordinadas con varias conexiones.'),
 ('RC-04, RC-12 y RC-15: impedir altas invalidas','PENDIENTE','Falta proteccion completa de vigencias, ciclos indirectos y unidades. Detectar NULL al costear no demuestra impedir el alta.'),
 ('Privilegios de cuentas operativas','PENDIENTE','Se usa una cuenta de pruebas; no certifica las restricciones de cuentas de aplicacion.'),
-('Poblado opcional 06','PENDIENTE','Se valida aparte, sobre una base vacia; este script usa exclusivamente 02.');
+('Poblado 06: cobertura adicional','PENDIENTE','Las 12 regresiones de movimientos se ejecutan si 06 esta instalado; faltan pruebas del resto de sus rutinas.');
+
+ END IF;
+ IF EXISTS(SELECT 1 FROM information_schema.routines WHERE routine_schema=DATABASE()
+           AND routine_name='pob_registrar_movimiento' AND routine_type='PROCEDURE') THEN
+  IF NOT EXISTS(SELECT 1 FROM information_schema.routines WHERE routine_schema=DATABASE()
+                AND routine_name='pob_saldo_lote' AND routine_type='FUNCTION') THEN
+   SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Falta pob_saldo_lote: instalar 06 completo';
+  END IF;
+  SELECT 'POBLADO: 12 comprobaciones de saldos historicos y transacciones' AS bloque;
+-- Regresion del procedimiento de poblado, sin modificar su escenario original.
+-- Fixtures exclusivas de una copia de pruebas. No se eliminan mediante DELETE:
+-- los movimientos son historicos y sus triggers pueden estar instalados.
+IF EXISTS(SELECT 1 FROM lotes WHERE id_lote BETWEEN 9101 AND 9103) THEN
+ SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Recrear la copia de pruebas: ya existen fixtures 9101 a 9103';
+END IF;
+INSERT INTO lotes(id_lote,identificador_lote,id_ingrediente,fecha_entrada,fecha_caducidad,ubicacion_almacen,fresco,apto_para_consumo) VALUES
+(9101,'__pp67_pob_hist',1,'2026-11-01 00:00:00',NULL,'Pruebas',0,1),
+(9102,'__pp67_pob_primera',1,'2026-11-01 00:00:00',NULL,'Pruebas',0,1),
+(9103,'__pp67_pob_vacio',1,'2026-11-01 00:00:00',NULL,'Pruebas',0,1);
+INSERT INTO movimientos_stock(id_lote,tipo,cantidad,fecha_movimiento) VALUES
+(9101,'ENTRADA',5,'2026-11-01 08:00:00'),
+(9101,'ENTRADA',10,'2026-11-03 08:00:00'),
+(9102,'ENTRADA',5,'2026-11-02 08:00:00');
+INSERT INTO movimientos_stock(id_lote,tipo,cantidad,fecha_movimiento,finalidad_salida)
+VALUES(9101,'SALIDA',5,'2026-11-02 08:00:00','OTRA');
+SET @pob_nmov=(SELECT COUNT(*) FROM movimientos_stock);
+CALL pp67_caso('Poblado: salida retroactiva invalida', 'CALL pob_registrar_movimiento(''__pp67_pob_hist'',''SALIDA'',1,''2026-11-01 12:00:00'',''OTRA'',NULL,@pob_id)', 1644, 'pob: el movimiento dejaria saldo negativo en el historial', TRUE);
+CALL pp67_caso('Poblado: ajuste retroactivo invalido', 'CALL pob_registrar_movimiento(''__pp67_pob_hist'',''AJUSTE'',-1,''2026-11-01 12:00:00'',NULL,NULL,@pob_id)', 1644, 'pob: el movimiento dejaria saldo negativo en el historial', TRUE);
+CALL pp67_caso('Poblado: salida antes de primera entrada', 'CALL pob_registrar_movimiento(''__pp67_pob_primera'',''SALIDA'',1,''2026-11-01 12:00:00'',''OTRA'',NULL,@pob_id)', 1644, 'pob: no se puede anteponer', TRUE);
+CALL pp67_caso('Poblado: primer movimiento debe ser entrada', 'CALL pob_registrar_movimiento(''__pp67_pob_vacio'',''SALIDA'',1,''2026-11-01 12:00:00'',''OTRA'',NULL,@pob_id)', 1644, 'pob: el primer movimiento', TRUE);
+CALL pp67_comprobar('Poblado: rechazos sin filas residuales', ((SELECT COUNT(*) FROM movimientos_stock)=@pob_nmov AND pob_saldo_lote(9101)=10 AND pob_saldo_lote(9102)=5), 'RC-13/RC-17 y transaccion del llamador');
+CALL pp67_caso('Poblado: salida retroactiva valida', 'CALL pob_registrar_movimiento(''__pp67_pob_hist'',''SALIDA'',1,''2026-11-03 12:00:00'',''OTRA'',NULL,@pob_id)', 0, NULL, FALSE);
+CALL pp67_caso('Poblado: ajuste retroactivo valido', 'CALL pob_registrar_movimiento(''__pp67_pob_hist'',''AJUSTE'',-1,''2026-11-03 12:00:00'',NULL,NULL,@pob_id)', 0, NULL, FALSE);
+CALL pp67_caso('Poblado: entrada retroactiva valida', 'CALL pob_registrar_movimiento(''__pp67_pob_hist'',''ENTRADA'',1,''2026-11-01 06:00:00'',NULL,NULL,@pob_id)', 0, NULL, FALSE);
+CALL pp67_caso('Poblado: misma fecha, entrada antes de salida', 'CALL pob_registrar_movimiento(''__pp67_pob_primera'',''SALIDA'',1,''2026-11-02 08:00:00'',''OTRA'',NULL,@pob_id)', 0, NULL, FALSE);
+START TRANSACTION;
+CALL pp67_caso('Poblado: participa en transaccion exterior', 'CALL pob_registrar_movimiento(''__pp67_pob_hist'',''ENTRADA'',1,''2026-11-04'',NULL,NULL,@pob_id)', 0, NULL, TRUE);
+CALL pp67_comprobar('Poblado: no confirma la transaccion', (@@in_transaction=1 AND pob_saldo_lote(9101)=11), 'RC-13/RC-17 y transaccion del llamador');
+ROLLBACK;
+CALL pp67_comprobar('Poblado: rollback exterior restaura filas', ((SELECT COUNT(*) FROM movimientos_stock)=@pob_nmov AND pob_saldo_lote(9101)=10), 'RC-13/RC-17 y transaccion del llamador');
 
  END IF;
 END$$
