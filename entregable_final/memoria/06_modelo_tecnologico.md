@@ -293,6 +293,20 @@ La creación de la merma de lote se realiza dentro de `pob_registrar_merma_lote`
 
 El script se ha comprobado en MariaDB 10.11 sobre una base creada con `01_tablas.sql`: la carga completa coincide con la de `02_datos.sql` salvo las dos fechas indicadas, y los casos de error (referencia inexistente, saldo negativo, solape de precios, solape de periodos, emisor no administrador y segunda ejecución) detienen la carga sin dejar datos parciales.
 
+### Contrato de transacciones
+
+Los 24 procedimientos internos de alta y de bloque con prefijo `pob_` requieren una transacción activa. Si se invocan sin ella, rechazan la llamada antes de escribir. Las funciones de consulta no necesitan esta comprobación.
+
+El procedimiento `pob_poblar_base_datos` debe invocarse fuera de una transacción. Esta comprobación se realiza antes del bloque que gestiona errores, por lo que su rechazo no confirma ni revierte el trabajo pendiente del llamador.
+
+El principal abre su propia transacción y confirma únicamente cuando termina toda la carga. Ante un error, revierte esa transacción y propaga el fallo. Los procedimientos internos no ejecutan COMMIT ni ROLLBACK.
+
+La salida y la merma creadas por `pob_registrar_merma_lote` participan en esa misma transacción. Si ocurre un error durante la carga, el principal revierte ambas.
+
+Estas comprobaciones no sustituyen los privilegios: las cuentas operativas no deben disponer de permiso para ejecutar las rutinas internas del poblado.
+
+El archivo completo debe instalarse sin una transacción pendiente, porque sus sentencias DDL pueden producir commits implícitos.
+
 ## 6.7. Script de creación de pruebas y llamadas
 
 El archivo `sql/07_pruebas.sql` contiene las pruebas del esquema, los datos, las funciones, los procedimientos y los triggers. No necesita otros archivos de pruebas ni un ejecutor Python.

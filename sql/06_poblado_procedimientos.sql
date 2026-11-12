@@ -2,6 +2,9 @@
 -- MariaDB 10.6+. Ejecutar tras 01_tablas.sql (y, si existen, 03-05), con las tablas VACÍAS.
 -- ALTERNATIVA a 02_datos.sql: carga el mismo escenario de demostración, pero mediante procedimientos.
 -- NO ejecutar 02_datos.sql y este script sobre la misma base: el procedimiento principal lo detecta y se detiene.
+-- Las rutinas de escritura pob_ son internas: requieren transaccion activa.
+-- Solo pob_poblar_base_datos abre, confirma o revierte la transaccion de carga.
+-- Instalar este archivo sin transaccion pendiente: su DDL puede hacer COMMIT implicito.
 -- Los registros se relacionan por clave natural (nombre, correo, identificador de lote), sin IDs fijos.
 -- Cliente: usar un cliente que admita DELIMITER (mariadb CLI, DBeaver, Workbench). Sin --force.
 SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -154,11 +157,17 @@ END$$
 -- ============================================================
 CREATE PROCEDURE pob_alta_rol(IN p_nombre VARCHAR(20))
 BEGIN
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     INSERT INTO roles (nombre) VALUES (p_nombre);
 END$$
 
 CREATE PROCEDURE pob_alta_permiso(IN p_nombre VARCHAR(100))
 BEGIN
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     INSERT INTO permisos (nombre) VALUES (p_nombre);
 END$$
 
@@ -167,18 +176,27 @@ CREATE PROCEDURE pob_alta_usuario(
     IN p_nombre VARCHAR(100), IN p_correo VARCHAR(150), IN p_hash VARCHAR(255),
     IN p_fecha_creacion DATETIME(6), IN p_rol VARCHAR(20), IN p_estado VARCHAR(8))
 BEGIN
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     INSERT INTO usuarios (nombre, correo_electronico, contrasena_protegida, fecha_creacion, id_rol, estado)
     VALUES (p_nombre, p_correo, p_hash, p_fecha_creacion, pob_id_rol(p_rol), p_estado);
 END$$
 
 CREATE PROCEDURE pob_conceder_permiso_rol(IN p_rol VARCHAR(20), IN p_permiso VARCHAR(100))
 BEGIN
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     INSERT INTO roles_permisos (id_rol, id_permiso)
     VALUES (pob_id_rol(p_rol), pob_id_permiso(p_permiso));
 END$$
 
 CREATE PROCEDURE pob_conceder_permiso_usuario(IN p_correo VARCHAR(150), IN p_permiso VARCHAR(100))
 BEGIN
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     INSERT INTO permisos_adicionales_usuario (id_usuario, id_permiso)
     VALUES (pob_id_usuario(p_correo), pob_id_permiso(p_permiso));
 END$$
@@ -186,6 +204,9 @@ END$$
 CREATE PROCEDURE pob_alta_unidad(
     IN p_codigo VARCHAR(10), IN p_nombre VARCHAR(100), IN p_magnitud VARCHAR(7), IN p_factor DECIMAL(18,6))
 BEGIN
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     INSERT INTO unidades_medida (codigo, nombre, magnitud, factor_a_base)
     VALUES (p_codigo, p_nombre, p_magnitud, p_factor);
 END$$
@@ -194,6 +215,9 @@ CREATE PROCEDURE pob_alta_proveedor(
     IN p_nombre VARCHAR(100), IN p_contacto VARCHAR(100), IN p_telefono VARCHAR(20),
     IN p_correo VARCHAR(150), IN p_forma_pago VARCHAR(100), IN p_estado VARCHAR(8))
 BEGIN
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     INSERT INTO proveedores (nombre, persona_contacto, telefono, correo_contacto, forma_pago, estado)
     VALUES (p_nombre, p_contacto, p_telefono, p_correo, p_forma_pago, p_estado);
 END$$
@@ -201,6 +225,9 @@ END$$
 CREATE PROCEDURE pob_alta_ingrediente(
     IN p_nombre VARCHAR(100), IN p_categoria VARCHAR(100), IN p_unidad VARCHAR(10), IN p_estado VARCHAR(8))
 BEGIN
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     INSERT INTO ingredientes (nombre, categoria, unidad_medida, estado)
     VALUES (p_nombre, p_categoria, p_unidad, p_estado);
 END$$
@@ -212,6 +239,9 @@ CREATE PROCEDURE pob_alta_precio_compra(
 BEGIN
     DECLARE v_proveedor INT UNSIGNED;
     DECLARE v_ingrediente INT UNSIGNED;
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     SET v_proveedor = pob_id_proveedor(p_proveedor);
     SET v_ingrediente = pob_id_ingrediente(p_ingrediente);
     IF EXISTS (SELECT 1 FROM precios_compra
@@ -228,6 +258,9 @@ END$$
 CREATE PROCEDURE pob_alta_receta(
     IN p_nombre VARCHAR(100), IN p_rendimiento DECIMAL(14,4), IN p_unidad VARCHAR(10), IN p_estado VARCHAR(8))
 BEGIN
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     INSERT INTO recetas (nombre, cantidad_rendimiento, unidad_rendimiento, estado)
     VALUES (p_nombre, p_rendimiento, p_unidad, p_estado);
 END$$
@@ -237,6 +270,9 @@ CREATE PROCEDURE pob_alta_plato(
     IN p_descripcion VARCHAR(500), IN p_categoria VARCHAR(100), IN p_menu_del_dia BOOLEAN,
     IN p_precio_venta DECIMAL(14,2), IN p_margen_objetivo DECIMAL(5,2), IN p_estado VARCHAR(8))
 BEGIN
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     INSERT INTO platos (id_receta, nombre, imagen, descripcion, categoria, menu_del_dia,
                         precio_venta, porcentaje_margen_objetivo, estado)
     VALUES (pob_id_receta(p_receta), p_nombre, p_imagen, p_descripcion, p_categoria, p_menu_del_dia,
@@ -250,6 +286,9 @@ CREATE PROCEDURE pob_alta_componente(
 BEGIN
     DECLARE v_ingrediente INT UNSIGNED DEFAULT NULL;
     DECLARE v_subreceta INT UNSIGNED DEFAULT NULL;
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     IF p_ingrediente IS NOT NULL THEN SET v_ingrediente = pob_id_ingrediente(p_ingrediente); END IF;
     IF p_subreceta IS NOT NULL THEN SET v_subreceta = pob_id_receta(p_subreceta); END IF;
     INSERT INTO componentes_receta (id_receta, cantidad, unidad_medida, id_ingrediente, id_receta_componente)
@@ -260,6 +299,9 @@ CREATE PROCEDURE pob_alta_lote(
     IN p_identificador VARCHAR(100), IN p_ingrediente VARCHAR(100), IN p_entrada DATETIME(6),
     IN p_caducidad DATETIME(6), IN p_ubicacion VARCHAR(100), IN p_fresco BOOLEAN, IN p_apto BOOLEAN)
 BEGIN
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     INSERT INTO lotes (identificador_lote, id_ingrediente, fecha_entrada, fecha_caducidad,
                        ubicacion_almacen, fresco, apto_para_consumo)
     VALUES (p_identificador, pob_id_ingrediente(p_ingrediente), p_entrada, p_caducidad,
@@ -278,6 +320,9 @@ BEGIN
     DECLARE v_plato INT UNSIGNED DEFAULT NULL;
     DECLARE v_entrada DATETIME(6);
     DECLARE v_primera DATETIME(6);
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     SET v_lote = pob_id_lote(p_identificador_lote);
     IF p_plato_destino IS NOT NULL THEN SET v_plato = pob_id_plato(p_plato_destino); END IF;
     SELECT fecha_entrada INTO v_entrada FROM lotes WHERE id_lote = v_lote;
@@ -317,13 +362,16 @@ BEGIN
     SET p_id_movimiento = LAST_INSERT_ID();
 END$$
 
--- RC-14: la merma de un lote crea de forma atómica su salida (finalidad MERMA) y la enlaza.
+-- RC-14: la merma y su salida se confirman juntas dentro de la transaccion del principal.
 -- Misma cantidad y fecha en la salida y en la merma.
 CREATE PROCEDURE pob_registrar_merma_lote(
     IN p_identificador_lote VARCHAR(100), IN p_cantidad DECIMAL(14,4), IN p_fecha DATETIME(6),
     IN p_motivo VARCHAR(25), IN p_detalle VARCHAR(500), IN p_coste DECIMAL(14,2))
 BEGIN
     DECLARE v_movimiento INT UNSIGNED;
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     CALL pob_registrar_movimiento(p_identificador_lote, 'SALIDA', p_cantidad, p_fecha, 'MERMA', NULL, v_movimiento);
     INSERT INTO mermas (cantidad_desperdiciada, fecha_merma, motivo, detalle_motivo, coste_perdida,
                         id_lote, id_plato, id_movimiento)
@@ -336,6 +384,9 @@ CREATE PROCEDURE pob_registrar_merma_plato(
     IN p_plato VARCHAR(100), IN p_cantidad DECIMAL(14,4), IN p_fecha DATETIME(6),
     IN p_motivo VARCHAR(25), IN p_detalle VARCHAR(500), IN p_coste DECIMAL(14,2))
 BEGIN
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     INSERT INTO mermas (cantidad_desperdiciada, fecha_merma, motivo, detalle_motivo, coste_perdida,
                         id_lote, id_plato, id_movimiento)
     VALUES (p_cantidad, p_fecha, p_motivo, p_detalle, p_coste, NULL, pob_id_plato(p_plato), NULL);
@@ -347,6 +398,9 @@ CREATE PROCEDURE pob_alta_periodo_oferta(
     IN p_plato VARCHAR(100), IN p_tipo VARCHAR(20), IN p_inicio DATETIME(6), IN p_fin DATETIME(6))
 BEGIN
     DECLARE v_plato INT UNSIGNED;
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     SET v_plato = pob_id_plato(p_plato);
     IF EXISTS (SELECT 1 FROM periodos_oferta
                WHERE id_plato = v_plato
@@ -366,6 +420,9 @@ CREATE PROCEDURE pob_alta_autorizacion_carta(
 BEGIN
     DECLARE v_periodo INT UNSIGNED DEFAULT NULL;
     DECLARE v_emisor INT UNSIGNED;
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     SELECT id_periodo_oferta INTO v_periodo FROM periodos_oferta
      WHERE id_plato = pob_id_plato(p_plato) AND tipo = 'CARTA_PERMANENTE' AND fecha_inicio = p_inicio_carta;
     IF v_periodo IS NULL THEN
@@ -389,6 +446,9 @@ END$$
 -- ============================================================
 CREATE PROCEDURE pob_bloque_acceso()
 BEGIN
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     CALL pob_alta_rol('ADMINISTRADOR');
     CALL pob_alta_rol('ENCARGADO');
     CALL pob_alta_rol('EMPLEADO');
@@ -428,6 +488,9 @@ END$$
 -- Bases: gramo, mililitro, unidad y ración. Solo se convierten magnitudes iguales.
 CREATE PROCEDURE pob_bloque_unidades()
 BEGIN
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     CALL pob_alta_unidad('g','Gramo','MASA',1);
     CALL pob_alta_unidad('kg','Kilogramo','MASA',1000);
     CALL pob_alta_unidad('ml','Mililitro','VOLUMEN',1);
@@ -438,6 +501,9 @@ END$$
 
 CREATE PROCEDURE pob_bloque_compras()
 BEGIN
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     CALL pob_alta_proveedor('Huerta del Sur','Lucía Pérez',NULL,'pedidos@huertadelsur.example','Transferencia a 30 días','ACTIVO');
     CALL pob_alta_proveedor('Despensa Central','Jorge Ruiz',NULL,'ventas@despensacentral.example','Transferencia a 15 días','ACTIVO');
     CALL pob_alta_proveedor('Distribuciones Antiguas','Pablo Gil',NULL,'contacto@distribucionesantiguas.example','Transferencia','INACTIVO');
@@ -467,6 +533,9 @@ END$$
 -- La salsa produce 1 kg tras la cocción. La pasta utiliza 600 g de esa subreceta.
 CREATE PROCEDURE pob_bloque_cocina()
 BEGIN
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     CALL pob_alta_receta('Salsa de tomate casera',1,'kg','ACTIVO');
     CALL pob_alta_receta('Pasta con tomate',4,'racion','ACTIVO');
     CALL pob_alta_receta('Tortilla de patatas',4,'racion','ACTIVO');
@@ -491,6 +560,9 @@ END$$
 CREATE PROCEDURE pob_bloque_inventario_y_mermas()
 BEGIN
     DECLARE v_mov INT UNSIGNED;
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
 
     CALL pob_alta_lote('TOM-20261109','Tomate','2026-11-09 08:00:00','2026-11-16 23:59:59','Cámara de verduras',1,1);
     CALL pob_alta_lote('CEB-20261109','Cebolla','2026-11-09 08:00:00','2026-11-30 23:59:59','Almacén de verduras',1,1);
@@ -543,6 +615,9 @@ END$$
 -- Cada plato pasa 14 días como sugerencia del chef antes de su alta en carta permanente.
 CREATE PROCEDURE pob_bloque_oferta()
 BEGIN
+    IF NOT @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: rutina interna; requiere una transaccion activa';
+    END IF;
     CALL pob_alta_periodo_oferta('Pasta con tomate','SUGERENCIA_CHEF','2026-10-01 00:00:00','2026-10-15 00:00:00');
     CALL pob_alta_periodo_oferta('Pasta con tomate','CARTA_PERMANENTE','2026-10-15 00:00:00',NULL);
     CALL pob_alta_periodo_oferta('Tortilla de patatas','SUGERENCIA_CHEF','2026-10-10 00:00:00','2026-10-24 00:00:00');
@@ -559,28 +634,32 @@ END$$
 -- ============================================================
 CREATE PROCEDURE pob_poblar_base_datos()
 BEGIN
-    -- Cualquier error revierte toda la carga y se propaga al cliente.
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
-    -- Las tablas padre bastan: el resto depende de ellas mediante claves foráneas.
-    IF (SELECT COUNT(*) FROM roles) + (SELECT COUNT(*) FROM permisos) + (SELECT COUNT(*) FROM usuarios)
-     + (SELECT COUNT(*) FROM unidades_medida) + (SELECT COUNT(*) FROM proveedores)
-     + (SELECT COUNT(*) FROM ingredientes) + (SELECT COUNT(*) FROM recetas) + (SELECT COUNT(*) FROM lotes) > 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: la base de datos ya contiene datos; la carga exige tablas vacías';
+    -- Fuera del manejador: no confirmar ni revertir la transaccion del llamador.
+    IF @@in_transaction THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: llamar al poblado principal fuera de una transaccion';
     END IF;
-
-    START TRANSACTION;
-    CALL pob_bloque_acceso();
-    CALL pob_bloque_unidades();
-    CALL pob_bloque_compras();
-    CALL pob_bloque_cocina();
-    CALL pob_bloque_inventario_y_mermas();
-    CALL pob_bloque_oferta();
-    COMMIT;
+    BEGIN
+        -- Este manejador solo revierte la transaccion abierta por el poblado.
+        DECLARE EXIT HANDLER FOR SQLEXCEPTION
+        BEGIN
+            ROLLBACK;
+            RESIGNAL;
+        END;
+        START TRANSACTION;
+        -- Las tablas padre bastan: el resto depende de ellas mediante FK.
+        IF (SELECT COUNT(*) FROM roles) + (SELECT COUNT(*) FROM permisos) + (SELECT COUNT(*) FROM usuarios)
+         + (SELECT COUNT(*) FROM unidades_medida) + (SELECT COUNT(*) FROM proveedores)
+         + (SELECT COUNT(*) FROM ingredientes) + (SELECT COUNT(*) FROM recetas) + (SELECT COUNT(*) FROM lotes) > 0 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: la base de datos ya contiene datos; la carga exige tablas vacías';
+        END IF;
+        CALL pob_bloque_acceso();
+        CALL pob_bloque_unidades();
+        CALL pob_bloque_compras();
+        CALL pob_bloque_cocina();
+        CALL pob_bloque_inventario_y_mermas();
+        CALL pob_bloque_oferta();
+        COMMIT;
+    END;
 
     -- Resumen de filas cargadas por tabla.
     SELECT 'roles' AS tabla, COUNT(*) AS filas FROM roles

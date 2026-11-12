@@ -4,7 +4,7 @@
 | **Urgente** | Las mermas pueden modificarse o borrarse, dejando su salida incoherente. | Proteger `mermas` frente a `UPDATE` y `DELETE` y definir cómo corregirlas. | Hecho |
 | **Urgente** | Falta un procedimiento operativo completo para registrar mermas. | Crear uno que valide permisos y saldos y registre salida y merma en una misma transacción. | Hecho |
 | **Urgente** | `07_pruebas.sql` espera errores antiguos y no prueba las rutinas actuales. | Adaptarlo a `04` y `05`, distinguiendo pruebas del esquema y de negocio. | Hecho |
-| **Importante** | `pob_registrar_movimiento` comprueba el saldo total, no los saldos históricos. | Comprobar todos los saldos acumulados, como hace el procedimiento del `04`. |
+| **Importante** | `pob_registrar_movimiento` comprueba el saldo total, no los saldos históricos. | Comprobar todos los saldos acumulados, como hace el procedimiento del `04`. | Hecho |
 | **Importante** | Las rutinas `pob_` no son todas seguras al invocarlas por separado. | Restringirlas al poblado o completar sus transacciones; impedir ejecutar el poblado principal dentro de otra transacción. |
 | **Importante** | Se permiten ciclos indirectos, precios solapados y unidades incompatibles. | Añadir validaciones de alta y modificación, con bloqueos adecuados. |
 | **Importante** | Cambiar unidades puede reinterpretar cantidades históricas. | Impedir cambios incompatibles cuando existan datos relacionados. |
