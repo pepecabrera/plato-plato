@@ -475,6 +475,7 @@ BEGIN
     CALL pob_conceder_permiso_rol('ADMINISTRADOR','REGISTRAR_MERMAS');
     CALL pob_conceder_permiso_rol('ADMINISTRADOR','CONSULTAR_COSTES');
     CALL pob_conceder_permiso_rol('ADMINISTRADOR','AUTORIZAR_CARTA');
+    CALL pob_conceder_permiso_rol('ADMINISTRADOR','GESTIONAR_PLATOS');
     CALL pob_conceder_permiso_rol('ENCARGADO','GESTIONAR_PROVEEDORES');
     CALL pob_conceder_permiso_rol('ENCARGADO','GESTIONAR_RECETAS');
     CALL pob_conceder_permiso_rol('ENCARGADO','GESTIONAR_STOCK');
