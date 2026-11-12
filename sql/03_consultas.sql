@@ -505,11 +505,11 @@ ORDER BY r.nombre;
 
 -- C-26. Coherencia del inventario: lotes cuyo saldo ha sido negativo en algún instante (RC-13), mermas de lote que no coinciden
 -- con la salida que originaron y salidas por merma sin merma asociada (RC-14).
--- La ventana ordena solo por fecha: los movimientos simultáneos comparten saldo y UNION los reduce a una fila.
+-- Se ordena por fecha e ID, con marco ROWS, igual que en los procedimientos de movimientos.
 SELECT 'RC-13' AS regla, l.identificador_lote, s.fecha_movimiento AS fecha, CONCAT('Saldo negativo: ',s.saldo) AS detalle
 FROM (
     SELECT id_lote, fecha_movimiento,
-           SUM(CASE WHEN tipo='SALIDA' THEN -cantidad ELSE cantidad END) OVER (PARTITION BY id_lote ORDER BY fecha_movimiento) AS saldo
+           SUM(CASE WHEN tipo='SALIDA' THEN -cantidad ELSE cantidad END) OVER (PARTITION BY id_lote ORDER BY fecha_movimiento,id_movimiento ROWS UNBOUNDED PRECEDING) AS saldo
     FROM movimientos_stock
 ) s
 JOIN lotes l ON l.id_lote=s.id_lote

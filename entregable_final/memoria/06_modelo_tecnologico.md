@@ -22,18 +22,18 @@ El archivo `sql/01_tablas.sql` crea una base nueva `plato_plato` y sus 17 tablas
 |---|---|---|
 | RC-01–03 | Cantidades, rendimientos y precios positivos; componentes únicos | — |
 | RC-04, D-01 | Fechas ordenadas, inicio único por proveedor/ingrediente y selección única | Validación al costear (funciones de 04). Solapamientos de vigencias: triggers `trg_precio_*` de 05; concurrencia pendiente |
-| RC-05–08, RC-11 | Objetivo opcional en rango; derivados ausentes de las tablas | Funciones de coste, vista de margen, propagación de NULL y permisos |
-| RC-09–10 | FK según política y tablas de permisos | Protección de hechos históricos, autenticación y autorización |
-| RC-12 | Impide receta componente igual a receta contenedora | Ciclos indirectos, incluidos UPDATE: triggers `trg_componente_*` de 05. Mínimo 1..* de componentes y borrados pendientes |
-| RC-13 | Signo según tipo de movimiento | Saldos históricos no negativos y concurrencia |
-| RC-14 | Merma de lote o plato; movimiento obligatorio solo para lote y único | Crear salida atómica y comparar lote, cantidad, fecha y finalidad; impedir salidas de merma huérfanas |
-| RC-15 | FK a unidades y factor positivo | Magnitudes compatibles y cambios en datos relacionados: triggers de 05. Rendimiento en raciones de los platos pendiente |
-| RC-16 | Inicio único y fin posterior | Solapamientos de oferta |
-| RC-17 | Coherencia entre tipo, signo, finalidad y destino | Fecha del lote, primera entrada y unidad implícita del movimiento |
-| RN-01–04 | Estructura de lotes, oferta y autorizaciones | Todas las comprobaciones temporales, de aptitud, prueba previa y administrador |
+| RC-05–08, RC-11 | Objetivo opcional en rango; derivados ausentes de las tablas | Funciones de coste, margen, propagación de NULL y permisos en 04; consultas en 03 |
+| RC-09–10 | FK según política y tablas de permisos | Protección del historial en 05 y permisos de aplicación en 04. Autenticación y privilegios MariaDB fuera del alcance actual |
+| RC-12 | Impide receta componente igual a receta contenedora | Ciclos indirectos, incluidos UPDATE: triggers `trg_componente_*` de 05. Alta completa en 04 y protección de la última línea en 05; inserción manual de cabeceras vacías aún posible |
+| RC-13 | Signo según tipo de movimiento | Saldos históricos comprobados en sp_registrar_movimiento y sp_registrar_merma; concurrencia general no certificada |
+| RC-14 | Merma de lote o plato; movimiento obligatorio solo para lote y único | Alta atómica en 04 y coherencia merma/salida en 05. El procedimiento de movimientos rechaza MERMA; la escritura directa aún puede crear salidas huérfanas |
+| RC-15 | FK a unidades y factor positivo | Magnitudes compatibles y cambios en datos relacionados: triggers de 05. Rendimiento en raciones de platos validado en INSERT/UPDATE de platos y cambios de unidad de recetas en 05 |
+| RC-16 | Inicio único y fin posterior | Solapamientos comprobados en 05; procedimientos de oferta bloquean el plato |
+| RC-17 | Coherencia entre tipo, signo, finalidad y destino | Fecha del lote y primera entrada en procedimientos; 05 bloquea cambios de ingrediente y recepción de lotes con movimientos |
+| RN-01–04 | Estructura de lotes, oferta y autorizaciones | Comprobaciones temporales y de aptitud en 05; prueba previa y administrador en 04/05. No se reconstruye aptitud histórica ni se comprueba pertenencia del ingrediente a la receta destino |
 | RNF-02 | Hash de longitud mínima | Algoritmo seguro y verificación externa |
 
-Una receta puede quedar temporalmente sin componentes: el procedimiento que registra la receta completa debe verificar su mínimo 1..*. El DDL no garantiza autorización para cada periodo de carta. El procedimiento de incorporación debe insertar periodo y autorización en una transacción y gestionar el error; los privilegios deben impedir eludirlo mediante escrituras directas.
+sp_registrar_receta registra la receta y sus componentes en una transacción y exige al menos una línea. Los triggers impiden borrar o trasladar la última línea de una receta conservada. Una cabecera insertada manualmente aún puede quedar vacía: no se restringen privilegios MariaDB en esta entrega. El DDL no garantiza autorización para cada periodo de carta. El procedimiento de incorporación debe insertar periodo y autorización en una transacción y gestionar el error; los privilegios deben impedir eludirlo mediante escrituras directas.
 
 Toda validación entre filas necesita una estrategia de concurrencia. Comprobar mediante SELECT sin acordar bloqueos no garantiza por sí solo que dos operaciones simultáneas mantengan saldos y periodos válidos.
 
@@ -124,6 +124,8 @@ Cada consulta va precedida de un comentario con su objetivo, las reglas que trat
 
 ### Cálculo del coste
 
+La fecha de consulta filtra la vigencia del precio seleccionado actualmente. La composición de las recetas y la selección de precios no tienen versionado: consultar una fecha pasada no reconstruye el escandallo de entonces y puede devolver NULL aunque exista otro precio histórico no seleccionado.
+
 El coste recorre las subrecetas con una CTE recursiva. Para cada receta se calcula cuántas elaboraciones de cada subreceta necesita, convirtiendo la cantidad a la unidad de rendimiento mediante `factor_a_base`. Cada ingrediente se valora con su precio seleccionado y vigente en `@ahora`, convertido a la unidad de la línea (RC-05, D-01). Solo se convierten unidades de la misma magnitud (RC-15).
 
 El coste queda en `NULL`, y no en cero, si falta un precio válido, las unidades no son compatibles, una receta no tiene componentes o existe un ciclo (RC-11). La recursión registra las recetas recorridas, de modo que termina aunque los datos contengan un ciclo. Los costes se redondean a cuatro decimales; las valoraciones y los porcentajes, a dos.
@@ -132,9 +134,7 @@ Con los datos de `02_datos.sql`, el coste por ración es de 0,7232 € para la p
 
 ### Verificación
 
-El script se ha ejecutado en MariaDB <VERSIÓN> sobre la base vacía, sobre los datos de `02_datos.sql` y sobre un juego adicional de casos límite que reproduce los escenarios de la sección 4.7. En todos los casos termina sin errores ni avisos, también con `ONLY_FULL_GROUP_BY`, y deja la base sin cambios. Con los casos límite se obtienen los valores de los escenarios: precio de referencia de 1,20 €/kg, coste de la degustación de 0,60 € con un margen del 80 %, saldo de 8 kg tras la merma y rechazo del lote fresco a las 72 horas. Además, las consultas de control detectan cada incumplimiento introducido a propósito.
-
-Con los datos actuales de `02_datos.sql`, las consultas de control C-23 a C-27 devuelven cero filas: los periodos de carta permanente comienzan cuando termina cada sugerencia del chef y las autorizaciones son previas al alta en carta.
+El script se ha revisado estáticamente; no se dispone de resultados de ejecución de esta versión en MariaDB. Los importes y resultados descritos son los previstos al leer el escenario. Queda pendiente ejecutar las consultas, incluidos los controles C-23 a C-27, conservar la salida con fecha y versión concreta y documentar solo lo observado. No se ha verificado ONLY_FULL_GROUP_BY ni los casos límite en ejecución.
 
 ## 6.4. Script de creación de funciones y procedimientos
 
@@ -168,6 +168,7 @@ Los costes y márgenes actuales se calculan al consultarlos y no se almacenan en
 | `sp_incorporar_carta` | Registra conjuntamente un periodo de carta permanente y su autorización. |
 | `sp_cerrar_periodo` | Cierra o acorta un periodo de oferta respetando las restricciones del historial. |
 | `sp_registrar_merma` | Dar de alta una merma de plato o de lote. |
+| `sp_registrar_receta` | Registrar receta y componentes en una transacción, exigiendo GESTIONAR_RECETAS y al menos una línea. |
 
 Los procedimientos de escritura gestionan sus propias transacciones y deben invocarse fuera de una transacción ya abierta. Si una comprobación falla, ejecutan `ROLLBACK` y propagan el error mediante `RESIGNAL`.
 
@@ -175,19 +176,37 @@ El procedimiento de movimientos bloquea el lote durante la operación. Comprueba
 
 Los procedimientos de oferta bloquean el plato para coordinar las operaciones sobre sus periodos. La incorporación a la carta inserta primero el periodo y después su autorización dentro de una misma transacción. Si la autorización falla, también se deshace la creación del periodo.
 
-Para los usuarios distintos del administrador, se comprueban los permisos `CONSULTAR_COSTES`, `GESTIONAR_STOCK`, `REGISTRAR_MERMAS` y `GESTIONAR_PLATOS`, según la operación. La incorporación a la carta exige específicamente un administrador activo.
+Para los usuarios distintos del administrador, se comprueban los permisos `CONSULTAR_COSTES`, `GESTIONAR_STOCK`, `REGISTRAR_MERMAS`, `GESTIONAR_PLATOS` y `GESTIONAR_RECETAS`, según la operación. La incorporación a la carta exige específicamente un administrador activo.
 
 ### Alcance
 
 El identificador de usuario recibido por un procedimiento no demuestra su identidad: la autenticación corresponde a la aplicación. Las cuentas operativas deben utilizar los procedimientos autorizados y no disponer de escrituras directas que permitan eludir sus comprobaciones.
 
-sp_registrar_merma exige el permiso REGISTRAR_MERMAS. Para una merma de lote, bloquea el lote, comprueba los saldos históricos y registra conjuntamente la salida y la merma, revirtiendo ambas ante cualquier error. Para una merma de plato no genera movimientos de stock. El coste recibido representa el importe histórico total; admite NULL cuando se desconoce. Las mermas registradas son definitivas.
+sp_registrar_merma exige el permiso REGISTRAR_MERMAS. Para una merma de lote, bloquea el lote, comprueba los saldos históricos y registra conjuntamente la salida y la merma, revirtiendo ambas ante cualquier error. Para una merma de plato no genera movimientos de stock. El coste recibido representa el importe histórico total; admite NULL cuando se desconoce. Las mermas registradas son definitivas: no se permite editarlas, borrarlas ni anularlas en esta versión. Un ajuste de stock no modifica los informes de pérdidas de la merma original.
 
 Los triggers de 05 impiden introducir ciclos al editar recetas y solapamientos de precios. La detección de ciclos durante el cálculo evita devolver un coste válido para una composición cíclica, pero no sustituye la validación de su registro.
 
+### Alta completa de recetas
+
+sp_registrar_receta recibe usuario, nombre, cantidad de rendimiento, unidad de rendimiento y una lista JSON de componentes. Usa JSON_TABLE, disponible en el objetivo MariaDB 10.6+, para insertar las líneas. Cada objeto contiene cantidad, unidad_medida y exactamente uno de id_ingrediente o id_receta_componente. Requiere instalar 05 antes de utilizarse: sus triggers validan magnitudes y ciclos, y el DDL valida cantidades, referencias y exclusividad.
+
+Ejemplo con ingrediente y subreceta:
+
+```sql
+CALL sp_registrar_receta(2, 'Pasta de prueba', 4, 'racion',
+ '[{"cantidad":800,"unidad_medida":"g","id_ingrediente":5},
+   {"cantidad":500,"unidad_medida":"g","id_receta_componente":1}]');
+```
+
+La llamada es autónoma, exige GESTIONAR_RECETAS y rechaza una lista vacía o un documento JSON inválido. Un fallo en cualquier línea revierte cabecera y componentes. El procedimiento devuelve id_receta. No se impide insertar manualmente una cabecera vacía: se adopta este procedimiento como flujo operativo del proyecto. Un borrado de receta completa por ON DELETE CASCADE no ejecuta los triggers de componentes; sigue sujeto a las FK que impiden eliminar recetas referenciadas.
+
+### Alcance de las fechas al costear
+
+sp_consultar_escandallo utiliza la composición y selección de precios actuales; p_fecha comprueba la vigencia del precio seleccionado. No reconstruye versiones históricas de recetas o selecciones. Se conserva este alcance sin añadir tablas de histórico.
+
 ## 6.5. Script de creación de triggers asociados a reglas de negocio
 
-El archivo `sql/05_triggers.sql` contiene los triggers que aplican las reglas RN-01 a RN-04, protegen los datos históricos relacionados y aplican las reglas de integridad RC-04, RC-12 y RC-15. Las operaciones que incumplen una comprobación se rechazan mediante `SIGNAL SQLSTATE '45000'`, acompañado de un mensaje explicativo. En total se crean 18 triggers y 2 funciones auxiliares (`fn_validar_precio` y `fn_validar_componente`).
+El archivo `sql/05_triggers.sql` contiene los triggers que aplican las reglas RN-01 a RN-04, protegen los datos históricos relacionados y aplican las reglas de integridad RC-04, RC-12, RC-14, RC-15 y RC-17. Las operaciones que incumplen una comprobación se rechazan mediante `SIGNAL SQLSTATE '45000'`, acompañado de un mensaje explicativo. En total se crean 23 triggers y 2 funciones auxiliares (`fn_validar_precio` y `fn_validar_componente`).
 
 ### Reglas implementadas
 
@@ -235,15 +254,22 @@ Los triggers `trg_componente_bi_negocio` y `trg_componente_bu_negocio` aplican R
 
 Los triggers `trg_unidad_bu_negocio`, `trg_ingrediente_bu_negocio` y `trg_receta_bu_negocio` impiden cambiar el código, la magnitud o el factor de una unidad en uso, la unidad de un ingrediente con lotes, precios o componentes, y el rendimiento de una subreceta utilizada por otra receta. De este modo, los datos históricos no se reinterpretan.
 
-Estos triggers comprueban sin bloqueos explícitos: dos conexiones simultáneas podrían crear a la vez dos precios solapados o dos líneas que formen un ciclo. La concurrencia queda pendiente. Tampoco garantizan el mínimo 1..* de componentes de una receta ni validan los borrados de líneas.
+Estos triggers comprueban sin bloqueos explícitos: dos conexiones simultáneas podrían crear a la vez dos precios solapados o dos líneas que formen un ciclo. La concurrencia queda pendiente. El alta operativa completa y los borrados/traslados de la última línea se cubren con el procedimiento y los triggers nuevos; la inserción manual de una cabecera vacía sigue permitida.
+
+### Nuevas comprobaciones de integridad
+
+- trg_merma_bi_coherencia exige que una merma de lote coincida con su movimiento en lote, cantidad, fecha, tipo SALIDA y finalidad MERMA. UNIQUE(id_movimiento) impide duplicar el enlace. Las mermas de plato siguen sin movimiento.
+- trg_plato_bi_raciones y trg_plato_bu_raciones exigen recetas con rendimiento de magnitud RACION. trg_receta_bu_negocio mantiene esa condición al cambiar su unidad. Las subrecetas sin plato asociado pueden rendir en kg o litros.
+- trg_componente_bd_minimo impide borrar la última línea de una receta conservada. trg_componente_bu_negocio impide trasladarla a otra receta. No se certifica concurrencia entre conexiones.
+- trg_lote_bu_historico impide cambiar ingrediente o fecha de recepción cuando hay movimientos. Permite editar ubicación y conserva el alcance actual para caducidad, frescura y aptitud; no incorpora historial de aptitud.
 
 ### Ejecución y validación
 
 Los archivos se ejecutan con las tablas ya creadas, primero `sql/04_funciones_procedimientos.sql` y después `sql/05_triggers.sql`. Ambos deben estar instalados antes de utilizar los procedimientos.
 
-La instalación de triggers no comprueba retroactivamente los datos que ya existían. Tampoco garantiza por sí sola todas las reglas pendientes del proyecto, como el mínimo 1..* de componentes de una receta, los borrados de componentes o la concurrencia.
+La instalación de triggers no comprueba retroactivamente los datos que ya existían. No elimina las limitaciones aceptadas: cabeceras de receta vacías insertadas manualmente, escritura directa sin privilegios restringidos y concurrencia general no certificada.
 
-Las pruebas del apartado 6.7 comprueban 94 casos de negocio que cubren cálculos de costes, límites temporales, autorizaciones, saldos, integridad de precios, recetas y unidades, y reversión de operaciones rechazadas. Sus resultados deben conservarse de la ejecución real en la versión de MariaDB utilizada por el equipo.
+Las pruebas del apartado 6.7 comprueban 128 casos de negocio que cubren cálculos de costes, límites temporales, autorizaciones, saldos, integridad de precios, recetas y unidades, y reversión de operaciones rechazadas. Sus resultados deben conservarse de la ejecución real en la versión de MariaDB utilizada por el equipo.
 
 Queda pendiente verificar la versión de MariaDB utilizada en clase, la integración con los demás scripts, los privilegios de las cuentas operativas y la concurrencia con varias conexiones.
 
@@ -304,7 +330,7 @@ Las rutinas pueden recrearse cuantas veces se desee (cada una se elimina con `DR
 
 La creación de la merma de lote se realiza dentro de `pob_registrar_merma_lote`, que inserta primero la salida y después la merma con su `id_movimiento`.
 
-El script se ha comprobado en MariaDB <VERSIÓN> sobre una base creada con `01_tablas.sql`: la carga completa coincide con la de `02_datos.sql`, y los casos de error (referencia inexistente, saldo negativo, solape de precios, solape de periodos, emisor no administrador y segunda ejecución) detienen la carga sin dejar datos parciales.
+La equivalencia de los pares rol-permiso entre 02 y 06 se ha comprobado estáticamente: 16 pares únicos (administrador 8, encargado 6 y empleado 2). La equivalencia del resto del escenario y los casos de error deben verificarse ejecutando la carga y las pruebas en una copia vacía, con salida fechada y versión concreta. Esta revisión no acredita ejecución en MariaDB.
 
 ### Contrato de transacciones
 
@@ -331,9 +357,9 @@ El script selecciona el bloque de pruebas según la presencia de triggers:
 | Bloque | Preparación | Comprobaciones |
 |---|---|---:|
 | Esquema y poblado | Archivos 01 y 02, sin triggers. | 66 |
-| Funciones, triggers y procedimientos | Archivos 01, 02, 04 y 05. | 94 |
+| Funciones, triggers y procedimientos | Archivos 01, uno de los poblados y 04/05. | 128 |
 
-El archivo define 172 comprobaciones distintas: 66 del esquema, 94 de negocio y 12 adicionales del procedimiento de movimientos del poblado 06. No todas se ejecutan en cada pasada.
+El archivo define 206 comprobaciones distintas: 66 del esquema, 128 de negocio y 12 adicionales del procedimiento de movimientos del poblado 06. No todas se ejecutan en cada pasada.
 
 Cuando está instalado `pob_registrar_movimiento`, se ejecutan las pruebas adicionales de salidas y ajustes retroactivos inválidos, movimientos retroactivos válidos, movimientos simultáneos, primera entrada y conservación de la transacción del llamador. Estas pruebas dejan datos auxiliares en la copia, por lo que solo se ejecutan la primera vez: si los lotes auxiliares 9101 a 9103 ya existen, se registra una entrada PENDIENTE en lugar de abortar.
 
@@ -346,6 +372,10 @@ Las pruebas de funciones comprueban conversiones, costes de ingredientes y subre
 Las pruebas de triggers comprueban la protección del historial, los periodos de oferta, las autorizaciones y las reglas temporales. Incluyen los límites exactos de 48 y 72 horas y un periodo de sugerencia de 14 días. También cubren la integridad de precios, recetas y unidades: solape de vigencias (y su límite contiguo, que se permite), unidad de precio o de componente incompatible, ciclo indirecto y cambios de factor, unidad o rendimiento en elementos en uso.
 
 Las pruebas de procedimientos comprueban permisos, movimientos, mermas, sugerencias, incorporación a carta y cierre de periodos. Verifican que una merma de lote genere su salida enlazada y que una merma de plato no vuelva a descontar ingredientes.
+
+Las 34 regresiones nuevas cubren el enlace de mermas, rendimiento en raciones, borrado y traslado de componentes, edición mínima de lotes, permisos y atomicidad del alta de recetas y el orden de movimientos simultáneos de C-26. La prueba de coste NULL por subreceta vacía crea deliberadamente una cabecera vacía manual; ya no borra todos los componentes de una receta existente.
+
+El bloque de negocio añade tres entradas PENDIENTE: concurrencia, privilegios operativos y cobertura adicional de 06. Si 06 está instalado y sus datos auxiliares ya existen por una pasada anterior, aparece una cuarta entrada PENDIENTE. Estas entradas no cuentan como pruebas aprobadas.
 
 ### Método
 
@@ -369,7 +399,7 @@ Utilizar una instancia MariaDB 10.6 o superior dedicada a pruebas. No ejecutar s
 2. Cargar `02_datos.sql`.
 3. Ejecutar `07_pruebas.sql`: realizará las 66 comprobaciones del esquema.
 4. Instalar `04_funciones_procedimientos.sql` y después `05_triggers.sql` completos, incluyendo el procedimiento de mermas, sus triggers de protección y los triggers de integridad de precios, recetas y unidades.
-5. Volver a ejecutar `07_pruebas.sql`: realizará las 94 comprobaciones de negocio.
+5. Volver a ejecutar `07_pruebas.sql`: realizará las 128 comprobaciones de negocio.
 
 El archivo utiliza la base `plato_plato`, por lo que debe ejecutarse en un entorno de pruebas separado del entorno de trabajo. No debe utilizarse la opción `--force`.
 
@@ -389,8 +419,16 @@ Al modificar los permisos del poblado deben actualizarse también sus recuentos 
 
 El archivo se ha revisado estáticamente, pero esta versión autónoma no se ha ejecutado en MariaDB en el entorno de preparación. Los resultados previstos no equivalen a resultados observados. Debe conservarse la salida real obtenida en la versión utilizada por el equipo, indicando su fecha.
 
-Quedan como PENDIENTE las pruebas coordinadas de concurrencia (también para los triggers de precios, recetas y unidades, que comprueban sin bloqueos), el mínimo 1..* de componentes y la validación de borrados en las recetas, los privilegios operativos y la cobertura adicional del poblado opcional 06.
+Quedan como PENDIENTE las pruebas coordinadas de concurrencia (también para los triggers de precios, recetas y unidades, que comprueban sin bloqueos), los privilegios operativos y la cobertura adicional del poblado opcional 06.
 
 La detección de NULL al calcular un coste complementa, pero no sustituye, a los triggers que impiden registrar composiciones inválidas.
 
-Estas pruebas utilizan exclusivamente `02_datos.sql`. El poblado mediante procedimientos del archivo 06 debe comprobarse por separado sobre otra base vacía.
+Las pruebas admiten uno de los poblados: 02 o 06, nunca ambos sobre la misma copia. La ruta alternativa es 01 → 06 → 07. Instalar 04/05 después permite ejecutar negocio en esa copia; si las regresiones de 06 ya dejaron sus datos auxiliares, se registran como PENDIENTE en lugar de repetirse.
+
+## Alcance acordado para la entrega de clase
+
+La revisión del 12/11/2026 incorpora los puntos 5, 6, 7, 10 y la protección mínima del 8 de la lista de incidencias. El punto 1 ya está corregido en 06. La ejecución completa (punto 2) queda aplazada; los nuevos casos de prueba están escritos, pero no ejecutados en MariaDB durante esta revisión.
+
+C-26 usa fecha_movimiento e id_movimiento con ROWS UNBOUNDED PRECEDING, igual que los procedimientos, para detectar negativos intermedios incluso con movimientos simultáneos. En C-12/C-13, «cantidad disponible» significa saldo registrado; no garantiza aptitud para elaboración. Se conserva ese nombre y se consultan aparte caducidad, frescura y aptitud.
+
+Se mantienen fuera del alcance actual los privilegios MariaDB, la concurrencia general, el historial de aptitud, usuario/motivo en movimientos y ajustes, la relación entre ingrediente retirado y receta destino y la ampliación de permisos. RN-02 sigue exigiendo administrador activo; fn_tiene_permiso conserva su comportamiento actual para administradores incluso ante nombres de permiso inexistentes. Se mantiene la convención local Europe/Madrid y su limitación durante cambios de hora, sin añadir configuración de conexión. Estas limitaciones no se consideran funcionalidad implementada.

@@ -2,7 +2,7 @@
 -- SOLO sobre una copia desechable con 01 y UNO de los poblados: 02 o 06.
 -- Primera ejecucion: sin 04/05, ejecuta 66 comprobaciones del esquema.
 -- Segunda ejecucion: instalar 04 y 05 completos y ejecutar de nuevo;
--- realiza 94 comprobaciones de negocio y cuatro entradas PENDIENTE.
+-- realiza 128 comprobaciones de negocio y tres entradas PENDIENTE; una cuarta si se omiten regresiones de 06 ya ejecutadas.
 -- Detecta el modo por la presencia de triggers. Rechaza instalaciones parciales.
 -- Las pruebas de negocio CONFIRMAN escrituras: recrear la copia antes de repetirlas.
 -- Si esta instalado 06, anade 12 comprobaciones de su procedimiento de movimientos.
@@ -173,12 +173,14 @@ CALL pp67_comprobar('Emisores administradores', NOT EXISTS (
                            'trg_merma_bu_historico','trg_merma_bd_historico',
                            'trg_precio_bi_negocio','trg_precio_bu_negocio',
                            'trg_componente_bi_negocio','trg_componente_bu_negocio',
-                           'trg_unidad_bu_negocio','trg_ingrediente_bu_negocio','trg_receta_bu_negocio'))<>18 THEN
+                           'trg_unidad_bu_negocio','trg_ingrediente_bu_negocio','trg_receta_bu_negocio',
+                           'trg_merma_bi_coherencia','trg_plato_bi_raciones','trg_plato_bu_raciones',
+                           'trg_componente_bd_minimo','trg_lote_bu_historico'))<>23 THEN
    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Instalacion parcial: ejecutar 05 completo antes de las pruebas de negocio';
   END IF;
   SELECT COUNT(*) INTO v_rutinas FROM information_schema.routines
-  WHERE routine_schema=DATABASE() AND routine_name IN ('fn_convertir','fn_coste_ingrediente','fn_coste_receta','fn_coste_plato','fn_margen_plato','fn_stock_lote','fn_tiene_permiso','sp_consultar_escandallo','sp_registrar_movimiento','sp_registrar_sugerencia','sp_incorporar_carta','sp_cerrar_periodo','sp_registrar_merma');
-  IF v_rutinas<>13 THEN
+  WHERE routine_schema=DATABASE() AND routine_name IN ('fn_convertir','fn_coste_ingrediente','fn_coste_receta','fn_coste_plato','fn_margen_plato','fn_stock_lote','fn_tiene_permiso','sp_consultar_escandallo','sp_registrar_movimiento','sp_registrar_sugerencia','sp_incorporar_carta','sp_cerrar_periodo','sp_registrar_merma','sp_registrar_receta');
+  IF v_rutinas<>14 THEN
    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Faltan rutinas: ejecutar 04 completo antes de las pruebas de negocio';
   END IF;
   IF (SELECT COUNT(*) FROM information_schema.routines
@@ -191,7 +193,7 @@ CALL pp67_comprobar('Emisores administradores', NOT EXISTS (
      OR EXISTS(SELECT 1 FROM periodos_oferta WHERE id_periodo_oferta=9002) THEN
    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Hay datos de otras pruebas: preparar una copia nueva con 01 y 02';
   END IF;
-  SELECT 'NEGOCIO: 94 comprobaciones y cuatro PENDIENTE' AS bloque;
+  SELECT 'NEGOCIO: 128 comprobaciones y tres PENDIENTE (mas otra si se omiten regresiones previas de 06)' AS bloque;
 -- Funciones y triggers: 01 + 02 + 04 + 05, sin transaccion exterior.
 CALL pp67_comprobar('Conversion kg a g', (fn_convertir(1,'kg','g')=1000), 'Resultado esperado de la regla comprobada');
 CALL pp67_comprobar('Conversion ml a l', (fn_convertir(250,'ml','l')=0.25), 'Resultado esperado de la regla comprobada');
@@ -218,7 +220,8 @@ UPDATE precios_compra SET seleccionado_para_costeo=0 WHERE id_ingrediente=1;
 CALL pp67_comprobar('Precio ausente propaga NULL', (fn_coste_plato(1,'2026-11-10') IS NULL), 'Resultado esperado de la regla comprobada');
 ROLLBACK;
 START TRANSACTION;
-DELETE FROM componentes_receta WHERE id_receta=1;
+INSERT INTO recetas(id_receta,nombre,cantidad_rendimiento,unidad_rendimiento) VALUES(9200,'__pp67_vacia',1,'kg');
+INSERT INTO componentes_receta(id_receta,cantidad,unidad_medida,id_receta_componente) VALUES(1,1,'kg',9200);
 CALL pp67_comprobar('Subreceta vacia propaga NULL', (fn_coste_plato(1,'2026-11-10') IS NULL), 'Resultado esperado de la regla comprobada');
 ROLLBACK;
 -- Integridad de unidades, precios y recetas (RC-04, RC-12, RC-15).
@@ -335,9 +338,66 @@ SET @periodo=(SELECT id_periodo_oferta FROM periodos_oferta WHERE id_plato=9001 
 CALL pp67_caso('Cerrar periodo: cierre valido', 'CALL sp_cerrar_periodo(1,@periodo,CURRENT_TIMESTAMP(6)+INTERVAL 3 DAY)', 0, NULL, TRUE);
 CALL pp67_comprobar('Cerrar periodo: fecha guardada', ((SELECT fecha_fin IS NOT NULL FROM periodos_oferta WHERE id_periodo_oferta=@periodo)), 'Resultado esperado de la regla comprobada');
 CALL pp67_caso('Cerrar periodo: no prolongar', 'CALL sp_cerrar_periodo(1,@periodo,CURRENT_TIMESTAMP(6)+INTERVAL 4 DAY)', 1644, 'Solo se permite cerrar o acortar', TRUE);
+-- Regresiones nuevas: RC-12, RC-14, RC-15, RC-17 y orden de C-26.
+INSERT INTO recetas(id_receta,nombre,cantidad_rendimiento,unidad_rendimiento) VALUES
+(9201,'__pp67_un_componente',1,'racion'),(9202,'__pp67_destino',1,'racion'),(9203,'__pp67_masa',1,'kg');
+INSERT INTO componentes_receta(id_receta,cantidad,unidad_medida,id_ingrediente) VALUES(9201,100,'g',1);
+INSERT INTO lotes(id_lote,identificador_lote,id_ingrediente,fecha_entrada,ubicacion_almacen,fresco,apto_para_consumo)
+VALUES(9201,'__pp67_editable',1,'2026-11-01','Prueba',0,1);
+
+CALL pp67_caso('Receta: ultimo componente no se borra', 'DELETE FROM componentes_receta WHERE id_receta=9201', 1644, 'RC-12:', FALSE);
+CALL pp67_caso('Receta: ultimo componente no se traslada', 'UPDATE componentes_receta SET id_receta=9202 WHERE id_receta=9201', 1644, 'RC-12:', FALSE);
+CALL pp67_caso('Receta: borrar una linea conservando otras', 'DELETE FROM componentes_receta WHERE id_componente=1', 0, NULL, FALSE);
+CALL pp67_caso('Receta: trasladar una linea conservando otras', 'UPDATE componentes_receta SET id_receta=9202 WHERE id_componente=1', 0, NULL, FALSE);
+CALL pp67_caso('Plato: rechaza receta que rinde kg', 'INSERT INTO platos(id_receta,nombre,descripcion,categoria) VALUES(9203,''__pp67_kg'',''Prueba'',''Prueba'')', 1644, 'RC-15:', FALSE);
+CALL pp67_caso('Plato: cambio a receta en kg rechazado', 'UPDATE platos SET id_receta=9203 WHERE id_plato=9001', 1644, 'RC-15:', FALSE);
+CALL pp67_caso('Receta de plato: no cambiar a kg', 'UPDATE recetas SET unidad_rendimiento=''kg'' WHERE id_receta=9001', 1644, 'RC-15:', FALSE);
+CALL pp67_caso('Plato: receta en raciones permitida', 'INSERT INTO platos(id_receta,nombre,descripcion,categoria) VALUES(9201,''__pp67_racion'',''Prueba'',''Prueba'')', 0, NULL, FALSE);
+CALL pp67_caso('Subreceta sin plato: unidad de masa permitida', 'UPDATE recetas SET unidad_rendimiento=''g'' WHERE id_receta=9203', 0, NULL, FALSE);
+CALL pp67_caso('Lote con movimientos: no cambiar ingrediente', 'UPDATE lotes SET id_ingrediente=2 WHERE id_lote=9001', 1644, 'RC-17:', FALSE);
+CALL pp67_caso('Lote con movimientos: no cambiar recepcion', 'UPDATE lotes SET fecha_entrada=''2026-11-08'' WHERE id_lote=9001', 1644, 'RC-17:', FALSE);
+CALL pp67_caso('Lote con movimientos: ubicacion editable', 'UPDATE lotes SET ubicacion_almacen=''Otra'' WHERE id_lote=9001', 0, NULL, FALSE);
+CALL pp67_caso('Lote sin movimientos: ingrediente editable', 'UPDATE lotes SET id_ingrediente=2 WHERE id_lote=9201', 0, NULL, FALSE);
+CALL pp67_caso('Lote sin movimientos: recepcion editable', 'UPDATE lotes SET fecha_entrada=''2026-11-02'' WHERE id_lote=9201', 0, NULL, FALSE);
+INSERT INTO movimientos_stock(id_lote,tipo,cantidad,fecha_movimiento,finalidad_salida)
+VALUES(9201,'ENTRADA',10,'2026-11-01 08:00:00',NULL);
+SET @coh_entrada=LAST_INSERT_ID();
+INSERT INTO movimientos_stock(id_lote,tipo,cantidad,fecha_movimiento,finalidad_salida)
+VALUES(9201,'SALIDA',2,'2026-11-02 08:00:00','OTRA');
+SET @coh_otra=LAST_INSERT_ID();
+INSERT INTO movimientos_stock(id_lote,tipo,cantidad,fecha_movimiento,finalidad_salida)
+VALUES(9201,'SALIDA',2,'2026-11-03 08:00:00','MERMA');
+SET @coh_merma=LAST_INSERT_ID();
+CALL pp67_caso('RC-14: enlace correcto permitido', 'INSERT INTO mermas(id_lote,cantidad_desperdiciada,fecha_merma,motivo,id_movimiento) VALUES(9201,2,''2026-11-03 08:00:00'',''OTRO'',@coh_merma)', 0, NULL, FALSE);
+CALL pp67_caso('RC-14: lote distinto rechazado', 'INSERT INTO mermas(id_lote,cantidad_desperdiciada,fecha_merma,motivo,id_movimiento) VALUES(9001,2,''2026-11-03 08:00:00'',''OTRO'',@coh_merma)', 1644, 'RC-14:', FALSE);
+CALL pp67_caso('RC-14: cantidad distinta rechazada', 'INSERT INTO mermas(id_lote,cantidad_desperdiciada,fecha_merma,motivo,id_movimiento) VALUES(9201,1,''2026-11-03 08:00:00'',''OTRO'',@coh_merma)', 1644, 'RC-14:', FALSE);
+CALL pp67_caso('RC-14: fecha distinta rechazada', 'INSERT INTO mermas(id_lote,cantidad_desperdiciada,fecha_merma,motivo,id_movimiento) VALUES(9201,2,''2026-11-04'',''OTRO'',@coh_merma)', 1644, 'RC-14:', FALSE);
+CALL pp67_caso('RC-14: entrada no es merma', 'INSERT INTO mermas(id_lote,cantidad_desperdiciada,fecha_merma,motivo,id_movimiento) VALUES(9201,10,''2026-11-01 08:00:00'',''OTRO'',@coh_entrada)', 1644, 'RC-14:', FALSE);
+CALL pp67_caso('RC-14: finalidad OTRA no es merma', 'INSERT INTO mermas(id_lote,cantidad_desperdiciada,fecha_merma,motivo,id_movimiento) VALUES(9201,2,''2026-11-02 08:00:00'',''OTRO'',@coh_otra)', 1644, 'RC-14:', FALSE);
+CALL pp67_caso('RC-14: movimiento inexistente rechazado', 'INSERT INTO mermas(id_lote,cantidad_desperdiciada,fecha_merma,motivo,id_movimiento) VALUES(9201,2,''2026-11-03 08:00:00'',''OTRO'',4294967295)', 1644, 'RC-14:', FALSE);
+CALL pp67_caso('RC-14: enlace duplicado rechazado', 'INSERT INTO mermas(cantidad_desperdiciada,fecha_merma,motivo,id_lote,id_movimiento) SELECT cantidad_desperdiciada,fecha_merma,motivo,id_lote,id_movimiento FROM mermas WHERE id_merma=1', 1062, NULL, FALSE);
+CALL pp67_caso('Alta receta: empleado sin permiso', 'CALL sp_registrar_receta(3,''__pp67_alta'',2,''racion'',''[{"cantidad":100,"unidad_medida":"g","id_ingrediente":1},{"cantidad":50,"unidad_medida":"g","id_ingrediente":2}]'')', 1644, 'Sin permiso GESTIONAR_RECETAS', TRUE);
+CALL pp67_caso('Alta receta: usuario inactivo', 'CALL sp_registrar_receta(4,''__pp67_alta'',2,''racion'',''[{"cantidad":100,"unidad_medida":"g","id_ingrediente":1},{"cantidad":50,"unidad_medida":"g","id_ingrediente":2}]'')', 1644, 'Sin permiso GESTIONAR_RECETAS', TRUE);
+CALL pp67_caso('Alta receta: lista vacia', 'CALL sp_registrar_receta(2,''__pp67_alta'',2,''racion'',''[]'')', 1644, 'RC-12:', TRUE);
+CALL pp67_caso('Alta receta: JSON invalido', 'CALL sp_registrar_receta(2,''__pp67_alta'',2,''racion'',''{'')', 1644, 'RC-12:', TRUE);
+CALL pp67_caso('Alta receta: objeto en lugar de lista', 'CALL sp_registrar_receta(2,''__pp67_alta'',2,''racion'',''{}'')', 1644, 'RC-12:', TRUE);
+SET @nr=(SELECT COUNT(*) FROM recetas), @nc=(SELECT COUNT(*) FROM componentes_receta);
+CALL pp67_caso('Alta receta: componente invalido revierte todo', 'CALL sp_registrar_receta(2,''__pp67_alta'',2,''racion'',''[{"cantidad":100,"unidad_medida":"g","id_ingrediente":1},{"cantidad":50,"unidad_medida":"l","id_ingrediente":2}]'')', 1644, 'RC-15:', TRUE);
+CALL pp67_comprobar('Alta receta: rollback de cabecera y lineas', ((SELECT COUNT(*) FROM recetas)=@nr AND (SELECT COUNT(*) FROM componentes_receta)=@nc AND @@in_transaction=0), 'Regresion de integridad academica');
+START TRANSACTION;
+CALL pp67_caso('Alta receta: rechaza transaccion exterior', 'CALL sp_registrar_receta(2,''__pp67_alta'',2,''racion'',''[{"cantidad":100,"unidad_medida":"g","id_ingrediente":1},{"cantidad":50,"unidad_medida":"g","id_ingrediente":2}]'')', 1644, 'Llamar fuera de una transaccion', TRUE);
+CALL pp67_comprobar('Alta receta: conserva transaccion exterior', (@@in_transaction=1), 'Regresion de integridad academica');
+ROLLBACK;
+CALL pp67_caso('Alta receta: encargado registra receta completa', 'CALL sp_registrar_receta(2,''__pp67_alta'',2,''racion'',''[{"cantidad":100,"unidad_medida":"g","id_ingrediente":1},{"cantidad":50,"unidad_medida":"g","id_ingrediente":2}]'')', 0, NULL, TRUE);
+CALL pp67_comprobar('Alta receta: cabecera y componentes guardados', ((SELECT COUNT(*) FROM recetas)=@nr+1 AND (SELECT COUNT(*) FROM componentes_receta)=@nc+2 AND (SELECT COUNT(*) FROM componentes_receta c JOIN recetas r ON r.id_receta=c.id_receta WHERE r.nombre='__pp67_alta')=2), 'Regresion de integridad academica');
+-- Datos invalidos deliberados dentro de una transaccion que se revierte.
+START TRANSACTION;
+INSERT INTO movimientos_stock(id_lote,tipo,cantidad,fecha_movimiento,finalidad_salida)
+VALUES(9201,'SALIDA',10,'2026-11-01 07:00:00','OTRA'),(9201,'ENTRADA',10,'2026-11-01 07:00:00',NULL);
+CALL pp67_comprobar('C-26: detecta negativo entre movimientos simultaneos', (EXISTS(SELECT 1 FROM (SELECT SUM(CASE WHEN tipo='SALIDA' THEN -cantidad ELSE cantidad END) OVER(PARTITION BY id_lote ORDER BY fecha_movimiento,id_movimiento ROWS UNBOUNDED PRECEDING) saldo FROM movimientos_stock WHERE id_lote=9201) s WHERE saldo<0)), 'Regresion de integridad academica');
+ROLLBACK;
 INSERT INTO pp67_resultados(prueba,resultado,detalle) VALUES
 ('Concurrencia','PENDIENTE','Esta suite es secuencial; faltan pruebas coordinadas con varias conexiones, tambien para los triggers de precios, componentes y unidades, que comprueban sin bloqueos.'),
-('RC-12: minimo de componentes y borrados','PENDIENTE','Ningun trigger garantiza que una receta tenga al menos un componente ni valida DELETE en componentes_receta.'),
 ('Privilegios de cuentas operativas','PENDIENTE','Se usa una cuenta de pruebas; no certifica las restricciones de cuentas de aplicacion.'),
 ('Poblado 06: cobertura adicional','PENDIENTE','Las 12 regresiones de movimientos se ejecutan si 06 esta instalado; faltan pruebas del resto de sus rutinas.');
 

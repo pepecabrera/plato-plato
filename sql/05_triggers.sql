@@ -145,7 +145,7 @@ BEGIN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RN-02: no se puede eliminar una autorizacion';
 END$$
 
--- RC-09 y S-07: las mermas registradas son definitivas, sin edicion ni borrado. Más adelante se puede implementar un sistema de edición de mermas.
+-- RC-09 y S-07: mermas definitivas; esta version no permite corregirlas ni anularlas.
 CREATE OR REPLACE TRIGGER trg_merma_bu_historico
 BEFORE UPDATE ON mermas FOR EACH ROW
 BEGIN
@@ -247,6 +247,9 @@ CREATE OR REPLACE TRIGGER trg_componente_bu_negocio
 BEFORE UPDATE ON componentes_receta FOR EACH ROW
 BEGIN
     DECLARE v_error VARCHAR(100);
+    IF NEW.id_receta<>OLD.id_receta AND NOT EXISTS(
+        SELECT 1 FROM componentes_receta WHERE id_receta=OLD.id_receta AND id_componente<>OLD.id_componente
+    ) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RC-12: no se puede dejar una receta sin componentes'; END IF;
     SET v_error=fn_validar_componente(OLD.id_componente,NEW.id_receta,NEW.unidad_medida,
                                       NEW.id_ingrediente,NEW.id_receta_componente);
     IF v_error IS NOT NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT=v_error; END IF;
@@ -284,6 +287,10 @@ END$$
 CREATE OR REPLACE TRIGGER trg_receta_bu_negocio
 BEFORE UPDATE ON recetas FOR EACH ROW
 BEGIN
+    IF EXISTS(SELECT 1 FROM platos WHERE id_receta=OLD.id_receta)
+       AND NOT EXISTS(SELECT 1 FROM unidades_medida WHERE codigo=NEW.unidad_rendimiento AND magnitud='RACION') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RC-15: la receta de un plato debe rendir en raciones';
+    END IF;
     IF NEW.unidad_rendimiento<>OLD.unidad_rendimiento OR NEW.cantidad_rendimiento<>OLD.cantidad_rendimiento THEN
         IF EXISTS(SELECT 1 FROM componentes_receta WHERE id_receta_componente=OLD.id_receta) THEN
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RC-15: no se puede cambiar el rendimiento de una subreceta en uso';
@@ -291,4 +298,53 @@ BEGIN
     END IF;
 END$$
 
+-- RC-14: la FK garantiza existencia, este trigger comprueba el hecho enlazado.
+-- La asociacion unica ya esta garantizada por UNIQUE(id_movimiento).
+CREATE OR REPLACE TRIGGER trg_merma_bi_coherencia
+BEFORE INSERT ON mermas FOR EACH ROW
+BEGIN
+    IF NEW.id_lote IS NOT NULL AND NOT EXISTS(
+        SELECT 1 FROM movimientos_stock m WHERE m.id_movimiento=NEW.id_movimiento
+          AND m.id_lote=NEW.id_lote AND m.cantidad=NEW.cantidad_desperdiciada
+          AND m.fecha_movimiento=NEW.fecha_merma AND m.tipo='SALIDA' AND m.finalidad_salida='MERMA'
+    ) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RC-14: la merma no coincide con su salida'; END IF;
+END$$
+
+CREATE OR REPLACE TRIGGER trg_plato_bi_raciones
+BEFORE INSERT ON platos FOR EACH ROW
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM recetas r JOIN unidades_medida u ON u.codigo=r.unidad_rendimiento
+                  WHERE r.id_receta=NEW.id_receta AND u.magnitud='RACION') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RC-15: la receta de un plato debe rendir en raciones';
+    END IF;
+END$$
+CREATE OR REPLACE TRIGGER trg_plato_bu_raciones
+BEFORE UPDATE ON platos FOR EACH ROW
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM recetas r JOIN unidades_medida u ON u.codigo=r.unidad_rendimiento
+                  WHERE r.id_receta=NEW.id_receta AND u.magnitud='RACION') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RC-15: la receta de un plato debe rendir en raciones';
+    END IF;
+END$$
+
+-- No bloquea el borrado de una receta completa por CASCADE: protege recetas conservadas.
+-- Alcance secuencial: no se certifica concurrencia entre conexiones.
+CREATE OR REPLACE TRIGGER trg_componente_bd_minimo
+BEFORE DELETE ON componentes_receta FOR EACH ROW
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM componentes_receta
+                  WHERE id_receta=OLD.id_receta AND id_componente<>OLD.id_componente) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RC-12: no se puede dejar una receta sin componentes';
+    END IF;
+END$$
+
+-- Proteccion minima del lote: no reinterpreta movimientos ya registrados.
+CREATE OR REPLACE TRIGGER trg_lote_bu_historico
+BEFORE UPDATE ON lotes FOR EACH ROW
+BEGIN
+    IF (NEW.id_ingrediente<>OLD.id_ingrediente OR NEW.fecha_entrada<>OLD.fecha_entrada)
+       AND EXISTS(SELECT 1 FROM movimientos_stock WHERE id_lote=OLD.id_lote) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RC-17: no cambiar ingrediente ni recepcion de un lote con movimientos';
+    END IF;
+END$$
 DELIMITER ;

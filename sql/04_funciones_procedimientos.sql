@@ -90,6 +90,8 @@ BEGIN
              OR EXISTS(SELECT 1 FROM permisos_adicionales_usuario pu WHERE pu.id_usuario=u.id_usuario AND pu.id_permiso=p.id_permiso)))));
 END$$
 
+-- La fecha filtra la vigencia del precio seleccionado ACTUALMENTE; se usa la receta actual.
+-- No reconstruye versiones historicas de recetas ni selecciones de precios.
 CREATE OR REPLACE PROCEDURE sp_consultar_escandallo(IN p_usuario INT UNSIGNED, IN p_plato INT UNSIGNED, IN p_fecha DATETIME(6))
 READS SQL DATA
 BEGIN
@@ -289,5 +291,44 @@ BEGIN
         COMMIT;
     END;
     SELECT v_merma AS id_merma,v_movimiento AS id_movimiento;
+END$$
+-- Alta operativa completa. p_componentes es un array JSON no vacio de objetos:
+-- {"cantidad":100,"unidad_medida":"g","id_ingrediente":1,"id_receta_componente":null}.
+-- Cada objeto utiliza ingrediente O subreceta. Requiere instalar 05 antes de usar.
+CREATE OR REPLACE PROCEDURE sp_registrar_receta(
+    IN p_usuario INT UNSIGNED, IN p_nombre VARCHAR(100),
+    IN p_rendimiento DECIMAL(14,4), IN p_unidad VARCHAR(10),
+    IN p_componentes LONGTEXT)
+MODIFIES SQL DATA
+BEGIN
+    DECLARE v_receta INT UNSIGNED;
+    IF @@in_transaction THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Llamar fuera de una transaccion'; END IF;
+    IF NOT fn_tiene_permiso(p_usuario,'GESTIONAR_RECETAS') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Sin permiso GESTIONAR_RECETAS';
+    END IF;
+    IF p_componentes IS NULL OR NOT JSON_VALID(p_componentes) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RC-12: componentes JSON invalidos';
+    END IF;
+    IF JSON_TYPE(p_componentes)<>'ARRAY' OR JSON_LENGTH(p_componentes)=0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RC-12: la receta requiere al menos un componente';
+    END IF;
+    SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+    BEGIN
+        DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+        START TRANSACTION;
+        INSERT INTO recetas(nombre,cantidad_rendimiento,unidad_rendimiento)
+        VALUES(p_nombre,p_rendimiento,p_unidad);
+        SET v_receta=LAST_INSERT_ID();
+        INSERT INTO componentes_receta(id_receta,cantidad,unidad_medida,id_ingrediente,id_receta_componente)
+        SELECT v_receta,j.cantidad,j.unidad_medida,j.id_ingrediente,j.id_receta_componente
+        FROM JSON_TABLE(p_componentes,'$[*]' COLUMNS (
+            cantidad DECIMAL(14,4) PATH '$.cantidad' ERROR ON EMPTY ERROR ON ERROR,
+            unidad_medida VARCHAR(10) PATH '$.unidad_medida' ERROR ON EMPTY ERROR ON ERROR,
+            id_ingrediente INT UNSIGNED PATH '$.id_ingrediente' NULL ON EMPTY ERROR ON ERROR,
+            id_receta_componente INT UNSIGNED PATH '$.id_receta_componente' NULL ON EMPTY ERROR ON ERROR
+        )) AS j;
+        COMMIT;
+    END;
+    SELECT v_receta AS id_receta;
 END$$
 DELIMITER ;
