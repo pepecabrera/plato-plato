@@ -103,7 +103,7 @@ BEGIN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RN-04: conservar el historial de oferta';
 END$$
 
--- RN-02: exige un administrador activo y guarda la evaluacion economica real.
+-- RN-02: exige un usuario activo con AUTORIZAR_CARTA y guarda la evaluacion economica real.
 -- La obligatoriedad de crear esta fila corresponde a sp_incorporar_carta.
 CREATE OR REPLACE TRIGGER trg_autorizacion_bi_negocio
 BEFORE INSERT ON autorizaciones_carta FOR EACH ROW
@@ -113,9 +113,8 @@ BEGIN
     DECLARE v_tipo VARCHAR(20);
     DECLARE v_coste DECIMAL(30,8);
     DECLARE v_precio DECIMAL(14,2);
-    IF NOT EXISTS(SELECT 1 FROM usuarios u JOIN roles r ON r.id_rol=u.id_rol
-                  WHERE u.id_usuario=NEW.id_emisor AND u.estado='ACTIVO' AND r.nombre='ADMINISTRADOR') THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RN-02: solo puede autorizar un administrador activo';
+    IF NOT fn_puede_autorizar_carta(NEW.id_emisor) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RN-02: se requiere un usuario activo con permiso AUTORIZAR_CARTA';
     END IF;
     SELECT id_plato,fecha_inicio,tipo INTO v_plato,v_inicio,v_tipo
     FROM periodos_oferta WHERE id_periodo_oferta=NEW.id_periodo_oferta;

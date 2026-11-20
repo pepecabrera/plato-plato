@@ -412,7 +412,7 @@ BEGIN
     VALUES (v_plato, p_tipo, p_inicio, p_fin);
 END$$
 
--- RN-02: autoriza la incorporación a carta un administrador con cuenta activa, antes del inicio del periodo.
+-- RN-02: autoriza un usuario activo con AUTORIZAR_CARTA, como maximo al inicio del periodo.
 -- El periodo de carta se localiza por plato y fecha de inicio.
 CREATE PROCEDURE pob_alta_autorizacion_carta(
     IN p_plato VARCHAR(100), IN p_inicio_carta DATETIME(6), IN p_correo_emisor VARCHAR(150),
@@ -429,12 +429,17 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: periodo de carta inexistente';
     END IF;
     SET v_emisor = pob_id_usuario(p_correo_emisor);
-    IF NOT EXISTS (SELECT 1 FROM usuarios u JOIN roles r ON r.id_rol = u.id_rol
-                   WHERE u.id_usuario = v_emisor AND r.nombre = 'ADMINISTRADOR' AND u.estado = 'ACTIVO') THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: el emisor debe ser un administrador activo (RN-02)';
+    -- Equivalente a fn_puede_autorizar_carta, sin depender de la instalacion de 04.
+    IF NOT EXISTS (
+        SELECT 1 FROM usuarios u JOIN permisos p ON p.nombre='AUTORIZAR_CARTA'
+        WHERE u.id_usuario=v_emisor AND u.estado='ACTIVO'
+          AND (EXISTS(SELECT 1 FROM roles_permisos rp WHERE rp.id_rol=u.id_rol AND rp.id_permiso=p.id_permiso)
+               OR EXISTS(SELECT 1 FROM permisos_adicionales_usuario pu WHERE pu.id_usuario=u.id_usuario AND pu.id_permiso=p.id_permiso))
+    ) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: RN-02 requiere un usuario activo con permiso AUTORIZAR_CARTA';
     END IF;
     IF p_fecha_autorizacion > p_inicio_carta THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: la autorización debe ser previa a la carta (RN-02)';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'pob: RN-02 no permite autorizar despues del inicio de la carta';
     END IF;
     INSERT INTO autorizaciones_carta (id_periodo_oferta, id_emisor, fecha_autorizacion,
                                       coste_evaluado, precio_venta_evaluado)

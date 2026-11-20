@@ -90,6 +90,18 @@ BEGIN
              OR EXISTS(SELECT 1 FROM permisos_adicionales_usuario pu WHERE pu.id_usuario=u.id_usuario AND pu.id_permiso=p.id_permiso)))));
 END$$
 
+-- RN-02 exige una concesion explicita incluso para el administrador.
+CREATE OR REPLACE FUNCTION fn_puede_autorizar_carta(p_usuario INT UNSIGNED)
+RETURNS BOOLEAN READS SQL DATA
+BEGIN
+    RETURN EXISTS(
+        SELECT 1 FROM usuarios u JOIN permisos p ON p.nombre='AUTORIZAR_CARTA'
+        WHERE u.id_usuario=p_usuario AND u.estado='ACTIVO'
+          AND (EXISTS(SELECT 1 FROM roles_permisos rp WHERE rp.id_rol=u.id_rol AND rp.id_permiso=p.id_permiso)
+               OR EXISTS(SELECT 1 FROM permisos_adicionales_usuario pu WHERE pu.id_usuario=u.id_usuario AND pu.id_permiso=p.id_permiso))
+    );
+END$$
+
 -- La fecha filtra la vigencia del precio seleccionado ACTUALMENTE; se usa la receta actual.
 -- No reconstruye versiones historicas de recetas ni selecciones de precios.
 CREATE OR REPLACE PROCEDURE sp_consultar_escandallo(IN p_usuario INT UNSIGNED, IN p_plato INT UNSIGNED, IN p_fecha DATETIME(6))
@@ -175,7 +187,7 @@ END$$
 
 -- RN-02: periodo y autorizacion se confirman juntos o se deshacen juntos.
 CREATE OR REPLACE PROCEDURE sp_incorporar_carta(
-    IN p_administrador INT UNSIGNED, IN p_plato INT UNSIGNED,
+    IN p_autorizador INT UNSIGNED, IN p_plato INT UNSIGNED,
     IN p_inicio DATETIME(6), IN p_fin DATETIME(6))
 MODIFIES SQL DATA
 BEGIN
@@ -188,16 +200,19 @@ BEGIN
     BEGIN
         DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
         START TRANSACTION;
-        SELECT id_usuario INTO v_usuario FROM usuarios WHERE id_usuario=p_administrador FOR UPDATE;
+        SELECT id_usuario INTO v_usuario FROM usuarios WHERE id_usuario=p_autorizador FOR UPDATE;
         SELECT id_plato INTO v_plato FROM platos WHERE id_plato=p_plato FOR UPDATE;
         IF v_usuario IS NULL OR v_plato IS NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Usuario o plato inexistente'; END IF;
+        IF NOT fn_puede_autorizar_carta(v_usuario) THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RN-02: se requiere un usuario activo con permiso AUTORIZAR_CARTA';
+        END IF;
         SET v_fecha=CURRENT_TIMESTAMP(6);
         IF p_inicio IS NULL OR p_inicio<v_fecha THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='La incorporacion no puede preceder a la autorizacion actual'; END IF;
         INSERT INTO periodos_oferta(id_plato,tipo,fecha_inicio,fecha_fin)
         VALUES(p_plato,'CARTA_PERMANENTE',p_inicio,p_fin);
         SET v_id=LAST_INSERT_ID();
         INSERT INTO autorizaciones_carta(id_periodo_oferta,id_emisor,fecha_autorizacion,coste_evaluado,precio_venta_evaluado)
-        VALUES(v_id,p_administrador,v_fecha,0,1);
+        VALUES(v_id,v_usuario,v_fecha,0,1);
         -- Los valores provisionales se sustituyen en BEFORE INSERT por los calculados.
         COMMIT;
     END;

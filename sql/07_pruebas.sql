@@ -2,7 +2,7 @@
 -- SOLO sobre una copia desechable con 01 y UNO de los poblados: 02 o 06.
 -- Primera ejecucion: sin 04/05, ejecuta 66 comprobaciones del esquema.
 -- Segunda ejecucion: instalar 04 y 05 completos y ejecutar de nuevo;
--- realiza 128 comprobaciones de negocio y tres entradas PENDIENTE; una cuarta si se omiten regresiones de 06 ya ejecutadas.
+-- realiza 133 comprobaciones de negocio y tres entradas PENDIENTE; una cuarta si se omiten regresiones de 06 ya ejecutadas.
 -- Detecta el modo por la presencia de triggers. Rechaza instalaciones parciales.
 -- Las pruebas de negocio CONFIRMAN escrituras: recrear la copia antes de repetirlas.
 -- Si esta instalado 06, anade 12 comprobaciones de su procedimiento de movimientos.
@@ -179,8 +179,8 @@ CALL pp67_comprobar('Emisores administradores', NOT EXISTS (
    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Instalacion parcial: ejecutar 05 completo antes de las pruebas de negocio';
   END IF;
   SELECT COUNT(*) INTO v_rutinas FROM information_schema.routines
-  WHERE routine_schema=DATABASE() AND routine_name IN ('fn_convertir','fn_coste_ingrediente','fn_coste_receta','fn_coste_plato','fn_margen_plato','fn_stock_lote','fn_tiene_permiso','sp_consultar_escandallo','sp_registrar_movimiento','sp_registrar_sugerencia','sp_incorporar_carta','sp_cerrar_periodo','sp_registrar_merma','sp_registrar_receta');
-  IF v_rutinas<>14 THEN
+   WHERE routine_schema=DATABASE() AND routine_name IN ('fn_convertir','fn_coste_ingrediente','fn_coste_receta','fn_coste_plato','fn_margen_plato','fn_stock_lote','fn_tiene_permiso','fn_puede_autorizar_carta','sp_consultar_escandallo','sp_registrar_movimiento','sp_registrar_sugerencia','sp_incorporar_carta','sp_cerrar_periodo','sp_registrar_merma','sp_registrar_receta');
+   IF v_rutinas<>15 THEN
    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Faltan rutinas: ejecutar 04 completo antes de las pruebas de negocio';
   END IF;
   IF (SELECT COUNT(*) FROM information_schema.routines
@@ -193,7 +193,7 @@ CALL pp67_comprobar('Emisores administradores', NOT EXISTS (
      OR EXISTS(SELECT 1 FROM periodos_oferta WHERE id_periodo_oferta=9002) THEN
    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Hay datos de otras pruebas: preparar una copia nueva con 01 y 02';
   END IF;
-  SELECT 'NEGOCIO: 128 comprobaciones y tres PENDIENTE (mas otra si se omiten regresiones previas de 06)' AS bloque;
+   SELECT 'NEGOCIO: 133 comprobaciones y tres PENDIENTE (mas otra si se omiten regresiones previas de 06)' AS bloque;
 -- Funciones y triggers: 01 + 02 + 04 + 05, sin transaccion exterior.
 CALL pp67_comprobar('Conversion kg a g', (fn_convertir(1,'kg','g')=1000), 'Resultado esperado de la regla comprobada');
 CALL pp67_comprobar('Conversion ml a l', (fn_convertir(250,'ml','l')=0.25), 'Resultado esperado de la regla comprobada');
@@ -276,9 +276,19 @@ CALL pp67_caso('Carta sin prueba: rechazo', 'INSERT INTO periodos_oferta(id_plat
 INSERT INTO periodos_oferta(id_plato,tipo,fecha_inicio,fecha_fin)
 VALUES(9002,'SUGERENCIA_CHEF','2026-10-01','2026-10-15');
 CALL pp67_caso('14 dias exactos: carta permitida', 'INSERT INTO periodos_oferta(id_plato,tipo,fecha_inicio) VALUES(9002,''CARTA_PERMANENTE'',''2026-10-15'')', 0, NULL, FALSE);
+SET @permiso_carta=(SELECT id_permiso FROM permisos WHERE nombre='AUTORIZAR_CARTA');
+-- Esta transaccion engloba el periodo, las concesiones temporales y la autorizacion.
+START TRANSACTION;
 INSERT INTO periodos_oferta(id_periodo_oferta,id_plato,tipo,fecha_inicio) VALUES(9002,9002,'CARTA_PERMANENTE','2026-10-15');
-CALL pp67_caso('Autorizar: encargado rechazado', 'INSERT INTO autorizaciones_carta(id_periodo_oferta,id_emisor,fecha_autorizacion,coste_evaluado,precio_venta_evaluado) VALUES(9002,2,''2026-10-14'',0,1)', 1644, 'RN-02: solo puede', FALSE);
-CALL pp67_caso('Autorizar: fecha posterior rechazada', 'INSERT INTO autorizaciones_carta(id_periodo_oferta,id_emisor,fecha_autorizacion,coste_evaluado,precio_venta_evaluado) VALUES(9002,1,''2026-10-16'',0,1)', 1644, 'RN-02: autorizacion posterior', FALSE);
+CALL pp67_caso('Autorizar: usuario sin permiso rechazado', 'INSERT INTO autorizaciones_carta(id_periodo_oferta,id_emisor,fecha_autorizacion,coste_evaluado,precio_venta_evaluado) VALUES(9002,2,''2026-10-14'',0,1)', 1644, 'RN-02: se requiere un usuario activo con permiso AUTORIZAR_CARTA', TRUE);
+DELETE FROM roles_permisos WHERE id_rol=1 AND id_permiso=@permiso_carta;
+CALL pp67_caso('Autorizar: administrador sin concesion rechazado', 'INSERT INTO autorizaciones_carta(id_periodo_oferta,id_emisor,fecha_autorizacion,coste_evaluado,precio_venta_evaluado) VALUES(9002,1,''2026-10-14'',0,1)', 1644, 'RN-02: se requiere un usuario activo con permiso AUTORIZAR_CARTA', TRUE);
+INSERT INTO permisos_adicionales_usuario VALUES(4,@permiso_carta);
+CALL pp67_caso('Autorizar: inactivo con permiso rechazado', 'INSERT INTO autorizaciones_carta(id_periodo_oferta,id_emisor,fecha_autorizacion,coste_evaluado,precio_venta_evaluado) VALUES(9002,4,''2026-10-14'',0,1)', 1644, 'RN-02: se requiere un usuario activo con permiso AUTORIZAR_CARTA', TRUE);
+INSERT INTO roles_permisos VALUES(2,@permiso_carta);
+CALL pp67_caso('Autorizar: fecha posterior rechazada', 'INSERT INTO autorizaciones_carta(id_periodo_oferta,id_emisor,fecha_autorizacion,coste_evaluado,precio_venta_evaluado) VALUES(9002,2,''2026-10-16'',0,1)', 1644, 'RN-02: autorizacion posterior', TRUE);
+CALL pp67_caso('Autorizar: permiso por rol y fecha igual al inicio', 'INSERT INTO autorizaciones_carta(id_periodo_oferta,id_emisor,fecha_autorizacion,coste_evaluado,precio_venta_evaluado) VALUES(9002,2,''2026-10-15'',0,1)', 0, NULL, TRUE);
+ROLLBACK;
 
 -- Procedimientos autonomos: sin START TRANSACTION global ni SAVEPOINT.
 CALL pp67_caso('Escandallo: acceso con permiso', 'CALL sp_consultar_escandallo(3,1,''2026-11-10'')', 0, NULL, TRUE);
@@ -330,10 +340,18 @@ UPDATE precios_compra SET seleccionado_para_costeo=0 WHERE id_precio_compra=2;
 CALL pp67_caso('Carta: coste ausente rechaza autorizacion', 'CALL sp_incorporar_carta(1,9001,CURRENT_TIMESTAMP(6)+INTERVAL 1 DAY,NULL)', 1644, 'RN-02: se necesita coste calculable', TRUE);
 CALL pp67_comprobar('Carta: rollback de periodo y autorizacion', ((SELECT COUNT(*) FROM periodos_oferta)=@np AND (SELECT COUNT(*) FROM autorizaciones_carta)=@na), 'Resultado esperado de la regla comprobada');
 UPDATE precios_compra SET seleccionado_para_costeo=1 WHERE id_precio_compra=2;
-CALL pp67_caso('Carta: encargado no puede autorizar', 'CALL sp_incorporar_carta(2,9001,CURRENT_TIMESTAMP(6)+INTERVAL 1 DAY,NULL)', 1644, 'RN-02: solo puede autorizar', TRUE);
+CALL pp67_caso('Carta: activo sin permiso rechazado', 'CALL sp_incorporar_carta(2,9001,CURRENT_TIMESTAMP(6)+INTERVAL 1 DAY,NULL)', 1644, 'RN-02: se requiere un usuario activo con permiso AUTORIZAR_CARTA', TRUE);
+INSERT INTO permisos_adicionales_usuario VALUES(4,@permiso_carta);
+CALL pp67_caso('Carta: inactivo con permiso rechazado', 'CALL sp_incorporar_carta(4,9001,CURRENT_TIMESTAMP(6)+INTERVAL 1 DAY,NULL)', 1644, 'RN-02: se requiere un usuario activo con permiso AUTORIZAR_CARTA', TRUE);
+DELETE FROM permisos_adicionales_usuario WHERE id_usuario=4 AND id_permiso=@permiso_carta;
+DELETE FROM roles_permisos WHERE id_rol=1 AND id_permiso=@permiso_carta;
+CALL pp67_caso('Carta: administrador sin concesion rechazado', 'CALL sp_incorporar_carta(1,9001,CURRENT_TIMESTAMP(6)+INTERVAL 1 DAY,NULL)', 1644, 'RN-02: se requiere un usuario activo con permiso AUTORIZAR_CARTA', TRUE);
+INSERT INTO roles_permisos VALUES(1,@permiso_carta);
 CALL pp67_comprobar('Carta: rechazo no deja periodo', ((SELECT COUNT(*) FROM periodos_oferta)=@np AND (SELECT COUNT(*) FROM autorizaciones_carta)=@na), 'Resultado esperado de la regla comprobada');
-CALL pp67_caso('Carta: incorporacion valida', 'CALL sp_incorporar_carta(1,9001,CURRENT_TIMESTAMP(6)+INTERVAL 1 DAY,NULL)', 0, NULL, TRUE);
-CALL pp67_comprobar('Carta: periodo y autorizacion confirmados', ((SELECT COUNT(*) FROM periodos_oferta)=@np+1 AND (SELECT COUNT(*) FROM autorizaciones_carta)=@na+1 AND (SELECT COUNT(*) FROM autorizaciones_carta a JOIN periodos_oferta p ON p.id_periodo_oferta=a.id_periodo_oferta WHERE p.id_plato=9001 AND p.tipo='CARTA_PERMANENTE' AND a.id_emisor=1 AND a.coste_evaluado=0.24 AND a.precio_venta_evaluado=5 AND a.fecha_autorizacion<=p.fecha_inicio)=1), 'Resultado esperado de la regla comprobada');
+INSERT INTO permisos_adicionales_usuario VALUES(2,@permiso_carta);
+CALL pp67_caso('Carta: incorporacion con permiso individual', 'CALL sp_incorporar_carta(2,9001,CURRENT_TIMESTAMP(6)+INTERVAL 1 DAY,NULL)', 0, NULL, TRUE);
+DELETE FROM permisos_adicionales_usuario WHERE id_usuario=2 AND id_permiso=@permiso_carta;
+CALL pp67_comprobar('Carta: periodo y autorizacion confirmados', ((SELECT COUNT(*) FROM periodos_oferta)=@np+1 AND (SELECT COUNT(*) FROM autorizaciones_carta)=@na+1 AND (SELECT COUNT(*) FROM autorizaciones_carta a JOIN periodos_oferta p ON p.id_periodo_oferta=a.id_periodo_oferta WHERE p.id_plato=9001 AND p.tipo='CARTA_PERMANENTE' AND a.id_emisor=2 AND a.coste_evaluado=0.24 AND a.precio_venta_evaluado=5 AND a.fecha_autorizacion<=p.fecha_inicio)=1), 'Resultado esperado de la regla comprobada');
 SET @periodo=(SELECT id_periodo_oferta FROM periodos_oferta WHERE id_plato=9001 AND tipo='CARTA_PERMANENTE');
 CALL pp67_caso('Cerrar periodo: cierre valido', 'CALL sp_cerrar_periodo(1,@periodo,CURRENT_TIMESTAMP(6)+INTERVAL 3 DAY)', 0, NULL, TRUE);
 CALL pp67_comprobar('Cerrar periodo: fecha guardada', ((SELECT fecha_fin IS NOT NULL FROM periodos_oferta WHERE id_periodo_oferta=@periodo)), 'Resultado esperado de la regla comprobada');
