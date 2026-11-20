@@ -287,8 +287,9 @@ CREATE OR REPLACE TRIGGER trg_receta_bu_negocio
 BEFORE UPDATE ON recetas FOR EACH ROW
 BEGIN
     IF EXISTS(SELECT 1 FROM platos WHERE id_receta=OLD.id_receta)
-       AND NOT EXISTS(SELECT 1 FROM unidades_medida WHERE codigo=NEW.unidad_rendimiento AND magnitud='RACION') THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RC-15: la receta de un plato debe rendir en raciones';
+       AND NOT EXISTS(SELECT 1 FROM unidades_medida WHERE codigo=NEW.unidad_rendimiento
+                      AND codigo='racion' AND magnitud='RACION' AND factor_a_base=1) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RC-15: la receta de un plato debe rendir en racion (factor 1)';
     END IF;
     IF NEW.unidad_rendimiento<>OLD.unidad_rendimiento OR NEW.cantidad_rendimiento<>OLD.cantidad_rendimiento THEN
         IF EXISTS(SELECT 1 FROM componentes_receta WHERE id_receta_componente=OLD.id_receta) THEN
@@ -313,16 +314,16 @@ CREATE OR REPLACE TRIGGER trg_plato_bi_raciones
 BEFORE INSERT ON platos FOR EACH ROW
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM recetas r JOIN unidades_medida u ON u.codigo=r.unidad_rendimiento
-                  WHERE r.id_receta=NEW.id_receta AND u.magnitud='RACION') THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RC-15: la receta de un plato debe rendir en raciones';
+                  WHERE r.id_receta=NEW.id_receta AND u.codigo='racion' AND u.magnitud='RACION' AND u.factor_a_base=1) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RC-15: la receta de un plato debe rendir en racion (factor 1)';
     END IF;
 END$$
 CREATE OR REPLACE TRIGGER trg_plato_bu_raciones
 BEFORE UPDATE ON platos FOR EACH ROW
 BEGIN
     IF NOT EXISTS(SELECT 1 FROM recetas r JOIN unidades_medida u ON u.codigo=r.unidad_rendimiento
-                  WHERE r.id_receta=NEW.id_receta AND u.magnitud='RACION') THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RC-15: la receta de un plato debe rendir en raciones';
+                  WHERE r.id_receta=NEW.id_receta AND u.codigo='racion' AND u.magnitud='RACION' AND u.factor_a_base=1) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RC-15: la receta de un plato debe rendir en racion (factor 1)';
     END IF;
 END$$
 

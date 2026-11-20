@@ -485,7 +485,6 @@ BEGIN
     CALL pob_conceder_permiso_rol('ENCARGADO','GESTIONAR_RECETAS');
     CALL pob_conceder_permiso_rol('ENCARGADO','GESTIONAR_STOCK');
     CALL pob_conceder_permiso_rol('ENCARGADO','REGISTRAR_MERMAS');
-    CALL pob_conceder_permiso_rol('ENCARGADO','CONSULTAR_COSTES');
     CALL pob_conceder_permiso_rol('ENCARGADO','GESTIONAR_PLATOS');
     CALL pob_conceder_permiso_rol('EMPLEADO','GESTIONAR_STOCK');
     CALL pob_conceder_permiso_rol('EMPLEADO','REGISTRAR_MERMAS');

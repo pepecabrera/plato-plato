@@ -2,7 +2,7 @@
 -- SOLO sobre una copia desechable con 01 y UNO de los poblados: 02 o 06.
 -- Primera ejecucion: sin 04/05, ejecuta 66 comprobaciones del esquema.
 -- Segunda ejecucion: instalar 04 y 05 completos y ejecutar de nuevo;
--- realiza 133 comprobaciones de negocio y tres entradas PENDIENTE; una cuarta si se omiten regresiones de 06 ya ejecutadas.
+-- realiza 143 comprobaciones de negocio y tres entradas PENDIENTE; una cuarta si se omiten regresiones de 06 ya ejecutadas.
 -- Detecta el modo por la presencia de triggers. Rechaza instalaciones parciales.
 -- Las pruebas de negocio CONFIRMAN escrituras: recrear la copia antes de repetirlas.
 -- Si esta instalado 06, anade 12 comprobaciones de su procedimiento de movimientos.
@@ -24,8 +24,8 @@ BEGIN
  INSERT INTO pp67_resultados(prueba,resultado,detalle)
  VALUES(titulo,IF(COALESCE(correcto,FALSE),'OK','FALLO'),detalle);
 END$$
--- FALSE: aislar la sentencia con una transaccion que se revierte.
--- TRUE: CALL autonomo, sin SAVEPOINT ni transaccion exterior; puede dejar cambios.
+-- FALSE: revertir la sentencia con una transaccion propia o un SAVEPOINT si ya hay transaccion.
+-- TRUE: no gestionar transacciones; usar para CALL autonomos o casos aislados por el llamador.
 DROP PROCEDURE IF EXISTS pp67_caso$$
 CREATE PROCEDURE pp67_caso(IN titulo VARCHAR(180), IN sentencia TEXT,
  IN error_esperado INT, IN prefijo VARCHAR(255), IN autonomo BOOLEAN)
@@ -33,7 +33,11 @@ BEGIN
  DECLARE error_real INT DEFAULT 0;
  DECLARE mensaje TEXT DEFAULT '';
  DECLARE preparada BOOLEAN DEFAULT FALSE;
- IF NOT autonomo THEN START TRANSACTION; END IF;
+ DECLARE dentro BOOLEAN DEFAULT FALSE;
+ IF NOT autonomo THEN
+  SET dentro=@@in_transaction;
+  IF dentro THEN SAVEPOINT pp67_sentencia; ELSE START TRANSACTION; END IF;
+ END IF;
  BEGIN
   DECLARE EXIT HANDLER FOR SQLEXCEPTION
   BEGIN
@@ -45,7 +49,13 @@ BEGIN
   EXECUTE pp67_stmt;
  END;
  IF preparada THEN DEALLOCATE PREPARE pp67_stmt; END IF;
- IF NOT autonomo THEN ROLLBACK; END IF;
+ IF NOT autonomo THEN
+  IF dentro THEN
+   ROLLBACK TO SAVEPOINT pp67_sentencia;
+   RELEASE SAVEPOINT pp67_sentencia;
+  ELSE ROLLBACK;
+  END IF;
+ END IF;
  CALL pp67_comprobar(titulo,
   error_real=error_esperado AND (prefijo IS NULL OR LEFT(mensaje,CHAR_LENGTH(prefijo))=prefijo),
   CONCAT('Esperado: ',error_esperado,'; recibido: ',error_real,'; mensaje: ',mensaje));
@@ -81,7 +91,7 @@ BEGIN
 CALL pp67_comprobar('Carga de roles', (SELECT COUNT(*)=3 FROM roles), 'Se esperan 3 filas del poblado original');
 CALL pp67_comprobar('Carga de permisos', (SELECT COUNT(*)=8 FROM permisos), 'Se esperan 8 filas del poblado original');
 CALL pp67_comprobar('Carga de usuarios', (SELECT COUNT(*)=4 FROM usuarios), 'Se esperan 4 filas del poblado original');
-CALL pp67_comprobar('Carga de roles_permisos', (SELECT COUNT(*)=16 FROM roles_permisos), 'Se esperan 16 filas del poblado original');
+CALL pp67_comprobar('Carga de roles_permisos', (SELECT COUNT(*)=15 FROM roles_permisos), 'Se esperan 15 pares rol-permiso');
 CALL pp67_comprobar('Carga de permisos_adicionales_usuario', (SELECT COUNT(*)=1 FROM permisos_adicionales_usuario), 'Se esperan 1 filas del poblado original');
 CALL pp67_comprobar('Carga de unidades_medida', (SELECT COUNT(*)=6 FROM unidades_medida), 'Se esperan 6 filas del poblado original');
 CALL pp67_comprobar('Carga de proveedores', (SELECT COUNT(*)=3 FROM proveedores), 'Se esperan 3 filas del poblado original');
@@ -160,10 +170,13 @@ CALL pp67_comprobar('RN-04: prueba previa de 14 días', NOT EXISTS (
  AND s.fecha_fin IS NOT NULL AND s.fecha_fin <= c.fecha_inicio
  AND s.fecha_fin >= s.fecha_inicio + INTERVAL 14 DAY)
 ), 'Se exige una prueba cerrada de al menos 14 días');
-CALL pp67_comprobar('Emisores administradores', NOT EXISTS (
+CALL pp67_comprobar('Emisores del poblado con permiso de carta', NOT EXISTS (
  SELECT 1 FROM autorizaciones_carta a JOIN usuarios u ON u.id_usuario=a.id_emisor
- JOIN roles r ON r.id_rol=u.id_rol WHERE r.nombre<>'ADMINISTRADOR'
-), 'Comprueba el rol actual; no demuestra autorización histórica ni bloqueo de otros roles');
+ WHERE u.estado<>'ACTIVO' OR NOT EXISTS (
+  SELECT 1 FROM permisos p WHERE p.nombre='AUTORIZAR_CARTA'
+  AND (EXISTS(SELECT 1 FROM roles_permisos rp WHERE rp.id_rol=u.id_rol AND rp.id_permiso=p.id_permiso)
+       OR EXISTS(SELECT 1 FROM permisos_adicionales_usuario pu WHERE pu.id_usuario=u.id_usuario AND pu.id_permiso=p.id_permiso)))
+ ), 'Comprueba el estado y las concesiones del poblado, no su historial');
 
  ELSE
   IF (SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_schema=DATABASE()
@@ -193,7 +206,7 @@ CALL pp67_comprobar('Emisores administradores', NOT EXISTS (
      OR EXISTS(SELECT 1 FROM periodos_oferta WHERE id_periodo_oferta=9002) THEN
    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Hay datos de otras pruebas: preparar una copia nueva con 01 y 02';
   END IF;
-   SELECT 'NEGOCIO: 133 comprobaciones y tres PENDIENTE (mas otra si se omiten regresiones previas de 06)' AS bloque;
+   SELECT 'NEGOCIO: 143 comprobaciones y tres PENDIENTE (mas otra si se omiten regresiones previas de 06)' AS bloque;
 -- Funciones y triggers: 01 + 02 + 04 + 05, sin transaccion exterior.
 CALL pp67_comprobar('Conversion kg a g', (fn_convertir(1,'kg','g')=1000), 'Resultado esperado de la regla comprobada');
 CALL pp67_comprobar('Conversion ml a l', (fn_convertir(250,'ml','l')=0.25), 'Resultado esperado de la regla comprobada');
@@ -203,6 +216,17 @@ CALL pp67_comprobar('Coste ingrediente', (ABS(fn_coste_ingrediente(1,100,'g','20
 CALL pp67_comprobar('Coste salsa', (ABS(fn_coste_receta(1,'2026-11-10')-3.488)<0.000001), 'Resultado esperado de la regla comprobada');
 CALL pp67_comprobar('Coste pasta con subreceta', (ABS(fn_coste_plato(1,'2026-11-10')-0.7232)<0.000001), 'Resultado esperado de la regla comprobada');
 CALL pp67_comprobar('Coste tortilla', (ABS(fn_coste_plato(2,'2026-11-10')-0.8416)<0.000001), 'Resultado esperado de la regla comprobada');
+-- Referencia SQL independiente para la pasta, a la misma fecha que C-10.
+CALL pp67_comprobar('Coste por racion: funcion y consulta de referencia a cuatro decimales', (
+ SELECT ROUND(fn_coste_plato(1,'2026-11-15 12:00:00'),4)=ROUND((0.4*MAX(CASE WHEN id_ingrediente=5 THEN precio_compra END)
+   +0.6*(1.2*MAX(CASE WHEN id_ingrediente=1 THEN precio_compra END)+0.2*MAX(CASE WHEN id_ingrediente=2 THEN precio_compra END)
+   +0.05*MAX(CASE WHEN id_ingrediente=3 THEN precio_compra END)+0.01*MAX(CASE WHEN id_ingrediente=4 THEN precio_compra END)))/4,4)
+ FROM precios_compra WHERE seleccionado_para_costeo=1 AND fecha_inicio_vigencia<='2026-11-15 12:00:00'
+ AND (fecha_fin_vigencia IS NULL OR fecha_fin_vigencia>'2026-11-15 12:00:00')
+ ), 'Mismas cantidades, vigencias y rendimiento que C-10');
+CALL pp67_comprobar('Carta: costes del poblado coinciden con la evaluacion a su fecha', (SELECT COUNT(*)=2 AND
+ SUM(COALESCE(a.coste_evaluado=ROUND(fn_coste_plato(p.id_plato,a.fecha_autorizacion),2),0))=2
+ FROM autorizaciones_carta a JOIN periodos_oferta p ON p.id_periodo_oferta=a.id_periodo_oferta), 'El importe historico se almacena a dos decimales');
 CALL pp67_comprobar('Margen pasta', (ABS(fn_margen_plato(1,'2026-11-10')-8.7768)<0.000001), 'Resultado esperado de la regla comprobada');
 CALL pp67_comprobar('Plato inexistente', (fn_coste_plato(4294967295,'2026-11-10') IS NULL), 'Resultado esperado de la regla comprobada');
 CALL pp67_comprobar('Stock historico', (fn_stock_lote(1,'2026-11-09 12:00:00')=10), 'Resultado esperado de la regla comprobada');
@@ -292,6 +316,7 @@ ROLLBACK;
 
 -- Procedimientos autonomos: sin START TRANSACTION global ni SAVEPOINT.
 CALL pp67_caso('Escandallo: acceso con permiso', 'CALL sp_consultar_escandallo(3,1,''2026-11-10'')', 0, NULL, TRUE);
+CALL pp67_caso('Escandallo: encargado sin concesion rechazado', 'CALL sp_consultar_escandallo(2,1,''2026-11-10'')', 1644, 'Sin permiso CONSULTAR_COSTES', TRUE);
 CALL pp67_caso('Escandallo: inactivo rechazado', 'CALL sp_consultar_escandallo(4,1,''2026-11-10'')', 1644, 'Sin permiso CONSULTAR_COSTES', TRUE);
 CALL pp67_caso('Escandallo: plato inexistente', 'CALL sp_consultar_escandallo(1,4294967295,''2026-11-10'')', 1644, 'Plato inexistente', TRUE);
 -- Retirada temporal en esta base desechable para probar un usuario ACTIVO sin permiso.
@@ -372,11 +397,22 @@ CALL pp67_caso('Plato: cambio a receta en kg rechazado', 'UPDATE platos SET id_r
 CALL pp67_caso('Receta de plato: no cambiar a kg', 'UPDATE recetas SET unidad_rendimiento=''kg'' WHERE id_receta=9001', 1644, 'RC-15:', FALSE);
 CALL pp67_caso('Plato: receta en raciones permitida', 'INSERT INTO platos(id_receta,nombre,descripcion,categoria) VALUES(9201,''__pp67_racion'',''Prueba'',''Prueba'')', 0, NULL, FALSE);
 CALL pp67_caso('Subreceta sin plato: unidad de masa permitida', 'UPDATE recetas SET unidad_rendimiento=''g'' WHERE id_receta=9203', 0, NULL, FALSE);
+START TRANSACTION;
+INSERT INTO unidades_medida VALUES('doc_racion','Docena de raciones','RACION',12);
+UPDATE recetas SET unidad_rendimiento='doc_racion' WHERE id_receta=9203;
+CALL pp67_caso('Plato: rechaza docenas de raciones', 'INSERT INTO platos(id_receta,nombre,descripcion,categoria) VALUES(9203,''__pp67_docena'',''Prueba'',''Prueba'')', 1644, 'RC-15:', TRUE);
+CALL pp67_caso('Plato: no admite reasignacion a una receta en docenas', 'UPDATE platos SET id_receta=9203 WHERE id_plato=9001', 1644, 'RC-15:', TRUE);
+CALL pp67_caso('Receta de plato: no cambiar a docenas', 'UPDATE recetas SET unidad_rendimiento=''doc_racion'' WHERE id_receta=9001', 1644, 'RC-15:', TRUE);
+ROLLBACK;
+CALL pp67_caso('RC-02: ingrediente duplicado rechazado', 'INSERT INTO componentes_receta(id_receta,cantidad,unidad_medida,id_ingrediente) VALUES(1,100,''g'',1)', 1062, NULL, FALSE);
+CALL pp67_caso('RC-02: subreceta duplicada rechazada', 'INSERT INTO componentes_receta(id_receta,cantidad,unidad_medida,id_receta_componente) VALUES(2,100,''g'',1)', 1062, NULL, FALSE);
 CALL pp67_caso('Lote con movimientos: no cambiar ingrediente', 'UPDATE lotes SET id_ingrediente=2 WHERE id_lote=9001', 1644, 'RC-17:', FALSE);
 CALL pp67_caso('Lote con movimientos: no cambiar recepcion', 'UPDATE lotes SET fecha_entrada=''2026-11-08'' WHERE id_lote=9001', 1644, 'RC-17:', FALSE);
 CALL pp67_caso('Lote con movimientos: ubicacion editable', 'UPDATE lotes SET ubicacion_almacen=''Otra'' WHERE id_lote=9001', 0, NULL, FALSE);
 CALL pp67_caso('Lote sin movimientos: ingrediente editable', 'UPDATE lotes SET id_ingrediente=2 WHERE id_lote=9201', 0, NULL, FALSE);
 CALL pp67_caso('Lote sin movimientos: recepcion editable', 'UPDATE lotes SET fecha_entrada=''2026-11-02'' WHERE id_lote=9201', 0, NULL, FALSE);
+-- Las salidas auxiliares y el enlace se revierten juntos, como el periodo auxiliar de RN-02.
+START TRANSACTION;
 INSERT INTO movimientos_stock(id_lote,tipo,cantidad,fecha_movimiento,finalidad_salida)
 VALUES(9201,'ENTRADA',10,'2026-11-01 08:00:00',NULL);
 SET @coh_entrada=LAST_INSERT_ID();
@@ -394,6 +430,7 @@ CALL pp67_caso('RC-14: entrada no es merma', 'INSERT INTO mermas(id_lote,cantida
 CALL pp67_caso('RC-14: finalidad OTRA no es merma', 'INSERT INTO mermas(id_lote,cantidad_desperdiciada,fecha_merma,motivo,id_movimiento) VALUES(9201,2,''2026-11-02 08:00:00'',''OTRO'',@coh_otra)', 1644, 'RC-14:', FALSE);
 CALL pp67_caso('RC-14: movimiento inexistente rechazado', 'INSERT INTO mermas(id_lote,cantidad_desperdiciada,fecha_merma,motivo,id_movimiento) VALUES(9201,2,''2026-11-03 08:00:00'',''OTRO'',4294967295)', 1644, 'RC-14:', FALSE);
 CALL pp67_caso('RC-14: enlace duplicado rechazado', 'INSERT INTO mermas(cantidad_desperdiciada,fecha_merma,motivo,id_lote,id_movimiento) SELECT cantidad_desperdiciada,fecha_merma,motivo,id_lote,id_movimiento FROM mermas WHERE id_merma=1', 1062, NULL, FALSE);
+ROLLBACK;
 CALL pp67_caso('Alta receta: empleado sin permiso', 'CALL sp_registrar_receta(3,''__pp67_alta'',2,''racion'',''[{"cantidad":100,"unidad_medida":"g","id_ingrediente":1},{"cantidad":50,"unidad_medida":"g","id_ingrediente":2}]'')', 1644, 'Sin permiso GESTIONAR_RECETAS', TRUE);
 CALL pp67_caso('Alta receta: usuario inactivo', 'CALL sp_registrar_receta(4,''__pp67_alta'',2,''racion'',''[{"cantidad":100,"unidad_medida":"g","id_ingrediente":1},{"cantidad":50,"unidad_medida":"g","id_ingrediente":2}]'')', 1644, 'Sin permiso GESTIONAR_RECETAS', TRUE);
 CALL pp67_caso('Alta receta: lista vacia', 'CALL sp_registrar_receta(2,''__pp67_alta'',2,''racion'',''[]'')', 1644, 'RC-12:', TRUE);
@@ -414,6 +451,18 @@ INSERT INTO movimientos_stock(id_lote,tipo,cantidad,fecha_movimiento,finalidad_s
 VALUES(9201,'SALIDA',10,'2026-11-01 07:00:00','OTRA'),(9201,'ENTRADA',10,'2026-11-01 07:00:00',NULL);
 CALL pp67_comprobar('C-26: detecta negativo entre movimientos simultaneos', (EXISTS(SELECT 1 FROM (SELECT SUM(CASE WHEN tipo='SALIDA' THEN -cantidad ELSE cantidad END) OVER(PARTITION BY id_lote ORDER BY fecha_movimiento,id_movimiento ROWS UNBOUNDED PRECEDING) saldo FROM movimientos_stock WHERE id_lote=9201) s WHERE saldo<0)), 'Regresion de integridad academica');
 ROLLBACK;
+START TRANSACTION;
+INSERT INTO recetas(id_receta,nombre,cantidad_rendimiento,unidad_rendimiento)
+ SELECT 9300+seq,CONCAT('__pp67_nivel_',seq),1,'racion' FROM seq_0_to_65;
+INSERT INTO componentes_receta(id_receta,cantidad,unidad_medida,id_receta_componente)
+ SELECT 9300+seq,1,'racion',9301+seq FROM seq_0_to_64;
+INSERT INTO componentes_receta(id_receta,cantidad,unidad_medida,id_ingrediente) VALUES(9365,100,'g',1);
+CALL pp67_comprobar('Coste: 64 enlaces validos, 65 exceden el limite',
+ (fn_coste_receta(9301,'2026-11-10')=0.24 AND fn_coste_receta(9300,'2026-11-10') IS NULL), 'No se suma un coste parcial');
+ROLLBACK;
+CALL pp67_comprobar('No quedan los datos auxiliares invalidos de carta y merma',
+ (NOT EXISTS(SELECT 1 FROM periodos_oferta WHERE id_periodo_oferta=9002 AND id_plato=9002 AND tipo='CARTA_PERMANENTE')
+  AND NOT EXISTS(SELECT 1 FROM movimientos_stock WHERE id_movimiento=@coh_merma)), 'Los dos bloques auxiliares se revierten');
 INSERT INTO pp67_resultados(prueba,resultado,detalle) VALUES
 ('Concurrencia','PENDIENTE','Esta suite es secuencial; faltan pruebas coordinadas con varias conexiones, tambien para los triggers de precios, componentes y unidades, que comprueban sin bloqueos.'),
 ('Privilegios de cuentas operativas','PENDIENTE','Se usa una cuenta de pruebas; no certifica las restricciones de cuentas de aplicacion.'),

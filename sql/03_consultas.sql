@@ -27,7 +27,8 @@ FROM usuarios u
 JOIN roles r ON r.id_rol=u.id_rol
 ORDER BY FIELD(r.nombre,'ADMINISTRADOR','ENCARGADO','EMPLEADO'), u.nombre;
 
--- C-02. Permisos efectivos de cada usuario activo: los de su rol más los adicionales, con su origen (RC-10, D-03, RNF-01).
+-- C-02. Concesiones registradas para cada usuario activo: por rol o individuales, con su origen (RC-10, D-03, RNF-01).
+-- No representa excepciones de la política efectiva, como el acceso general del administrador.
 -- UNION ALL de las dos vías y agrupación, para que un permiso concedido por ambas aparezca una sola vez.
 SELECT u.nombre AS usuario, r.nombre AS rol, p.nombre AS permiso,
        CASE WHEN MIN(c.origen)<>MAX(c.origen) THEN 'ROL Y ADICIONAL' ELSE MIN(c.origen) END AS origen
@@ -158,7 +159,8 @@ ORDER BY recetas_que_la_usan DESC, sr.nombre;
 
 -- C-09. Escandallo detallado de cada plato: ingredientes básicos, bajando por sus subrecetas, con la cantidad y el coste por ración
 -- (RF-07, RC-05, RC-15). CTE recursiva «despiece»: «veces» indica cuántas elaboraciones de cada receta hacen falta para una
--- elaboración de la receta raíz. La ruta impide volver a entrar en una receta ya recorrida, de modo que un ciclo no la hace infinita.
+-- elaboración de la receta raíz. Mismo límite de 64 enlaces, conversiones y criterio de NULL que C-10 y fn_coste_receta.
+-- Si una rama no puede costearse, no se muestran importes parciales como si el plato fuera calculable.
 WITH RECURSIVE despiece AS (
     SELECT r.id_receta AS id_receta_raiz, r.id_receta, 0 AS nivel, CAST(1 AS DECIMAL(30,12)) AS veces,
            CAST(CONCAT(',',r.id_receta,',') AS CHAR(1000)) AS ruta
@@ -173,28 +175,43 @@ WITH RECURSIVE despiece AS (
     JOIN recetas sr ON sr.id_receta=cr.id_receta_componente
     JOIN unidades_medida uc ON uc.codigo=cr.unidad_medida
     JOIN unidades_medida us ON us.codigo=sr.unidad_rendimiento
-    WHERE LOCATE(CONCAT(',',sr.id_receta,','),d.ruta)=0
+    WHERE d.nivel<64 AND LOCATE(CONCAT(',',sr.id_receta,','),d.ruta)=0
+), lineas AS (
+    SELECT d.id_receta_raiz, d.id_receta, d.nivel, d.veces, cr.id_ingrediente, cr.cantidad, cr.unidad_medida,
+           pc.precio_compra, pc.unidad_precio,
+           CASE WHEN d.veces IS NULL THEN NULL
+                WHEN cr.id_ingrediente IS NOT NULL THEN d.veces*CAST(
+                     CAST(CAST(cr.cantidad AS DECIMAL(30,8))*uc.factor_a_base/up.factor_a_base AS DECIMAL(30,8))
+                     *pc.precio_compra AS DECIMAL(30,8))
+                WHEN d.nivel<64 AND LOCATE(CONCAT(',',cr.id_receta_componente,','),d.ruta)=0 THEN 0
+           END AS coste
+    FROM despiece d
+    LEFT JOIN componentes_receta cr ON cr.id_receta=d.id_receta
+    LEFT JOIN unidades_medida uc ON uc.codigo=cr.unidad_medida
+    LEFT JOIN precios_compra pc ON pc.id_ingrediente=cr.id_ingrediente AND pc.seleccionado_para_costeo=1
+        AND pc.fecha_inicio_vigencia<=@ahora AND (pc.fecha_fin_vigencia IS NULL OR pc.fecha_fin_vigencia>@ahora)
+    LEFT JOIN unidades_medida up ON up.codigo=pc.unidad_precio AND up.magnitud=uc.magnitud
+), detalle AS (
+    SELECT l.*, MIN(l.coste IS NOT NULL) OVER (PARTITION BY l.id_receta_raiz) AS calculable
+    FROM lineas l
 )
 SELECT p.nombre AS plato, d.nivel, e.nombre AS elaboracion, i.nombre AS ingrediente,
-       ROUND(d.veces*cr.cantidad/r.cantidad_rendimiento,4) AS cantidad_por_racion, cr.unidad_medida,
-       pc.precio_compra, pc.unidad_precio,
-       ROUND(d.veces*cr.cantidad*uc.factor_a_base*pc.precio_compra/(up.factor_a_base*r.cantidad_rendimiento),4) AS coste_por_racion
-FROM despiece d
+       ROUND(d.veces*d.cantidad/r.cantidad_rendimiento,4) AS cantidad_por_racion, d.unidad_medida,
+       d.precio_compra, d.unidad_precio,
+       CASE WHEN d.calculable=1 THEN ROUND(d.coste/r.cantidad_rendimiento,4) END AS coste_por_racion
+FROM detalle d
 JOIN platos p ON p.id_receta=d.id_receta_raiz
 JOIN recetas r ON r.id_receta=d.id_receta_raiz
 JOIN recetas e ON e.id_receta=d.id_receta
-JOIN componentes_receta cr ON cr.id_receta=d.id_receta
-JOIN ingredientes i ON i.id_ingrediente=cr.id_ingrediente
-JOIN unidades_medida uc ON uc.codigo=cr.unidad_medida
-LEFT JOIN precios_compra pc ON pc.id_ingrediente=cr.id_ingrediente AND pc.seleccionado_para_costeo=1
-    AND pc.fecha_inicio_vigencia<=@ahora AND (pc.fecha_fin_vigencia IS NULL OR pc.fecha_fin_vigencia>@ahora)
-LEFT JOIN unidades_medida up ON up.codigo=pc.unidad_precio AND up.magnitud=uc.magnitud
+JOIN unidades_medida ur ON ur.codigo=r.unidad_rendimiento AND ur.codigo='racion' AND ur.magnitud='RACION' AND ur.factor_a_base=1
+JOIN ingredientes i ON i.id_ingrediente=d.id_ingrediente
 ORDER BY p.nombre, d.nivel, e.nombre, i.nombre;
 
 -- C-10. Coste de cada receta y rentabilidad de las que son plato: coste de elaboración, coste unitario (en un plato, su coste de
 -- producción), margen bruto, porcentaje de margen y cumplimiento del objetivo (RF-07, RF-08, RC-05 a RC-08, RC-11, D-02, D-06).
 -- Misma CTE «despiece» que en C-09. El coste queda en NULL si falta un precio seleccionado y vigente, hay unidades de distinta
--- magnitud, una receta no tiene componentes o existe un ciclo: una línea sin coste anula el total en lugar de sumar cero.
+-- magnitud, una receta no tiene componentes, existe un ciclo o se exceden 64 enlaces.
+-- Coste unitario a ocho decimales como en la función; cuatro para mostrarlo, no para calcular margen u objetivo.
 WITH RECURSIVE despiece AS (
     SELECT r.id_receta AS id_receta_raiz, r.id_receta, 0 AS nivel, CAST(1 AS DECIMAL(30,12)) AS veces,
            CAST(CONCAT(',',r.id_receta,',') AS CHAR(1000)) AS ruta
@@ -209,13 +226,16 @@ WITH RECURSIVE despiece AS (
     JOIN recetas sr ON sr.id_receta=cr.id_receta_componente
     JOIN unidades_medida uc ON uc.codigo=cr.unidad_medida
     JOIN unidades_medida us ON us.codigo=sr.unidad_rendimiento
-    WHERE LOCATE(CONCAT(',',sr.id_receta,','),d.ruta)=0
+    WHERE d.nivel<64 AND LOCATE(CONCAT(',',sr.id_receta,','),d.ruta)=0
 ),
 lineas AS (
     -- Una fila por línea de cada receta recorrida. La línea de subreceta vale 0 porque su coste lo aportan las líneas de esa subreceta.
     SELECT d.id_receta_raiz,
-           CASE WHEN cr.id_ingrediente IS NOT NULL THEN d.veces*cr.cantidad*uc.factor_a_base*pc.precio_compra/up.factor_a_base
-                WHEN LOCATE(CONCAT(',',cr.id_receta_componente,','),d.ruta)=0 THEN 0
+           CASE WHEN d.veces IS NULL THEN NULL
+                WHEN cr.id_ingrediente IS NOT NULL THEN d.veces*CAST(
+                     CAST(CAST(cr.cantidad AS DECIMAL(30,8))*uc.factor_a_base/up.factor_a_base AS DECIMAL(30,8))
+                     *pc.precio_compra AS DECIMAL(30,8))
+                WHEN d.nivel<64 AND LOCATE(CONCAT(',',cr.id_receta_componente,','),d.ruta)=0 THEN 0
            END AS coste
     FROM despiece d
     LEFT JOIN componentes_receta cr ON cr.id_receta=d.id_receta
@@ -226,22 +246,28 @@ lineas AS (
 ),
 costes AS (
     SELECT r.id_receta,
-           CASE WHEN COUNT(*)=COUNT(l.coste) THEN ROUND(SUM(l.coste),4) END AS coste_elaboracion,
-           CASE WHEN COUNT(*)=COUNT(l.coste) THEN ROUND(SUM(l.coste)/r.cantidad_rendimiento,4) END AS coste_unitario
+           CASE WHEN COUNT(*)=COUNT(l.coste) THEN SUM(l.coste) END AS coste_elaboracion,
+           CASE WHEN COUNT(*)=COUNT(l.coste) THEN CAST(SUM(l.coste)/r.cantidad_rendimiento AS DECIMAL(30,8)) END AS coste_unitario
     FROM recetas r
     JOIN lineas l ON l.id_receta_raiz=r.id_receta
     GROUP BY r.id_receta, r.cantidad_rendimiento
+), importes AS (
+    SELECT r.*, p.id_plato, p.nombre AS plato, p.precio_venta, p.porcentaje_margen_objetivo, c.coste_elaboracion,
+           CASE WHEN p.id_plato IS NULL OR (ur.codigo='racion' AND ur.magnitud='RACION' AND ur.factor_a_base=1)
+                THEN c.coste_unitario END AS coste_unitario
+    FROM recetas r
+    JOIN costes c ON c.id_receta=r.id_receta
+    JOIN unidades_medida ur ON ur.codigo=r.unidad_rendimiento
+    LEFT JOIN platos p ON p.id_receta=r.id_receta
 )
-SELECT r.nombre AS receta, r.cantidad_rendimiento, r.unidad_rendimiento, c.coste_elaboracion, c.coste_unitario,
-       p.nombre AS plato, p.precio_venta,
-       p.precio_venta-c.coste_unitario AS margen_bruto,
-       ROUND(100*(p.precio_venta-c.coste_unitario)/p.precio_venta,2) AS porcentaje_margen,
-       p.porcentaje_margen_objetivo,
-       CASE (c.coste_unitario<=p.precio_venta*(1-p.porcentaje_margen_objetivo/100)) WHEN 1 THEN 'SI' WHEN 0 THEN 'NO' END AS cumple_objetivo
-FROM recetas r
-JOIN costes c ON c.id_receta=r.id_receta
-LEFT JOIN platos p ON p.id_receta=r.id_receta
-ORDER BY p.id_plato IS NULL, r.nombre;
+SELECT nombre AS receta, cantidad_rendimiento, unidad_rendimiento,
+       ROUND(coste_elaboracion,4) AS coste_elaboracion, ROUND(coste_unitario,4) AS coste_unitario,
+       plato, precio_venta, ROUND(precio_venta-coste_unitario,4) AS margen_bruto,
+       ROUND(100*(precio_venta-coste_unitario)/precio_venta,2) AS porcentaje_margen,
+       porcentaje_margen_objetivo,
+       CASE (coste_unitario<=precio_venta*(1-porcentaje_margen_objetivo/100)) WHEN 1 THEN 'SI' WHEN 0 THEN 'NO' END AS cumple_objetivo
+FROM importes
+ORDER BY id_plato IS NULL, nombre;
 
 -- C-11. Ingredientes que impiden costear platos, con el motivo y los platos afectados (RC-11, D-01, S-12).
 -- EXISTS y NOT EXISTS correlacionados. La CTE «uso» alcanza también los ingredientes de las subrecetas.

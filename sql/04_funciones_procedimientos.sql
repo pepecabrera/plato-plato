@@ -23,34 +23,35 @@ BEGIN
 END$$
 
 -- Expande subrecetas con una CTE: no utiliza funciones almacenadas recursivas.
--- Cada rama conserva su factor por unidad de rendimiento. Los ciclos, recetas
--- vacias, unidades incompatibles o precios ausentes producen NULL, nunca cero.
+-- Mismo despiece que C-09/C-10, hasta 64 enlaces. Un fallo en cualquier rama
+-- invalida el coste total. El redondeo de presentacion no interviene aqui.
 CREATE OR REPLACE FUNCTION fn_coste_receta(p_receta INT UNSIGNED, p_fecha DATETIME(6))
 RETURNS DECIMAL(30,8) READS SQL DATA
 BEGIN
     DECLARE v_coste DECIMAL(30,8);
-    WITH RECURSIVE arbol (id_receta,factor,ruta,nivel,ciclo) AS (
-        SELECT id_receta, CAST(1/cantidad_rendimiento AS DECIMAL(30,8)),
-               CAST(CONCAT('/',id_receta,'/') AS CHAR(2000)), 0, 0
+    WITH RECURSIVE arbol (id_receta,veces,ruta,nivel) AS (
+        SELECT id_receta, CAST(1 AS DECIMAL(30,12)),
+               CAST(CONCAT(',',id_receta,',') AS CHAR(1000)), 0
         FROM recetas WHERE id_receta=p_receta
         UNION ALL
         SELECT r.id_receta,
-               CAST(a.factor*fn_convertir(c.cantidad,c.unidad_medida,r.unidad_rendimiento)/r.cantidad_rendimiento AS DECIMAL(30,8)),
-               CONCAT(a.ruta,r.id_receta,'/'), a.nivel+1,
-               LOCATE(CONCAT('/',r.id_receta,'/'),a.ruta)>0
+               CAST(CASE WHEN uc.magnitud=us.magnitud
+                         THEN a.veces*c.cantidad*uc.factor_a_base/(us.factor_a_base*r.cantidad_rendimiento) END AS DECIMAL(30,12)),
+               CONCAT(a.ruta,r.id_receta,','), a.nivel+1
         FROM arbol a JOIN componentes_receta c ON c.id_receta=a.id_receta
         JOIN recetas r ON r.id_receta=c.id_receta_componente
-        WHERE a.ciclo=0 AND a.nivel<64
+        JOIN unidades_medida uc ON uc.codigo=c.unidad_medida
+        JOIN unidades_medida us ON us.codigo=r.unidad_rendimiento
+        WHERE a.nivel<64 AND LOCATE(CONCAT(',',r.id_receta,','),a.ruta)=0
     ), lineas AS (
-        SELECT a.*, c.id_componente,c.id_ingrediente,c.id_receta_componente,
-               fn_coste_ingrediente(c.id_ingrediente,c.cantidad,c.unidad_medida,p_fecha) coste
+        SELECT CASE WHEN a.veces IS NULL THEN NULL
+                    WHEN c.id_ingrediente IS NOT NULL THEN a.veces*fn_coste_ingrediente(c.id_ingrediente,c.cantidad,c.unidad_medida,p_fecha)
+                    WHEN a.nivel<64 AND LOCATE(CONCAT(',',c.id_receta_componente,','),a.ruta)=0 THEN 0
+               END AS coste
         FROM arbol a LEFT JOIN componentes_receta c ON c.id_receta=a.id_receta
     )
-    SELECT CASE WHEN COUNT(*)=0 OR
-        SUM(ciclo=1 OR factor IS NULL OR id_componente IS NULL
-            OR (nivel=64 AND id_receta_componente IS NOT NULL)
-            OR (id_ingrediente IS NOT NULL AND coste IS NULL))>0
-        THEN NULL ELSE SUM(CASE WHEN id_ingrediente IS NOT NULL THEN factor*coste ELSE 0 END) END
+    SELECT CASE WHEN COUNT(*)=COUNT(coste)
+                THEN SUM(coste)/(SELECT cantidad_rendimiento FROM recetas WHERE id_receta=p_receta) END
     INTO v_coste FROM lineas;
     RETURN v_coste;
 END$$
@@ -58,10 +59,10 @@ END$$
 CREATE OR REPLACE FUNCTION fn_coste_plato(p_plato INT UNSIGNED, p_fecha DATETIME(6))
 RETURNS DECIMAL(30,8) READS SQL DATA
 BEGIN
-    RETURN (SELECT fn_coste_receta(r.id_receta,p_fecha)/u.factor_a_base
+    RETURN (SELECT fn_coste_receta(r.id_receta,p_fecha)
             FROM platos p JOIN recetas r ON r.id_receta=p.id_receta
             JOIN unidades_medida u ON u.codigo=r.unidad_rendimiento
-            WHERE p.id_plato=p_plato AND u.magnitud='RACION');
+            WHERE p.id_plato=p_plato AND u.codigo='racion' AND u.magnitud='RACION' AND u.factor_a_base=1);
 END$$
 
 CREATE OR REPLACE FUNCTION fn_margen_plato(p_plato INT UNSIGNED, p_fecha DATETIME(6))

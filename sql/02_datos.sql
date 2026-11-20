@@ -26,7 +26,7 @@ INSERT INTO usuarios
 
 INSERT INTO roles_permisos (id_rol,id_permiso) VALUES
 (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),
-(2,2),(2,3),(2,4),(2,5),(2,6),(2,8),(3,4),(3,5);
+(2,2),(2,3),(2,4),(2,5),(2,8),(3,4),(3,5);
 
 INSERT INTO permisos_adicionales_usuario (id_usuario,id_permiso) VALUES (3,6);
 
@@ -143,7 +143,7 @@ INSERT INTO periodos_oferta (id_periodo_oferta,id_plato,tipo,fecha_inicio,fecha_
 (3,2,'SUGERENCIA_CHEF','2026-10-10 00:00:00','2026-10-24 00:00:00'),
 (4,2,'CARTA_PERMANENTE','2026-10-24 00:00:00',NULL);
 
--- Autoriza el administrador tras el periodo de prueba y antes del alta en carta.
+-- La administradora autoriza durante la prueba; la carta empieza cuando termina la sugerencia.
 -- Costes por ración redondeados: pasta 0,72 €; tortilla 0,84 €.
 INSERT INTO autorizaciones_carta
 (id_autorizacion,id_periodo_oferta,id_emisor,fecha_autorizacion,coste_evaluado,precio_venta_evaluado) VALUES
