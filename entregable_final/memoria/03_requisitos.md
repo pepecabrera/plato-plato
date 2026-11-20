@@ -4,27 +4,25 @@ Los identificadores se conservan respecto a la segunda entrega. La correspondenc
 
 ## 3.1. Usuarios del sistema
 
-El sistema permitirá el acceso a tres perfiles de usuario, ordenados de mayor a menor nivel de permisos: **administrador, encargado y empleado**.
+El modelo distingue tres perfiles de usuario: **administrador, encargado y empleado** (RI-01). Son perfiles de aplicación, no cuentas de MariaDB (RNF-01). La entrega de clase se limita a la base de datos: incluye datos de demostración, consultas y operaciones concretas mediante procedimientos. No incluye una aplicación ni flujos completos de alta, modificación y baja de datos maestros.
 
 ### US-01 — Administrador
 
 El administrador será, generalmente, uno de los propietarios del restaurante, aunque el sistema permitirá la existencia de varios administradores.
 
-Este rol tendrá acceso a todas las funcionalidades del sistema, incluyendo la gestión de usuarios y la asignación de roles y permisos.
-
-Podrá registrar, modificar, consultar y desactivar proveedores, lotes, ingredientes, platos, recetas y demás elementos gestionados por el sistema. Asimismo, tendrá acceso a la información económica y a los márgenes de los platos.
+Este rol podrá consultar los datos de usuarios, roles y concesiones de la demostración, así como la información económica y los márgenes de los platos. Podrá realizar las operaciones previstas por los procedimientos según sus permisos. La incorporación a carta se rige por RN-02, no por el nombre del rol.
 
 ### US-02 — Encargado
 
 El encargado será, generalmente, el jefe de sala o una persona de confianza designada por el administrador.
 
-Por defecto, tendrá permisos para gestionar ingredientes, platos, proveedores y usuarios con rol de empleado. No tendrá acceso a la información económica ni a los márgenes de los platos, salvo que dichos permisos le sean concedidos por un administrador.
+Su perfil está orientado a las operaciones de stock, mermas, recetas y periodos de oferta permitidas por sus permisos. No podrá consultar costes ni márgenes por defecto; podrá hacerlo si recibe individualmente `CONSULTAR_COSTES`. La gestión de cuentas de empleados no forma parte de esta entrega.
 
 ### US-03 — Empleado
 
 El empleado tendrá el nivel de permisos más limitado de los tres perfiles.
 
-Por defecto, podrá consultar los platos y las recetas necesarias para su correcta preparación, así como registrar manualmente las mermas producidas durante la actividad del restaurante.
+El perfil está orientado a consultar los platos y las recetas necesarios para su preparación y a registrar movimientos de stock y mermas mediante los procedimientos previstos, según sus permisos.
 
 ## 3.2. Requisitos generales
 
@@ -38,7 +36,7 @@ El sistema deberá permitir gestionar la información relacionada con proveedore
 
 ### RG-03 — Gestión de usuarios y permisos
 
-El sistema deberá permitir gestionar los usuarios, sus roles y sus permisos de acceso, garantizando que cada trabajador pueda realizar únicamente las operaciones autorizadas según su perfil y los permisos adicionales que tenga asignados.
+La base de datos deberá representar usuarios, roles y permisos adicionales, y aplicar las comprobaciones de acceso previstas para las operaciones de la entrega (RC-10, RNF-01).
 
 ## 3.3. Requisitos detallados
 
@@ -166,31 +164,31 @@ El sistema deberá almacenar las unidades de medida admitidas, con su código, n
 
 ### 3.3.2. Requisitos funcionales
 
-Los requisitos funcionales describen las operaciones y comportamientos que el sistema deberá proporcionar a los usuarios.
+Los requisitos funcionales (RF) describen las operaciones que deberá ofrecer la base de datos. Se distingue entre la carga inicial de datos de demostración, las consultas a demanda y las operaciones realizadas mediante procedimientos. Las reglas de conducta (RC) describen las restricciones que deben respetar los datos y las operaciones.
 
-#### RF-01 — Gestión de usuarios
+#### RF-01 — Consulta de usuarios y permisos
 
-El sistema deberá permitir a los usuarios autorizados registrar, modificar, consultar, activar y desactivar cuentas de usuario, así como asignarles un rol o permisos adicionales.
+El poblado deberá incluir usuarios de aplicación, roles y concesiones de demostración. Se podrán consultar las cuentas, su estado, su rol y los permisos concedidos por rol o individualmente. El alta, la edición y la desactivación de cuentas de aplicación, así como la gestión interactiva de sus concesiones, quedan fuera de esta entrega.
 
-#### RF-02 — Gestión de proveedores
+#### RF-02 — Consulta de proveedores
 
-El sistema deberá permitir registrar, modificar, consultar y desactivar proveedores.
+El poblado deberá incluir proveedores con sus datos de contacto, forma de pago y estado. La entrega deberá permitir consultarlos, sin ofrecer un flujo operativo de alta, edición o desactivación.
 
-#### RF-03 — Gestión de ingredientes
+#### RF-03 — Consulta de ingredientes y existencias
 
-El sistema deberá permitir registrar, modificar, consultar y desactivar ingredientes, incluyendo su unidad de medida y la información relacionada con sus lotes y stock.
+El poblado deberá incluir ingredientes, sus unidades de medida y lotes de demostración. La entrega deberá permitir consultar la unidad, los lotes y las existencias por ingrediente. Los movimientos se registrarán según RF-09; no se incluye un flujo de mantenimiento del catálogo de ingredientes.
 
-#### RF-04 — Gestión de precios
+#### RF-04 — Consulta del histórico de precios
 
-El sistema deberá permitir registrar y actualizar los precios de compra de los ingredientes asociados a sus respectivos proveedores, conservando el histórico de precios.
+El poblado deberá incluir precios de compra por ingrediente y proveedor, con sus vigencias y la selección para el cálculo de costes. La entrega deberá permitir consultar el histórico y sus variaciones. No se incluye un flujo operativo de edición de precios o de cambio de la selección.
 
-#### RF-05 — Gestión de platos
+#### RF-05 — Consulta de platos y gestión de su oferta
 
-El sistema deberá permitir registrar, modificar, consultar y desactivar los platos de la carta.
+Los platos de demostración se cargarán con el poblado. La entrega deberá permitir consultar sus datos y su historial de oferta, así como registrar sugerencias, incorporar platos a la carta y cerrar periodos de oferta mediante procedimientos. La incorporación a carta deberá cumplir RN-02 y RN-04. No se incluye un flujo de alta, edición o desactivación de platos.
 
-#### RF-06 — Gestión de recetas
+#### RF-06 — Alta y consulta de recetas
 
-El sistema deberá permitir definir y modificar recetas, sean de un plato o reutilizables como subrecetas, indicando su rendimiento, los ingredientes y/o subrecetas que las forman y la cantidad necesaria de cada componente.
+La entrega deberá permitir consultar la composición y el rendimiento de las recetas, incluidas las subrecetas. Además de las recetas del poblado, un procedimiento deberá permitir dar de alta una receta completa en una sola transacción, con su rendimiento, unidad y componentes (ingredientes o subrecetas), cada uno con su cantidad y unidad. No se incluye un flujo completo de edición de recetas.
 
 #### RF-07 — Cálculo de escandallos
 
@@ -202,19 +200,19 @@ El sistema deberá permitir calcular el margen bruto de cada plato a partir de s
 
 #### RF-09 — Gestión de stock
 
-El sistema deberá permitir registrar y consultar los movimientos de stock de los ingredientes, incluyendo entradas, salidas y ajustes. Se permitirá registrar movimientos con fecha pasada, siempre que no provoquen saldos negativos en el momento afectado ni en momentos posteriores (RC-13).
+La entrega deberá permitir registrar mediante procedimientos y consultar los movimientos de stock de los ingredientes, incluyendo entradas, salidas y ajustes. Se permitirán movimientos con fecha pasada siempre que no provoquen saldos negativos en el momento afectado ni en momentos posteriores (RC-13). Las salidas por merma se registrarán mediante el flujo de RF-10.
 
 #### RF-10 — Gestión de mermas
 
-El sistema deberá permitir registrar y consultar las mermas producidas, indicando el elemento afectado, la cantidad, el motivo y la fecha de la pérdida, así como analizar el coste de las pérdidas.
+La entrega deberá permitir registrar mermas mediante un procedimiento y consultar su detalle: elemento afectado, cantidad, motivo y fecha. El coste de la pérdida es opcional: si se conoce, se aporta al registrar la merma y se conserva para su análisis; si no se aporta, queda como desconocido y no se calcula automáticamente.
 
-#### RF-11 — Alertas de sobrecostes
+#### RF-11 — Consulta de subidas del precio de referencia
 
-El sistema deberá permitir generar avisos cuando la variación del precio de un ingrediente provoque un aumento significativo del coste de producción de un plato o una reducción de su margen. Se considera significativo un aumento del precio de al menos el 10 %, valor configurable al solicitar el aviso (S-08).
+La entrega deberá ofrecer una consulta a demanda que compare el precio seleccionado y vigente de cada ingrediente con el precio anterior del mismo proveedor, en una unidad común. La consulta mostrará las subidas de al menos el 10 % por defecto, con umbral configurable, y los platos activos que usan el ingrediente (S-08). No mide la variación del margen del plato ni envía notificaciones automáticas.
 
-#### RF-12 — Alertas de caducidad
+#### RF-12 — Consulta de lotes próximos a caducar
 
-El sistema deberá permitir generar avisos cuando un lote almacenado se encuentre próximo a su fecha de caducidad. Se considera próximo un lote al que le falten menos de 48 horas, valor configurable al solicitar el aviso (S-08).
+La entrega deberá ofrecer una consulta a demanda de lotes con existencias que aún no hayan caducado y a los que les queden menos de 48 horas por defecto. El plazo de la consulta es configurable (S-08) y no modifica la regla RN-01. No se incluyen notificaciones automáticas.
 
 #### RF-13 — Comparación de proveedores
 
@@ -308,9 +306,9 @@ Los lotes de ingredientes perecederos a los que les queden menos de 48 horas par
 
 #### RN-02 — Incorporación a la carta
 
-Toda incorporación de un plato a la carta permanente deberá ser autorizada previamente por un administrador, con independencia de su relación entre coste de elaboración y precio de venta. La autorización registrará el administrador, la fecha, el coste evaluado y el precio de venta evaluado. No podrá autorizarse un plato cuyo coste no sea calculable.
+Toda incorporación de un plato a la carta permanente deberá ser autorizada por un usuario activo con el permiso `AUTORIZAR_CARTA`, concedido por su rol o individualmente. La autorización se registrará a más tardar al inicio del periodo y conservará el emisor, la fecha, el coste evaluado y el precio de venta evaluado. Para autorizar se exige un coste calculable y un precio de venta definido, pero no un umbral de margen.
 
-*Criterio de aplicación:* se exige en cada incorporación, también en las posteriores a una retirada de la carta. El emisor debe tener rol de administrador y una cuenta activa al autorizar.
+*Criterio de aplicación:* la autorización se exige en cada incorporación, también tras una retirada de la carta. El rol de administrador no sustituye la concesión de `AUTORIZAR_CARTA`. La prueba de 14 días solo se exige para la primera incorporación (RN-04).
 
 #### RN-03 — Política interna de frescura
 
@@ -328,27 +326,27 @@ Todo plato de nueva creación deberá ofrecerse inicialmente durante un mínimo 
 
 #### RNF-01 — Control de acceso
 
-El sistema deberá permitir el acceso únicamente a usuarios registrados y autenticados, aplicando los permisos correspondientes a su rol más los permisos adicionales.
+La entrega deberá incluir cuentas operativas autenticadas por MariaDB y con privilegios diferenciados, comprobables mediante operaciones permitidas y denegadas al conectarse con cada cuenta. Las cuentas del servidor se distinguen de los usuarios y permisos de aplicación (RI-01, RC-10). Las comprobaciones sobre un usuario de aplicación no sustituyen la autenticación de la conexión; la autenticación propia de una futura aplicación queda fuera de esta entrega.
 
 #### RNF-02 — Seguridad de las credenciales
 
-El sistema no deberá almacenar las contraseñas de los usuarios en texto plano.
+Las contraseñas de los usuarios de aplicación no se almacenarán en texto plano. El poblado deberá almacenar hashes generados con scrypt y una sal individual. El `CHECK` de longitud mínima del valor almacenado es solo una comprobación estructural: no acredita el algoritmo ni la seguridad del hash.
 
 #### RNF-03 — Disponibilidad
 
-El sistema deberá ofrecer una disponibilidad adecuada para permitir su utilización durante el horario habitual de funcionamiento del restaurante.
+En un futuro despliegue, el sistema deberá estar disponible durante el horario habitual del restaurante. La disponibilidad no se verifica en esta entrega de clase.
 
 #### RNF-04 — Rendimiento
 
-El sistema deberá ofrecer tiempos de respuesta adecuados en las operaciones habituales de consulta, registro y modificación de información.
+El rendimiento de las operaciones habituales se deberá evaluar en un futuro despliegue con una carga representativa. La entrega de clase no fija ni acredita tiempos de respuesta.
 
 #### RNF-05 — Usabilidad e integración
 
-El sistema deberá proporcionar operaciones que permitan consultar y gestionar la información de forma estructurada, facilitando su integración con una posible interfaz de usuario sin necesidad de que esta acceda directamente a la base de datos.
+La base de datos deberá ofrecer consultas y procedimientos documentados que puedan integrarse en una futura aplicación. No se incluye una interfaz ni un servicio de aplicación en esta entrega.
 
 #### RNF-06 — Integridad de los datos
 
-El sistema deberá garantizar la integridad y consistencia de la información almacenada, evitando registros que incumplan las relaciones y restricciones definidas en el sistema.
+El esquema deberá aplicar sus restricciones declarativas, y las operaciones de escritura de la entrega deberán respetar las reglas de integridad que validan sus procedimientos y triggers. Los controles de diagnóstico complementan esas garantías, pero no impiden por sí mismos escrituras incoherentes.
 
 ### 3.3.6. Decisiones de modelado
 
@@ -401,18 +399,18 @@ La siguiente matriz relaciona los requisitos generales con los requisitos detall
 | RI-10 — Oferta y autorizaciones | ○ | | ○ |
 | RI-11 — Unidades de medida | ● | ○ | |
 | **Requisitos funcionales** | | | |
-| RF-01 — Gestión de usuarios | | | ● |
-| RF-02 — Gestión de proveedores | | ● | |
-| RF-03 — Gestión de ingredientes | ○ | ● | |
-| RF-04 — Gestión de precios | ● | ● | |
-| RF-05 — Gestión de platos | ● | | |
-| RF-06 — Gestión de recetas | ● | | |
+| RF-01 — Consulta de usuarios y permisos | | | ● |
+| RF-02 — Consulta de proveedores | | ● | |
+| RF-03 — Consulta de ingredientes y existencias | ○ | ● | |
+| RF-04 — Consulta del histórico de precios | ● | ● | |
+| RF-05 — Consulta de platos y gestión de su oferta | ● | | |
+| RF-06 — Alta y consulta de recetas | ● | | |
 | RF-07 — Cálculo de escandallos | ● | | |
 | RF-08 — Cálculo de rentabilidad | ● | | |
 | RF-09 — Gestión de stock | | ● | |
 | RF-10 — Gestión de mermas | | ● | |
-| RF-11 — Alertas de sobrecostes | ● | | |
-| RF-12 — Alertas de caducidad | | ● | |
+| RF-11 — Consulta de subidas del precio de referencia | ● | | |
+| RF-12 — Consulta de lotes próximos a caducar | | ● | |
 | RF-13 — Comparación de proveedores | ● | ● | |
 | **Reglas de conducta** | | | |
 | RC-01 — Cantidades de las recetas | ● | | |
