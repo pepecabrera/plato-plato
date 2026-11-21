@@ -2,15 +2,15 @@
 
 **Sistema de apoyo a la gestión de costes, inventario y elaboración de platos para restaurantes.**
 
-> **Estado:** proyecto académico en fase de definición y desarrollo. Las funcionalidades descritas representan el alcance previsto y no implican que estén implementadas.
+> **Entrega de clase:** demostración de base de datos MariaDB. Incluye esquema, datos ficticios, consultas, procedimientos, triggers, pruebas y cuentas SQL. No incluye una aplicación ni una interfaz de usuario. Véase la [memoria vigente (PDF)](entregable_final/plato_plato_memoria.pdf).
 
-Plato-Plató es un proyecto desarrollado por un equipo de **cinco integrantes**. Su propósito es reunir en una única aplicación la información sobre proveedores, ingredientes, precios de compra, lotes, existencias, mermas, recetas y platos, y utilizarla para calcular escandallos y facilitar el análisis de rentabilidad.
+Plato-Plató es un proyecto de **cinco integrantes**. Reúne la información sobre proveedores, ingredientes, precios de compra, lotes, existencias, mermas, recetas y platos para calcular escandallos y analizar el margen unitario.
 
 ## Índice
 
 - [1. Motivación](#1-motivación)
 - [2. Objetivos](#2-objetivos)
-- [3. Alcance funcional previsto](#3-alcance-funcional-previsto)
+- [3. Alcance de la entrega](#3-alcance-de-la-entrega)
 - [4. Perfiles de usuario](#4-perfiles-de-usuario)
 - [5. Modelo de información](#5-modelo-de-información)
 - [6. Funcionamiento conceptual](#6-funcionamiento-conceptual)
@@ -26,7 +26,7 @@ Plato-Plató es un proyecto desarrollado por un equipo de **cinco integrantes**.
 
 ## 1. Motivación
 
-En un restaurante, la información sobre compras, existencias, elaboración y precios puede encontrarse dispersa en documentos, hojas de cálculo o registros manuales. Esto dificulta conocer el coste real de los platos y detectar variaciones que afectan a su rentabilidad.
+En un restaurante, la información sobre compras, existencias, elaboración y precios puede encontrarse dispersa en documentos, hojas de cálculo o registros manuales. Esto dificulta estimar el coste por ración y detectar variaciones que afectan al margen.
 
 Plato-Plató busca centralizar esos datos y relacionarlos entre sí, reduciendo tareas repetitivas y mejorando la trazabilidad de los cálculos.
 
@@ -39,36 +39,30 @@ Plato-Plató busca centralizar esos datos y relacionarlos entre sí, reduciendo 
 - **Comparar** precios de distintos proveedores para un mismo ingrediente.
 - **Facilitar** la consulta y gestión de información según los permisos de cada perfil.
 
-## 3. Alcance funcional previsto
+## 3. Alcance de la entrega
 
-Las siguientes capacidades forman parte de los requisitos planteados; su disponibilidad efectiva dependerá del avance del desarrollo.
+La [especificación vigente](entregable_final/memoria/03_requisitos.md) distingue la carga de demostración, las consultas y las operaciones disponibles por procedimiento.
 
-| Área | Capacidades previstas |
+| Área | Capacidad de la demo |
 | --- | --- |
-| Usuarios | Gestión de cuentas, activación/desactivación y roles. |
-| Proveedores | Registro, consulta, modificación y desactivación. |
+| Usuarios | Consulta de usuarios de demostración y sus concesiones, sin CRUD de aplicación. |
+| Proveedores | Consulta del catálogo cargado con el poblado. |
 | Ingredientes | Catálogo, categorías, unidades de medida y estado. |
 | Precios de compra | Asociación ingrediente-proveedor, vigencias e histórico de precios. |
 | Lotes e inventario | Entradas, salidas, ajustes, existencias y fechas de caducidad. |
-| Recetas y subrecetas | Composición por ingredientes y otras subrecetas, con cantidades. |
-| Platos | Catálogo, categorías, descripciones, imágenes y precios de venta. |
+| Recetas y subrecetas | Consulta de composición y alta completa por procedimiento. |
+| Platos | Catálogo de demostración y procedimientos para la oferta y la incorporación a carta. |
 | Escandallos | Cálculo del coste de producción a partir de los componentes de cada receta. |
 | Rentabilidad | Cálculo del margen bruto y apoyo al seguimiento de costes. |
 | Mermas | Registro de pérdidas, causas, cantidades y costes asociados. |
-| Alertas | Avisos por caducidad próxima o variaciones relevantes de costes. |
+| Avisos | Consultas a demanda de lotes próximos a caducar y subidas del precio de referencia del mismo proveedor. |
 | Comparación | Consulta de proveedores y precios por ingrediente. |
 
 **Fuera del alcance confirmado:** no se presupone la existencia de un módulo de reservas, comandas, facturación, gestión de turnos o ventas. Cualquier ampliación se documentará antes de incorporarse.
 
 ## 4. Perfiles de usuario
 
-El sistema contempla tres perfiles:
-
-- **Administrador:** acceso general y gestión de usuarios, roles y permisos, además de la información económica.
-- **Encargado:** gestión operativa de ingredientes, platos y proveedores, con permisos económicos únicamente cuando se le concedan.
-- **Empleado:** consulta de la información necesaria para elaborar platos y registro de mermas, de acuerdo con sus permisos.
-
-Los permisos concretos se definirán y verificarán durante el desarrollo.
+La demo separa los perfiles de aplicación de las cuentas de MariaDB. Las cuentas SQL de administrador, encargado y empleado reciben vistas y operaciones distintas; la [matriz de acceso](#cuentas-operativas-de-mariadb) detalla las concesiones. La regla de negocio RN-02 exige el permiso explícito `AUTORIZAR_CARTA`, no un rol concreto. En la demo, solo `pp_administrador` tiene además el privilegio SQL para llamar al procedimiento público de incorporación.
 
 ## 5. Modelo de información
 
@@ -90,41 +84,23 @@ El **escandallo** representa el cálculo del coste de elaboración de un plato. 
 
 Un posible recorrido de uso del sistema es:
 
-1. Registrar los proveedores y los ingredientes disponibles.
-2. Asociar precios de compra a los ingredientes y conservar su histórico.
-3. Registrar la recepción de lotes y sus movimientos de inventario.
-4. Definir recetas mediante ingredientes y subrecetas, indicando cantidades.
-5. Asociar una receta a un plato y establecer su precio de venta.
-6. Consultar el escandallo y el margen estimado del plato.
-7. Registrar mermas y revisar alertas relacionadas con existencias o costes.
-
-Este flujo describe el objetivo del producto, no una secuencia ya implementada.
+1. Cargar proveedores, ingredientes, precios, lotes, recetas y platos de demostración con `02` o `06`.
+2. Consultar recetas, existencias y, con el perfil SQL autorizado, el escandallo y el margen por ración.
+3. Registrar movimientos, mermas o periodos de oferta mediante los procedimientos habilitados para cada cuenta.
 
 ## 7. Arquitectura y tecnologías
 
-La arquitectura definitiva y las tecnologías de implementación **están pendientes de confirmación por el equipo**. Se prevé separar conceptualmente:
-
-- **Interfaz de usuario:** presentación y operaciones permitidas a cada perfil.
-- **Lógica de negocio:** reglas de cálculo, validaciones y operaciones sobre el inventario.
-- **Persistencia:** almacenamiento de usuarios, productos, recetas, precios, lotes y movimientos.
-
-Las decisiones sobre lenguaje, framework, motor de base de datos, despliegue y autenticación se recogerán en la documentación técnica una vez acordadas.
+La entrega usa **MariaDB** para la persistencia y las reglas de negocio. Las cuentas operativas consultan vistas y llaman a procedimientos; no acceden directamente a las tablas. El [modelo tecnológico](entregable_final/memoria/06_modelo_tecnologico.md) documenta las garantías y sus límites.
 
 ## 8. Organización del repositorio
 
-Estructura **orientativa**, adaptable a las decisiones técnicas:
-
 ```text
 plato-plato/
-├── docs/                 # Requisitos, modelos y decisiones técnicas
-├── src/                  # Código fuente de la aplicación
-├── tests/                # Pruebas automatizadas
-├── scripts/              # Utilidades de desarrollo y mantenimiento
-├── .gitignore
+├── docs/                 # Entregas anteriores y materiales de trabajo
+├── entregable_final/     # Memoria vigente, figuras y herramientas de generación
+├── sql/                  # Instalación, poblados, consultas y pruebas de MariaDB
 └── README.md
 ```
-
-No es necesario crear directorios vacíos ni adoptar esta estructura si el framework elegido propone otra más adecuada.
 
 ## 9. Instalación y ejecución
 
@@ -179,16 +155,7 @@ mariadb --protocol=SOCKET -u pp_empleado -p plato_plato -e "CALL sp_consultar_es
 
 ## 10. Calidad y pruebas
 
-Se prevé verificar, entre otros aspectos:
-
-- Cálculos de costes y márgenes.
-- Composición de recetas y subrecetas, evitando referencias cíclicas.
-- Coherencia de precios y períodos de vigencia.
-- Registro de movimientos de inventario y mermas.
-- Restricciones de acceso por rol.
-- Integridad de los datos y tratamiento de errores.
-
-El framework de pruebas y la automatización en GitHub Actions se concretarán al fijar la tecnología del proyecto.
+`07_pruebas.sql` comprueba el esquema y los flujos de negocio en una copia desechable. La secuencia de verificación, los resultados previos y lo que queda pendiente se detallan en el [seguimiento de clase](entregable_final/memoria/pendientes_clase_plato_plato.md). Los privilegios se verifican desde las conexiones separadas indicadas arriba.
 
 ## 11. Colaboración
 
@@ -214,32 +181,11 @@ Estas convenciones son una propuesta de organización y podrán ajustarse por co
 
 ## 13. Documentación
 
-La documentación del proyecto se organizará preferentemente en `docs/` e incluirá, a medida que esté disponible:
-
-- Especificación de requisitos y glosario.
-- Reglas de conducta y políticas de negocio.
-- Modelo conceptual y diseño de datos.
-- Decisiones de arquitectura.
-- Guías de desarrollo, despliegue y pruebas.
-
-La documentación debe reflejar las decisiones realmente adoptadas y mantenerse sincronizada con el código.
+La [memoria vigente](entregable_final/plato_plato_memoria.pdf) se genera a partir de los Markdown de `entregable_final/memoria/`. Para regenerarla desde la raíz, ejecutad `bash entregable_final/herramientas/generar_memoria.sh` con Pandoc y XeLaTeX instalados. `docs/entregas/` conserva los PDF históricos sin modificaciones; los requisitos y modelos de trabajo en `docs/` no sustituyen a la memoria vigente.
 
 ## 14. Hoja de ruta
 
-La siguiente secuencia es **orientativa**, no un calendario cerrado:
-
-- [ ] Revisar y validar el catálogo de requisitos.
-- [ ] Acordar tecnologías y arquitectura.
-- [ ] Diseñar el modelo de datos.
-- [ ] Preparar la estructura del proyecto y el entorno local.
-- [ ] Implementar catálogos de proveedores e ingredientes.
-- [ ] Implementar precios, lotes y movimientos de stock.
-- [ ] Implementar recetas, subrecetas y platos.
-- [ ] Incorporar cálculo de escandallos y márgenes.
-- [ ] Incorporar gestión de mermas y alertas.
-- [ ] Completar pruebas, documentación y revisión final.
-
-El estado de las tareas se mantendrá preferentemente en los Issues o el tablero del proyecto, para evitar duplicar el seguimiento.
+El [seguimiento de clase](entregable_final/memoria/pendientes_clase_plato_plato.md) recoge la validación final y los límites aceptados. Una aplicación completa queda fuera de esta entrega.
 
 ## 15. Equipo y licencia
 

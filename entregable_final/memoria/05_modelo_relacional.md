@@ -13,7 +13,7 @@ La transformación se aplica en siete pasos:
 1. **Entidades.** Cada entidad da lugar a una relación con clave primaria subrogada (`id_*`), salvo `unidades_medida`, cuyo código es una clave natural breve y estable.
 2. **Atributos.** Los atributos simples pasan a columnas. Los derivados no se almacenan (sección 5.3.3). Los enumerados pasan a dominios cerrados.
 3. **Asociaciones 1:N.** La clave primaria del extremo 1 se añade como clave ajena en el extremo N. Si el mínimo es 0, la clave ajena admite nulos.
-4. **Asociaciones 1:1.** La clave ajena se sitúa en el extremo cuya participación es obligatoria y se declara única.
+4. **Asociaciones 1:1.** La clave ajena se sitúa en la relación dependiente y se declara `UNIQUE`. Es `NOT NULL` si toda fila de esa relación debe apuntar a la otra (`platos`, `autorizaciones_carta`); si el vínculo es opcional, admite nulos (`mermas`), con un `CHECK` que lo exige para las mermas de lote. La FK no obliga por sí sola a que una fila referenciada tenga una fila dependiente.
 5. **Asociaciones N:M.** Generan una relación propia cuya clave primaria es la combinación de ambas claves ajenas.
 6. **Asociación recursiva.** `utilizaReceta` se transforma en una segunda clave ajena de `componentes_receta` hacia `recetas`.
 7. **Asociaciones exclusivas.** Cada alternativa se transforma en una clave ajena que admite nulos, y una restricción CHECK exige que se informe exactamente una.
@@ -42,30 +42,30 @@ La Tabla 5.1 recoge la correspondencia de las entidades y la Tabla 5.2, la de la
 
 **Tabla 5.2. Correspondencia de asociaciones del MC con elementos del MR.**
 
-| Asociación (MC) | Multiplicidad | Elemento en el MR |
+| Asociación (MC) | Multiplicidad | Clave ajena → clave referenciada |
 |---|---|---|
-| tieneRol | Rol 1 — 0..\* Usuario | `usuarios.id_rol` |
-| concede | Rol 0..\* — 0..\* Permiso | Relación `roles_permisos` |
-| tienePermisoAdicional | Usuario 0..\* — 0..\* Permiso | Relación `permisos_adicionales_usuario` |
-| emite | Usuario 1 — 0..\* AutorizacionCarta | `autorizaciones_carta.id_emisor` |
-| ofrece | Proveedor 1 — 0..\* PrecioCompra | `precios_compra.id_proveedor` |
-| tienePrecio | Ingrediente 1 — 0..\* PrecioCompra | `precios_compra.id_ingrediente` |
-| seMideEn | UnidadMedida 1 — 0..\* Ingrediente | `ingredientes.unidad_medida` |
-| expresaPrecioEn | UnidadMedida 1 — 0..\* PrecioCompra | `precios_compra.unidad_precio` |
-| rindeEn | UnidadMedida 1 — 0..\* Receta | `recetas.unidad_rendimiento` |
-| seExpresaEn | UnidadMedida 1 — 0..\* ComponenteReceta | `componentes_receta.unidad_medida` |
-| tieneReceta | Plato 0..1 — 1 Receta | `platos.id_receta`, NOT NULL y única |
-| seComponeDe | Receta 1 — 1..\* ComponenteReceta | `componentes_receta.id_receta` |
-| utilizaIngrediente | ComponenteReceta 0..\* — 0..1 Ingrediente | `componentes_receta.id_ingrediente`, admite nulos |
-| utilizaReceta | ComponenteReceta 0..\* — 0..1 Receta | `componentes_receta.id_receta_componente`, admite nulos |
-| tieneLote | Ingrediente 1 — 0..\* Lote | `lotes.id_ingrediente` |
-| recibeMovimiento | Lote 1 — 0..\* MovimientoStock | `movimientos_stock.id_lote` |
-| seDestinaA | MovimientoStock 0..\* — 0..1 Plato | `movimientos_stock.id_plato_destino`, admite nulos |
-| afectaLote | Merma 0..\* — 0..1 Lote | `mermas.id_lote`, admite nulos |
-| afectaPlato | Merma 0..\* — 0..1 Plato | `mermas.id_plato`, admite nulos |
-| originaSalida | Merma 0..1 — 0..1 MovimientoStock | `mermas.id_movimiento`, admite nulos y es única |
-| tienePeriodoOferta | Plato 1 — 0..\* PeriodoOferta | `periodos_oferta.id_plato` |
-| tieneAutorizacion | PeriodoOferta 1 — 0..1 AutorizacionCarta | `autorizaciones_carta.id_periodo_oferta`, NOT NULL y única |
+| tieneRol | Rol 1 — 0..\* Usuario | `usuarios.id_rol` → `roles.id_rol` |
+| concede | Rol 0..\* — 0..\* Permiso | `roles_permisos.id_rol` → `roles.id_rol`; `roles_permisos.id_permiso` → `permisos.id_permiso` |
+| tienePermisoAdicional | Usuario 0..\* — 0..\* Permiso | `permisos_adicionales_usuario.id_usuario` → `usuarios.id_usuario`; `permisos_adicionales_usuario.id_permiso` → `permisos.id_permiso` |
+| emite | Usuario 1 — 0..\* AutorizacionCarta | `autorizaciones_carta.id_emisor` → `usuarios.id_usuario` |
+| ofrece | Proveedor 1 — 0..\* PrecioCompra | `precios_compra.id_proveedor` → `proveedores.id_proveedor` |
+| tienePrecio | Ingrediente 1 — 0..\* PrecioCompra | `precios_compra.id_ingrediente` → `ingredientes.id_ingrediente` |
+| seMideEn | UnidadMedida 1 — 0..\* Ingrediente | `ingredientes.unidad_medida` → `unidades_medida.codigo` |
+| expresaPrecioEn | UnidadMedida 1 — 0..\* PrecioCompra | `precios_compra.unidad_precio` → `unidades_medida.codigo` |
+| rindeEn | UnidadMedida 1 — 0..\* Receta | `recetas.unidad_rendimiento` → `unidades_medida.codigo` |
+| seExpresaEn | UnidadMedida 1 — 0..\* ComponenteReceta | `componentes_receta.unidad_medida` → `unidades_medida.codigo` |
+| tieneReceta | Plato 0..1 — 1 Receta | `platos.id_receta` → `recetas.id_receta` (`NOT NULL`, `UNIQUE`) |
+| seComponeDe | Receta 1 — 1..\* ComponenteReceta | `componentes_receta.id_receta` → `recetas.id_receta` |
+| utilizaIngrediente | ComponenteReceta 0..\* — 0..1 Ingrediente | `componentes_receta.id_ingrediente` → `ingredientes.id_ingrediente` (admite nulos) |
+| utilizaReceta | ComponenteReceta 0..\* — 0..1 Receta | `componentes_receta.id_receta_componente` → `recetas.id_receta` (admite nulos) |
+| tieneLote | Ingrediente 1 — 0..\* Lote | `lotes.id_ingrediente` → `ingredientes.id_ingrediente` |
+| recibeMovimiento | Lote 1 — 0..\* MovimientoStock | `movimientos_stock.id_lote` → `lotes.id_lote` |
+| seDestinaA | MovimientoStock 0..\* — 0..1 Plato | `movimientos_stock.id_plato_destino` → `platos.id_plato` (admite nulos) |
+| afectaLote | Merma 0..\* — 0..1 Lote | `mermas.id_lote` → `lotes.id_lote` (admite nulos) |
+| afectaPlato | Merma 0..\* — 0..1 Plato | `mermas.id_plato` → `platos.id_plato` (admite nulos) |
+| originaSalida | Merma 0..1 — 0..1 MovimientoStock | `mermas.id_movimiento` → `movimientos_stock.id_movimiento` (`UNIQUE`; obligatorio solo para mermas de lote) |
+| tienePeriodoOferta | Plato 1 — 0..\* PeriodoOferta | `periodos_oferta.id_plato` → `platos.id_plato` |
+| tieneAutorizacion | PeriodoOferta 1 — 0..1 AutorizacionCarta | `autorizaciones_carta.id_periodo_oferta` → `periodos_oferta.id_periodo_oferta` (`NOT NULL`, `UNIQUE`; RN-02 exige autorización en carta permanente) |
 
 ### 5.1.2. Esquema relacional resultante
 
@@ -90,32 +90,32 @@ El modelo consta de 17 relaciones: 15 procedentes de entidades y 2 de asociacion
 
 - `recetas(id_receta, nombre, cantidad_rendimiento, #unidad_rendimiento, estado)`; AK: `nombre`.
 - `platos(id_plato, #id_receta, nombre, imagen?, descripcion, categoria, menu_del_dia, precio_venta?, estado, porcentaje_margen_objetivo?)`; AK: `id_receta`; AK: `nombre`.
-- `componentes_receta(id_componente, #id_receta, cantidad, #unidad_medida, #id_ingrediente?, #id_receta_componente?)`; únicas: `(id_receta, id_ingrediente)` y `(id_receta, id_receta_componente)`.
+- `componentes_receta(id_componente, #id_receta, cantidad, #unidad_medida, #id_ingrediente?, #id_receta_componente?)`; unicidades condicionales: `(id_receta, id_ingrediente)` para líneas de ingrediente y `(id_receta, id_receta_componente)` para líneas de subreceta.
 
 **Lotes, stock y mermas**
 
 - `lotes(id_lote, identificador_lote, #id_ingrediente, fecha_entrada, fecha_caducidad?, ubicacion_almacen, fresco, apto_para_consumo)`; AK: `identificador_lote`.
 - `movimientos_stock(id_movimiento, #id_lote, tipo, cantidad, fecha_movimiento, finalidad_salida?, #id_plato_destino?)`.
-- `mermas(id_merma, cantidad_desperdiciada, fecha_merma, motivo, detalle_motivo?, coste_perdida?, #id_lote?, #id_plato?, #id_movimiento?)`; única: `id_movimiento`.
+- `mermas(id_merma, cantidad_desperdiciada, fecha_merma, motivo, detalle_motivo?, coste_perdida?, #id_lote?, #id_plato?, #id_movimiento?)`; unicidad condicional: `id_movimiento` para mermas de lote.
 
 **Oferta y autorización**
 
 - `periodos_oferta(id_periodo_oferta, #id_plato, tipo, fecha_inicio, fecha_fin?)`; AK: `(id_plato, fecha_inicio)`.
 - `autorizaciones_carta(id_autorizacion, #id_periodo_oferta, #id_emisor, fecha_autorizacion, coste_evaluado, precio_venta_evaluado)`; AK: `id_periodo_oferta`.
 
-![Modelo relacional: vista global de claves primarias y ajenas](img/mr_global.png)
+![Figura 5.1. Modelo relacional: vista global de claves primarias y ajenas.](img/mr_global.png)
 
 Las vistas siguientes detallan los atributos y dominios de cada grupo. Una tabla marcada como [referencia] solo se muestra para situar una clave ajena.
 
-![Modelo relacional: acceso y permisos](img/mr_acceso.png)
+![Figura 5.2. Modelo relacional: acceso y permisos.](img/mr_acceso.png)
 
-![Modelo relacional: compras y precios](img/mr_compras.png)
+![Figura 5.3. Modelo relacional: compras y precios.](img/mr_compras.png)
 
-![Modelo relacional: platos y recetas](img/mr_recetas.png)
+![Figura 5.4. Modelo relacional: platos y recetas.](img/mr_recetas.png)
 
-![Modelo relacional: lotes, stock y mermas](img/mr_inventario.png)
+![Figura 5.5. Modelo relacional: lotes, stock y mermas.](img/mr_inventario.png)
 
-![Modelo relacional: oferta y autorización](img/mr_oferta.png)
+![Figura 5.6. Modelo relacional: oferta y autorización.](img/mr_oferta.png)
 
 ### 5.1.3. Dominios
 
@@ -130,7 +130,7 @@ Las vistas siguientes detallan los atributos y dominios de cada grupo. Una tabla
 | Ruta | Texto de hasta 255 caracteres. |
 | Correo | Texto de hasta 150 caracteres que contiene una arroba. |
 | Telefono | Texto de hasta 20 caracteres. |
-| Hash | Texto de al menos 60 caracteres (RNF-02). |
+| Hash | Texto de al menos 60 caracteres según el `CHECK`; la longitud no valida el algoritmo (RNF-02). |
 | Instante | Fecha y hora local del restaurante. |
 | Booleano | Verdadero o falso. |
 | CantidadPositiva | Decimal mayor que cero, con cuatro decimales. |
@@ -157,41 +157,42 @@ La política general es impedir el borrado de filas referenciadas (ON DELETE RES
 | Clave ajena | Acción | Justificación |
 |---|---|---|
 | `roles_permisos.id_rol`, `roles_permisos.id_permiso` | ON DELETE CASCADE | Una concesión no tiene existencia sin su rol y su permiso, y no es información histórica. |
-| `permisos_adicionales_usuario.id_usuario`, `.id_permiso` | ON DELETE CASCADE | Mismo motivo que en la fila anterior. |
+| `permisos_adicionales_usuario.id_usuario`, `permisos_adicionales_usuario.id_permiso` | ON DELETE CASCADE | Mismo motivo que en la fila anterior. |
 | `componentes_receta.id_receta` | ON DELETE CASCADE | La línea forma parte de la receta por composición. |
-| Claves ajenas hacia `unidades_medida.codigo` | ON UPDATE CASCADE | Es una clave natural: corregir un código no debe obligar a reescribir sus usos. El borrado sigue restringido. |
+| `ingredientes.unidad_medida`, `precios_compra.unidad_precio`, `recetas.unidad_rendimiento`, `componentes_receta.unidad_medida` | ON UPDATE CASCADE | Es la acción declarada en las cuatro FK a `unidades_medida.codigo`. Con los triggers instalados no se permite cambiar el código, la magnitud ni el factor de una unidad en uso. El borrado sigue restringido. |
 
 ### 5.1.5. Catálogo de restricciones
 
-La Tabla 5.5 sustituye a las referencias R-01 a R-15 del borrador del modelo relacional, que remitían a un documento inexistente. Indica cómo se garantiza cada regla: de forma declarativa cuando es posible y mediante triggers o procedimientos cuando MariaDB no lo permite.
+La Tabla 5.5 distingue las restricciones del esquema (`01_tablas.sql`), los triggers (`05_triggers.sql`), las rutinas de operación (`04_funciones_procedimientos.sql`) y las consultas de diagnóstico (`03_consultas.sql`). Los diagnósticos solo detectan incidencias en los datos consultados: no impiden escrituras ni corrigen filas (RNF-06).
 
-**Tabla 5.5. Reglas y mecanismo que las garantiza.**
+**Tabla 5.5. Reglas, mecanismos de aplicación y diagnósticos.**
 
-| Regla | Relación | Mecanismo |
-|---|---|---|
-| RC-01 | `componentes_receta`, `recetas` | CHECK de cantidad y rendimiento positivos. |
-| RC-02 | `componentes_receta` | UNIQUE `(id_receta, id_ingrediente)` y `(id_receta, id_receta_componente)`. |
-| RC-03 | `precios_compra` | CHECK de precio positivo. |
-| RC-04 | `precios_compra` | AK, CHECK de fin posterior al inicio y trigger de no solapamiento. |
-| D-01 | `precios_compra` | Índice único sobre una columna virtual que solo toma valor si el precio está seleccionado. |
-| RC-05, RC-11 | Funciones de coste | Cálculo recursivo; devuelve nulo si falta un precio válido. |
-| RC-06, RC-07 | Funciones y vistas | Se cumplen por construcción, porque el coste y el margen no se almacenan. |
-| RC-08, D-06 | `platos` | Atributo opcional con CHECK de porcentaje. |
-| RC-09 | Todas | Claves ajenas restrictivas, desactivación lógica y triggers que impiden modificar o borrar movimientos y mermas. |
-| RC-10, D-03, RNF-01 | Procedimientos | Función de permisos efectivos, comprobada en cada procedimiento que recibe el usuario. |
-| RC-12 | `componentes_receta` | CHECK contra la autorreferencia directa y trigger con consulta recursiva. |
-| RC-13 | `movimientos_stock` | Trigger que comprueba el saldo en el instante afectado y en los posteriores. |
-| RC-14 | `mermas` | CHECK de exclusividad y de correspondencia entre lote y movimiento, UNIQUE y trigger que genera la salida. |
-| RC-15, D-02 | `precios_compra`, `componentes_receta`, `platos` | Triggers que comparan magnitudes y exigen raciones en la receta de un plato. |
-| RC-16 | `periodos_oferta` | AK, CHECK de fin posterior al inicio y trigger de no solapamiento. |
-| RC-17 | `movimientos_stock` | CHECK compuesto de coherencia y trigger sobre la fecha de entrada del lote. |
-| RN-01 | `movimientos_stock` | Trigger sobre las salidas de elaboración. |
-| RN-02 | `autorizaciones_carta`, `periodos_oferta` | Trigger de validación y procedimiento atómico de incorporación. |
-| RN-03, D-04 | `movimientos_stock` | Trigger sobre las salidas de elaboración de lotes frescos. |
-| RN-04, D-05 | `periodos_oferta` | Trigger sobre el inicio de una carta permanente. |
-| RNF-02 | `usuarios` | CHECK de longitud mínima del hash. |
+| Regla | DDL del esquema | Triggers | Procedimientos u otros mecanismos | Diagnóstico |
+|---|---|---|---|---|
+| RC-01 | `CHECK` de cantidad y rendimiento positivos. | — | — | — |
+| RC-02 | `CHECK` de exclusividad y `UNIQUE` por receta e ingrediente o subreceta, según la referencia informada. | — | — | — |
+| RC-03 | `CHECK` de precio positivo. | — | — | — |
+| RC-04 | AK de proveedor, ingrediente e inicio; `CHECK` de fin posterior al inicio. | Rechazan solapes al insertar o actualizar precios. | — | C-24 detecta solapes. |
+| D-01 | Índice único sobre la columna virtual que identifica el ingrediente solo si el precio está seleccionado. | — | Para costear, el precio seleccionado también debe estar vigente. | C-11 detecta ingredientes sin precio seleccionado y vigente que afectan a platos. |
+| RC-05 a RC-07, RC-11 | Costes y márgenes corrientes no almacenados. | — | Funciones de cálculo a demanda (Tabla 5.6); el coste queda nulo si falta un precio válido. | C-11 diagnostica falta de precio válido, no todas las causas de coste nulo. |
+| RC-08, D-06 | Margen objetivo opcional, con `CHECK` de porcentaje. | — | — | — |
+| RC-09 | FK restrictivas salvo las excepciones de la Tabla 5.4; atributo de estado en las tablas que admiten desactivación lógica. | Impiden modificar o borrar movimientos, mermas y autorizaciones; impiden borrar periodos y limitan sus modificaciones. | Las diferencias de inventario se registran como ajustes, no reescribiendo movimientos. | — |
+| RC-10, D-03 | Relaciones de permisos por rol y adicionales por usuario. | — | `fn_tiene_permiso` comprueba el usuario activo y las concesiones, con acceso general para el administrador activo; RN-02 usa una comprobación específica. | — |
+| RC-12 | `CHECK` contra la autorreferencia directa. | Comprueban ciclos al insertar o actualizar componentes. | — | C-25 detecta ciclos. |
+| Mínimo de un componente por receta | La FK solo exige que exista la receta de cada componente. | Impiden eliminar o trasladar el último componente de una receta conservada. | `sp_registrar_receta` crea la receta con al menos un componente en una transacción. | C-23 detecta recetas sin componentes. |
+| RC-13 | — | — | `sp_registrar_movimiento` y `sp_registrar_merma` de lote bloquean el lote y revierten la operación si algún saldo acumulado queda negativo. | C-26 detecta saldos negativos en el historial. |
+| RC-14 | `CHECK` de lote o plato exclusivo, con movimiento solo para lote; FK y `UNIQUE` sobre `id_movimiento`. | `trg_merma_bi_coherencia` valida que la salida enlazada sea de merma y coincida en lote, cantidad y fecha. | `sp_registrar_merma` registra la salida y la merma de lote en la misma transacción; una merma de plato no genera salida. `sp_registrar_movimiento` no admite salidas por merma. | C-26 detecta mermas de lote que no coinciden con su salida y salidas por merma sin merma asociada. |
+| RC-15, D-02 | FK a unidades y `CHECK` de rendimiento positivo. | Validan magnitudes y rendimiento en raciones para platos; limitan cambios en unidades y rendimientos en uso. | `fn_convertir` no convierte entre magnitudes distintas. | — |
+| RC-16 | AK de plato e inicio; `CHECK` de fin posterior al inicio. | Rechazan solapes al insertar periodos; las actualizaciones no pueden desplazar su inicio ni prolongarlos. | — | C-24 detecta solapes. |
+| RC-17 | `CHECK` de coherencia entre tipo, cantidad, finalidad y plato de destino. | Validan la fecha de recepción en salidas de elaboración y protegen el ingrediente y la fecha de entrada de lotes con movimientos. | `sp_registrar_movimiento` valida la fecha y la primera entrada; `sp_registrar_merma` exige entrada previa para una merma de lote. | — |
+| RN-01 | — | Validan aptitud, caducidad y destino al menú del día en salidas de elaboración según las condiciones de la regla. | — | C-27 detecta elaboraciones con lotes caducados; no comprueba aptitud ni destino al menú del día. |
+| RN-02 | FK obligatoria y única al periodo; `CHECK` de los dominios de los importes. | Validan emisor activo con concesión explícita de `AUTORIZAR_CARTA` por rol o individual, tipo de periodo, fecha no posterior al inicio ni futura, coste calculable y precio definido. Registran los importes evaluados, sin umbral de margen. | `sp_incorporar_carta` usa `fn_puede_autorizar_carta` y crea periodo y autorización en una transacción. Ser administrador no sustituye la concesión. | C-23 detecta cartas sin autorización; C-27 detecta autorizaciones posteriores al inicio o de periodos que no son de carta. |
+| RN-03, D-04 | Frescura por lote. | Rechazan salidas de elaboración de lotes frescos a partir de las 72 horas desde su recepción. | — | C-27 detecta elaboraciones registradas fuera de ese plazo según los datos del lote. |
+| RN-04, D-05 | — | Exigen una sugerencia previa cerrada de al menos 14 días consecutivos en la primera incorporación y protegen los periodos de prueba tras la incorporación. | — | C-27 detecta primeras incorporaciones sin prueba válida. |
+| RNF-01 | Privilegios diferenciados sobre vistas y procedimientos públicos (`08_cuentas_privilegios.sql`), sin acceso directo a tablas para las cuentas operativas. | — | MariaDB autentica la conexión. Los procedimientos `sp_demo_*` resuelven el usuario de aplicación desde la cuenta conectada, sin aceptar un ID de usuario del llamante. | — |
+| RNF-02 | `CHECK` de longitud mínima del hash de aplicación; no acredita el algoritmo. | — | El poblado almacena hashes scrypt generados fuera de SQL con una sal individual. No son las credenciales de las cuentas MariaDB. | — |
 
-Dos multiplicidades mínimas no pueden expresarse de forma declarativa porque MariaDB no dispone de restricciones diferidas: `Receta 1..* ComponenteReceta` y la autorización obligatoria de un periodo de carta permanente. Se garantizan con procedimientos atómicos y se verifican con un procedimiento de auditoría; además, una receta sin componentes no tiene coste calculable (RC-11).
+El esquema no impone por sí solo que toda receta tenga un componente ni que todo periodo de carta permanente tenga autorización. Los procedimientos de alta citados en la tabla aseguran esos mínimos en sus flujos; una escritura directa que eluda esos flujos puede dejar una receta vacía o una carta sin autorización. C-23 detecta ambos casos. Una receta vacía no tiene coste calculable (RC-11).
 
 ## 5.2. Estrategia de transformación de jerarquías
 
@@ -222,7 +223,7 @@ Una relación está en **1FN** si todos sus atributos son atómicos; en **2FN** 
 
 **1FN.** Todos los dominios son atómicos. El atributo compuesto `informacionContacto` de la segunda entrega se ha descompuesto en `persona_contacto`, `telefono` y `correo_contacto`, y el `motivo` en texto libre, en una categoría cerrada y un detalle opcional (S-06).
 
-Las restricciones condicionales (por ejemplo, que una salida de elaboración tenga plato de destino) no son dependencias funcionales: las filas con nulo en el determinante no determinan un único valor. Por eso se expresan con CHECK y no afectan a la normalización.
+Las restricciones de presencia de un atributo, como exigir un plato de destino en una salida de elaboración, no determinan el valor concreto de ese atributo. Las unicidades condicionales, en cambio, sí identifican una fila en el subconjunto donde se aplican, pero no son claves candidatas de la relación completa. En MariaDB, `UNIQUE` admite varias filas con `NULL` en alguna de las columnas de la restricción.
 
 ### 5.3.2. Análisis por relación
 
@@ -250,46 +251,46 @@ Para cada relación se indican sus claves candidatas (CC) y dependencias funcion
 
 **`platos`.** CC: `id_plato`, `id_receta`, `nombre`. DF: `id_plato → id_receta, nombre, imagen, descripcion, categoria, menu_del_dia, precio_venta, estado, porcentaje_margen_objetivo`. Claves simples: no hay parciales. `id_receta` es clave candidata (cada plato tiene una receta y cada receta, como máximo un plato), por lo que los atributos que determina no constituyen una dependencia transitiva. `categoria` no determina `precio_venta` ni `menu_del_dia`.
 
-**`componentes_receta`.** CC: `id_componente`; además, `(id_receta, id_ingrediente)` y `(id_receta, id_receta_componente)` identifican la línea cuando su componente está informado. DF: `id_componente → id_receta, cantidad, unidad_medida, id_ingrediente, id_receta_componente`. No hay parciales: la cantidad y la unidad dependen de la línea completa, ya que un mismo ingrediente se usa en distintas cantidades y unidades según la receta. No hay transitivas.
+**`componentes_receta`.** CC: `id_componente`. DF: `id_componente → id_receta, cantidad, unidad_medida, id_ingrediente, id_receta_componente`. Cada pareja sujeta a `UNIQUE` identifica la línea en su rama de la asociación exclusiva, no en la relación completa. La clave candidata es simple. Tampoco hay dependencias transitivas: ni la receta ni el ingrediente o la subreceta por separado determinan la cantidad o unidad de la línea.
 
 **`lotes`.** CC: `id_lote`, `identificador_lote`. DF: `id_lote → identificador_lote, id_ingrediente, fecha_entrada, fecha_caducidad, ubicacion_almacen, fresco, apto_para_consumo`. Claves simples: no hay parciales. No hay transitivas: `id_ingrediente` no determina `fresco` porque la frescura se clasifica por lote (D-04), ni `fecha_caducidad`, que depende de cada entrada.
 
-**`movimientos_stock`.** CC: `id_movimiento`. DF: `id_movimiento → id_lote, tipo, cantidad, fecha_movimiento, finalidad_salida, id_plato_destino`. Clave simple: no hay parciales. No hay transitivas: `finalidad_salida` y `id_plato_destino` están ligados por una restricción condicional, no por una DF, pues todas las filas sin plato de destino tienen nulo en el determinante y distintas finalidades.
+**`movimientos_stock`.** CC: `id_movimiento`. DF: `id_movimiento → id_lote, tipo, cantidad, fecha_movimiento, finalidad_salida, id_plato_destino`. Clave simple: no hay parciales. No hay transitivas: el tipo `SALIDA` admite varias finalidades y la finalidad `ELABORACION` admite distintos platos de destino. El `CHECK` regula cuándo informar esos atributos, no qué finalidad o qué plato elegir.
 
-**`mermas`.** CC: `id_merma`; además, `id_movimiento` identifica la fila cuando está informado. DF: `id_merma → cantidad_desperdiciada, fecha_merma, motivo, detalle_motivo, coste_perdida, id_lote, id_plato, id_movimiento`. Clave simple: no hay parciales. Tampoco hay transitivas: los atributos que determina `id_movimiento` no suponen una violación porque este es una clave. `detalle_motivo` no determina `motivo`. La redundancia con `movimientos_stock`, que no es una violación de la 3FN, se trata en la sección 5.3.4.
+**`mermas`.** CC: `id_merma`. DF: `id_merma → cantidad_desperdiciada, fecha_merma, motivo, detalle_motivo, coste_perdida, id_lote, id_plato, id_movimiento`. Clave simple: no hay parciales. `id_movimiento` identifica la fila solo en el subconjunto de mermas de lote, donde es obligatorio y único; las mermas de plato no tienen movimiento. No introduce una dependencia transitiva en la relación completa. Tampoco `detalle_motivo` determina `motivo`. La redundancia entre relaciones se trata en la sección 5.3.4.
 
 **`periodos_oferta`.** CC: `id_periodo_oferta` y `(id_plato, fecha_inicio)`. DF: `id_periodo_oferta → id_plato, tipo, fecha_inicio, fecha_fin`. No hay parciales: `id_plato` por sí solo no determina `tipo` ni `fecha_fin`, ya que un plato tiene varios periodos. No hay transitivas.
 
 **`autorizaciones_carta`.** CC: `id_autorizacion`, `id_periodo_oferta`. DF: `id_autorizacion → id_periodo_oferta, id_emisor, fecha_autorizacion, coste_evaluado, precio_venta_evaluado`. Claves simples: no hay parciales. No hay transitivas: `id_emisor` no determina la fecha ni los importes.
 
-**Conclusión.** Las 17 relaciones cumplen 1FN, 2FN y 3FN. Como en todas ellas los únicos determinantes son claves candidatas, o claves alternativas que admiten nulos e identifican la fila cuando están informadas, también cumplen la forma normal de Boyce-Codd.
+**Conclusión.** Las 17 relaciones del esquema lógico cumplen 1FN, 2FN y 3FN según las DF analizadas. Las unicidades de líneas de componente, del movimiento de una merma y del precio seleccionado se aplican en sus respectivos subconjuntos; no se han contado como claves alternativas globales ni se usan para justificar una forma normal más fuerte.
 
 ### 5.3.3. Atributos derivados
 
-Ningún atributo derivado del modelo conceptual se almacena. Se calculan cuando se consultan, de modo que no pueden quedar desactualizados y RC-06 se cumple sin mantenimiento adicional.
+Los atributos derivados del modelo conceptual se calculan al consultar los datos, sin mantener copias del saldo, coste corriente o margen. El cálculo usa la composición actual y la selección de precios actual, con la vigencia evaluada en la fecha de referencia; no reconstruye versiones históricas (B.2).
 
 **Tabla 5.6. Cálculo de los atributos derivados.**
 
-| Atributo (MC) | Cálculo | Elemento SQL |
-|---|---|---|
-| Lote `/cantidad` | Entradas − salidas + ajustes firmados | `fn_saldo_lote` |
-| Ingrediente `/cantidadTotalDisponible` | Suma de los saldos de sus lotes | `fn_stock_ingrediente` |
-| Receta `/costeElaboracion` | Suma de los costes de sus líneas, con recorrido recursivo | `fn_coste_elaboracion_receta` |
-| Receta `/costeUnitario` | `/costeElaboracion` / `cantidad_rendimiento` | `fn_coste_unitario_receta` |
-| Plato `/costeProduccion` | `/costeUnitario` de su receta | `fn_coste_produccion_plato` |
-| Plato `/margenBruto` | `precio_venta` − `/costeProduccion` | `vw_escandallo_platos` |
-| Plato `/porcentajeMargen` | 100 × `/margenBruto` / `precio_venta` | `vw_escandallo_platos` |
+| Atributo (MC) | Cálculo | Rutina (`04_funciones_procedimientos.sql`) | Consulta (`03_consultas.sql`) |
+|---|---|---|---|
+| Lote `/cantidad` | Entradas − salidas + ajustes con signo | `fn_stock_lote` | C-12 (lotes con saldo positivo); C-14 (saldo tras cada movimiento) |
+| Ingrediente `/cantidadTotalDisponible` | Suma de los saldos registrados de sus lotes; no implica aptitud para elaborar | — | C-13 (ingredientes activos) |
+| Receta `/costeElaboracion` | Coste de la elaboración completa: suma de las líneas con expansión de subrecetas y ajuste por su rendimiento | — | C-10 (`coste_elaboracion`) |
+| Receta `/costeUnitario` | `/costeElaboracion` / `cantidad_rendimiento` | `fn_coste_receta` devuelve el coste unitario, no el total | C-10 (`coste_unitario`) |
+| Plato `/costeProduccion` | Coste unitario de su receta, por ración | `fn_coste_plato`, `sp_consultar_escandallo` | C-09 (detalle por ingrediente y ración); C-10 (`coste_unitario` del plato) |
+| Plato `/margenBruto` | `precio_venta` − `/costeProduccion` | `fn_margen_plato`, `sp_consultar_escandallo` | C-10 (`margen_bruto`) |
+| Plato `/porcentajeMargen` | 100 × `/margenBruto` / `precio_venta` | `sp_consultar_escandallo` | C-10 (`porcentaje_margen`) |
 
 ### 5.3.4. Decisiones que requieren justificación expresa
 
 No se ha introducido ninguna desnormalización por rendimiento. Tres decisiones podrían interpretarse como tal y se justifican a continuación.
 
-**Valores evaluados en el momento de un hecho.** `mermas.coste_perdida`, `autorizaciones_carta.coste_evaluado` y `autorizaciones_carta.precio_venta_evaluado` no son atributos derivados, sino hechos históricos: registran el valor que se aplicó en un instante. No pueden recalcularse después porque los precios, la selección de precios y las recetas cambian, y RC-09 obliga a conservarlos. Por tanto, no existe ninguna dependencia funcional que los determine.
+**Importes históricos.** `mermas.coste_perdida` guarda el importe total aportado al registrar la merma, sea de lote o de plato; si se desconoce, queda `NULL`. El procedimiento no lo calcula ni lo rellena con el precio seleccionado. `autorizaciones_carta.coste_evaluado` y `autorizaciones_carta.precio_venta_evaluado` guardan los valores de la evaluación de la autorización, no valores corrientes. Cada importe depende de la clave de su hecho histórico; no se deduce de los precios o de la composición actuales.
 
 **Redundancia controlada entre `mermas` y `movimientos_stock`.** Una merma de lote repite el lote, la cantidad y la fecha de la salida que origina. Cada relación sigue en 3FN, pero la base de datos almacena el mismo hecho en dos lugares. Se mantiene por tres motivos:
 
 - El modelo conceptual y el escenario 3 definen la merma con su propia cantidad y fecha.
 - Las mermas de plato no tienen movimiento, de modo que esos atributos deben existir en `mermas`. Mantenerlos también en las de lote permite consultar todas las pérdidas sin distinguir casos.
-- El riesgo de incoherencia está controlado: la salida la genera un trigger a partir de la propia merma (RC-14), y ni mermas ni movimientos pueden modificarse después (RC-09). La auditoría comprueba además que coinciden.
+- En el flujo operativo, `sp_registrar_merma` crea la salida y la merma de lote en la misma transacción. El trigger valida la correspondencia al insertar la merma; los triggers de histórico impiden modificar ambos registros. C-26 detecta discordancias y salidas por merma sin una merma asociada, pero no impide que se inserte una salida huérfana por escritura directa.
 
 **Columna virtual de `precios_compra`.** Para garantizar D-01 de forma declarativa, la implementación añade una columna virtual que vale `id_ingrediente` si el precio está seleccionado, y nulo en caso contrario, con un índice único. No forma parte del modelo lógico ni se almacena: es el mecanismo con el que MariaDB emula un índice único parcial.

@@ -1,0 +1,7 @@
+% The Markdown captions already include the chapter and figure numbers.
+\makeatletter
+\long\def\@makecaption#1#2{\vskip\abovecaptionskip\centering\small #2\par\vskip\belowcaptionskip}
+\makeatother
+\usepackage{newunicodechar}
+\newunicodechar{●}{\ensuremath{\bullet}}
+\newunicodechar{○}{\ensuremath{\circ}}

@@ -442,16 +442,21 @@ def mc_global(sal):
     d.arista("merma", "T", "plato", "T=785", "afectaPlato", "0..*", "0..1", vhv=62)
 
     d.nota(1250, 350, 250,
-           "RN-01 Con menos de 48 h para caducar, el lote solo se usa en platos del menú del día, si sigue apto.\n"
-           "RN-03 Un lote fresco no se usa desde recepción + 72 h.", titulo="Reglas de inventario")
-    d.nota(1250, 490, 250,
-           "Merma: exactamente un Lote o un Plato (RC-14).\n"
-           "Componente: exactamente un Ingrediente u otra Receta.\n"
-           "Sin ciclos entre recetas (RC-12).", titulo="Asociaciones exclusivas")
+           "El saldo no garantiza el uso: para elaborar, el lote debe estar apto y no caducado.\n"
+           "RN-01: solo menú del día con menos de 48 h para caducar; a 48 h exactas aún no.\n"
+           "RN-03: un lote fresco no se usa desde recepción + 72 h.", titulo="Saldo y uso")
+    d.nota(1250, 485, 250,
+           "Merma: exactamente un Lote o un Plato, nunca ambos ni ninguno (RC-14).\n"
+           "Componente: exactamente un Ingrediente o una Receta, nunca ambos ni ninguno (RC-12: sin ciclos).",
+           titulo="Exclusividad obligatoria")
+    d.nota(40, 355, 190,
+           "Solo las salidas tienen finalidad; solo las de elaboración tienen plato de destino (RC-17).\n"
+           "Merma de lote: una salida MERMA; de plato: ninguna (RC-14).", titulo="Enlaces condicionales")
     d.nota(40, 660, 440,
-           "RN-02 Toda incorporación a carta permanente requiere autorización previa de un administrador, "
-           "con independencia de la relación entre coste y precio, y con coste calculable.\n"
-           "RN-04 Antes de la primera incorporación, al menos 14 días consecutivos como sugerencia del chef.",
+           "RN-02: carta permanente, una autorización a más tardar al inicio; sugerencia, ninguna. "
+           "Emisor activo con AUTORIZAR_CARTA por rol o concesión individual. Se exige coste calculable y precio "
+           "definido, no un umbral de margen.\n"
+           "RN-04: antes de la primera incorporación, al menos 14 días consecutivos como sugerencia del chef.",
            titulo="Reglas de oferta")
     d.nota(40, 800, 440,
            "1 exactamente uno; 0..1 ninguno o uno; 0..* cero o más; 1..* uno o más. "
@@ -472,8 +477,9 @@ def mc_vistas(sal):
     d.arista("rol", "R=78", "usuario", "L=78", "tieneRol", "1", "0..*")
     d.arista("rol", "B", "permiso", "L=318", "concede", "0..*", "0..*", nombre_en=(125, 235))
     d.arista("usuario", "B", "permiso", "R=318", "tienePermisoAdicional", "0..*", "0..*", nombre_en=(535, 262))
-    d.nota(470, 420, 240, "Permisos efectivos = permisos del rol + permisos adicionales del usuario. "
-                          "La cuenta debe estar activa (RC-10, D-03).", titulo="Control de acceso")
+    d.nota(470, 420, 265, "Para operar, la cuenta debe estar activa y el permiso debe estar concedido por rol o "
+                           "individualmente (RC-10, D-03). El rol de administrador no sustituye AUTORIZAR_CARTA (RN-02).",
+            titulo="Control de acceso")
     d.guardar(os.path.join(sal, "mc_acceso.png"))
 
     # 4.3 Compras
@@ -506,8 +512,10 @@ def mc_vistas(sal):
     d.arista("unidad", "T", "comp", "B", "seExpresaEn", "1", "0..*")
     d.arista("unidad", "L=490", "receta", "L=130", "rindeEn", "1", "0..*", hvh=385, nombre_en=(385, 320))
     d.nota(40, 330, 300, "Una receta sin plato actúa como subreceta cuando otra receta la utiliza (D-07). "
-                         "El rendimiento de la receta de un plato se expresa en raciones (D-02).",
-           titulo="Subreceta: un papel, no una clase")
+                          "El rendimiento de la receta de un plato se expresa en raciones (D-02).",
+            titulo="Subreceta: un papel, no una clase")
+    d.nota(40, 445, 300, "Cada componente utiliza exactamente un ingrediente o una receta: nunca ambos ni ninguno. "
+                          "No se permiten ciclos entre recetas (RC-12).", titulo="Exclusividad obligatoria")
     d.nota(800, 400, 270, "Línea de ingrediente: cantidad convertida a la unidad del precio × precio.\n"
                           "Línea de receta: cantidad convertida a la unidad de rendimiento × coste unitario.\n"
                           "/costeUnitario = /costeElaboracion / cantidadRendimiento.\n"
@@ -531,11 +539,16 @@ def mc_vistas(sal):
     d.arista("mov", "R=350", "merma", "L=350", "originaSalida", "0..1", "0..1", ma_off=(0, 22), mb_off=(0, 22))
     d.arista("mov", "B", "plato", "L=535", "seDestinaA (platoDestino)", "0..*", "0..1", nombre_en=(182, 455))
     d.arista("merma", "B", "plato", "R=535", "afectaPlato", "0..*", "0..1", nombre_en=(542, 470))
-    d.nota(750, 470, 225, "La merma de lote origina una sola salida MERMA. La de plato no descuenta de nuevo: "
-                          "sus ingredientes salieron al elaborar (RC-14).", titulo="Sin doble descuento")
-    d.nota(40, 600, 640, "Saldo = entradas − salidas + ajustes firmados; nunca negativo (RC-13). "
-                         "RN-01: con menos de 48 h para caducar, solo platos del menú del día y si sigue apto. "
-                         "RN-03: un lote fresco no se usa desde recepción + 72 h.", titulo="Saldo y uso de los lotes")
+    d.nota(735, 470, 255, "Cada merma afecta exactamente a un lote o a un plato, nunca a ambos ni a ninguno. "
+                           "La de lote origina una salida MERMA del mismo lote, cantidad y fecha; la de plato, ninguna (RC-14).",
+            titulo="Exclusividad y salida de merma")
+    d.nota(40, 600, 660, "Saldo = entradas − salidas + ajustes firmados; nunca negativo (RC-13). "
+                          "La suma de saldos por ingrediente no mide cuánto puede usarse para elaborar.\n"
+                          "RN-01: el lote debe estar apto y no caducado; con menos de 48 h, solo menú del día. "
+                          "A 48 h exactas aún no se restringe el destino.\n"
+                          "RN-03: un lote fresco no se usa desde recepción + 72 h.", titulo="Saldo y uso de los lotes")
+    d.nota(735, 625, 255, "Cada salida tiene una finalidad; entradas y ajustes, ninguna. Solo las salidas de elaboración "
+                           "tienen plato de destino, exactamente uno (RC-17).", titulo="Finalidad y destino")
     d.guardar(os.path.join(sal, "mc_inventario.png"))
 
     # 4.6 Oferta
@@ -550,10 +563,11 @@ def mc_vistas(sal):
     d.arista("per", "B", "aut", "T", "tieneAutorizacion", "1", "0..1")
     d.arista("usu", "R=290", "aut", "L=290", "emite", "1", "0..*")
     d.arista("usu", "B", "rol", "T", "tieneRol", "0..*", "1")
-    d.nota(730, 40, 270, "Toda incorporación requiere autorización previa de un administrador, con independencia de "
-                         "la relación entre coste y precio. No se autoriza sin coste calculable.", titulo="RN-02")
-    d.nota(730, 190, 270, "Antes de la primera incorporación, el plato debe haberse ofrecido como sugerencia del chef "
-                          "durante al menos 14 días consecutivos ya transcurridos.", titulo="RN-04")
+    d.nota(730, 40, 300, "Cada periodo de carta requiere una autorización, registrada a más tardar al inicio; "
+                          "una sugerencia no tiene ninguna. Emisor activo con AUTORIZAR_CARTA por rol o concesión "
+                          "individual. Se exige coste calculable y precio definido, no un umbral de margen.", titulo="RN-02")
+    d.nota(730, 245, 300, "Solo para la primera incorporación: sugerencia del chef cerrada, de al menos 14 días "
+                           "consecutivos y finalizada a más tardar al inicio de la carta.", titulo="RN-04")
     d.guardar(os.path.join(sal, "mc_oferta.png"))
 
 
@@ -638,14 +652,48 @@ def escenarios(sal):
     d.obj("pr", 480, 30, "pruebaLasana : PeriodoOferta", ["tipo = SUGERENCIA_CHEF", "fechaInicio = 01/10/2026 12:00", "fechaFin = 15/10/2026 12:00"], OFE, w=265)
     d.obj("ca", 480, 190, "cartaLasana : PeriodoOferta", ["tipo = CARTA_PERMANENTE", "fechaInicio = 15/10/2026 12:00", "fechaFin = sin valor"], OFE, w=265)
     d.obj("au", 480, 350, "aprobacionLasana : AutorizacionCarta", ["fechaAutorizacion = 15/10/2026 11:00", "costeEvaluado = 4.00 €", "precioVentaEvaluado = 10.00 €"], OFE, w=300)
-    d.obj("an", 40, 370, "ana : Usuario", ['nombre = "Ana"', "estado = ACTIVO"], ACC, w=230)
-    d.obj("ro", 40, 510, "rolAdmin : Rol", ["nombre = ADMINISTRADOR"], ACC, w=230)
+    d.obj("lu", 40, 370, "luis : Usuario", ['nombre = "Luis"', "estado = ACTIVO"], ACC, w=230)
+    d.obj("ro", 40, 510, "rolEncargado : Rol", ["nombre = ENCARGADO"], ACC, w=230)
+    d.obj("pe", 480, 510, "autorizarCarta : Permiso", ["nombre = AUTORIZAR_CARTA"], ACC, w=300)
+    d.obj("an", 910, 30, "ana : Usuario", ['nombre = "Ana"', "estado = ACTIVO"], ACC, w=300)
+    d.obj("ra", 910, 165, "rolAdmin : Rol", ["nombre = ADMINISTRADOR"], ACC, w=300)
+    d.obj("in", 910, 350, "intentoAna : AutorizacionCarta", ["fechaAutorizacion = 15/10/2026 10:00",
+                                                           "costeEvaluado = 4.00 €", "precioVentaEvaluado = 10.00 €"],
+          OFE, w=300, rojo=True)
     d.arista("la", "R=170", "pr", "L=75", "tienePeriodoOferta", hvh=320, nombre_en=(400, 75))
     d.arista("la", "R=210", "ca", "L=240", "tienePeriodoOferta", hvh=320, nombre_en=(400, 240))
     d.arista("ca", "B=610", "au", "T=610", "tieneAutorizacion")
-    d.arista("an", "R=410", "au", "L=410", "emite")
-    d.arista("an", "B", "ro", "T", "tieneRol")
-    d.guardar(os.path.join(sal, "esc_5.png"))
+    d.arista("lu", "R=410", "au", "L=410", "emite")
+    d.arista("lu", "B:0.25", "ro", "T:0.25", "tieneRol")
+    d.arista("lu", "R=430", "pe", "L=540", "tienePermisoAdicional", hvh=320, nombre_en=(393, 540))
+    d.arista("an", "B", "ra", "T", "tieneRol")
+    d.arista("an", "R", "in", "R", "intenta emitir", hvh=1250, rojo=True, nombre_en=(1250, 290))
+    d.nota(910, 490, 300, "Ana no tiene AUTORIZAR_CARTA por rol ni individualmente. Su intento no registra "
+                           "autorización ni periodo de carta.", titulo="RN-02: intento denegado")
+    d.guardar(os.path.join(sal, "esc_5.png"), margen=55)
+
+    # E6: las tres salidas se evalúan por separado desde el mismo saldo.
+    d = Diagrama("esc_6", fs=10.0)
+    d.obj("l", 390, 30, "lotePerecedero : Lote", ['identificadorLote = "PERE-001"', "fechaEntrada = 09/11/2026 08:00",
+                                                 "fechaCaducidad = 12/11/2026 08:00", "fresco = false",
+                                                 "aptoParaConsumo = true", "/cantidad = 10.00 kg (saldo inicial)"], INV, w=315)
+    d.obj("o", 195, 530, "ordinario : Plato", ["menuDelDia = false"], ELA, w=315)
+    d.obj("m", 740, 530, "menu : Plato", ["menuDelDia = true"], ELA, w=315)
+    casos = [
+        (40, "a", "salidaEnLimite", "08:00:00", "o", False, "48 h exactas: admitida", "Saldo resultante: 9 kg."),
+        (390, "b", "salidaRechazada", "08:00:00.000001", "o", True, "Menos de 48 h: rechazada", "No se registra salida; saldo: 10 kg."),
+        (740, "c", "salidaMenu", "08:00:00.000001", "m", False, "Menos de 48 h: admitida", "Saldo resultante: 9 kg."),
+    ]
+    for x, cid, nombre, hora, destino, rojo, titulo, resultado in casos:
+        d.obj(cid, x, 275, f"{nombre} : MovimientoStock",
+              ["tipo = SALIDA", "cantidad = 1.00", f"fechaMovimiento = 10/11/2026 {hora}",
+               "finalidadSalida = ELABORACION"], INV, w=315, rojo=rojo)
+        d.arista("l", {"a": "B:0.15", "b": "B", "c": "B:0.85"}[cid], cid, "T", "recibeMovimiento", vhv=215, rojo=rojo)
+        d.arista(cid, "B", destino, {"a": "T:0.20", "b": "T:0.80", "c": "T"}[cid], "seDestinaA", vhv=460, rojo=rojo)
+        d.nota(x, 620, 315, resultado, titulo=titulo)
+    d.nota(740, 45, 315, "Tres pruebas independientes: cada salida se evalúa desde los mismos 10 kg. "
+                          "Solo cambia el instante o el plato de destino.", titulo="RN-01: umbral de caducidad")
+    d.guardar(os.path.join(sal, "esc_6.png"))
 
 
 # ==================================================================== MR
