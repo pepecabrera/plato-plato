@@ -2,7 +2,7 @@
 -- SOLO sobre una copia desechable con 01 y UNO de los poblados: 02 o 06.
 -- Primera ejecucion: sin 04/05, ejecuta 66 comprobaciones del esquema.
 -- Segunda ejecucion: instalar 04 y 05 completos y ejecutar de nuevo;
--- realiza 143 comprobaciones de negocio y tres entradas PENDIENTE; una cuarta si se omiten regresiones de 06 ya ejecutadas.
+-- realiza 147 comprobaciones de negocio y tres entradas PENDIENTE; una cuarta si se omiten regresiones de 06 ya ejecutadas.
 -- Detecta el modo por la presencia de triggers. Rechaza instalaciones parciales.
 -- Las pruebas de negocio CONFIRMAN escrituras: recrear la copia antes de repetirlas.
 -- Si esta instalado 06, anade 12 comprobaciones de su procedimiento de movimientos.
@@ -206,7 +206,7 @@ CALL pp67_comprobar('Emisores del poblado con permiso de carta', NOT EXISTS (
      OR EXISTS(SELECT 1 FROM periodos_oferta WHERE id_periodo_oferta=9002) THEN
    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Hay datos de otras pruebas: preparar una copia nueva con 01 y 02';
   END IF;
-   SELECT 'NEGOCIO: 143 comprobaciones y tres PENDIENTE (mas otra si se omiten regresiones previas de 06)' AS bloque;
+   SELECT 'NEGOCIO: 147 comprobaciones y tres PENDIENTE (mas otra si se omiten regresiones previas de 06)' AS bloque;
 -- Funciones y triggers: 01 + 02 + 04 + 05, sin transaccion exterior.
 CALL pp67_comprobar('Conversion kg a g', (fn_convertir(1,'kg','g')=1000), 'Resultado esperado de la regla comprobada');
 CALL pp67_comprobar('Conversion ml a l', (fn_convertir(250,'ml','l')=0.25), 'Resultado esperado de la regla comprobada');
@@ -381,6 +381,12 @@ SET @periodo=(SELECT id_periodo_oferta FROM periodos_oferta WHERE id_plato=9001 
 CALL pp67_caso('Cerrar periodo: cierre valido', 'CALL sp_cerrar_periodo(1,@periodo,CURRENT_TIMESTAMP(6)+INTERVAL 3 DAY)', 0, NULL, TRUE);
 CALL pp67_comprobar('Cerrar periodo: fecha guardada', ((SELECT fecha_fin IS NOT NULL FROM periodos_oferta WHERE id_periodo_oferta=@periodo)), 'Resultado esperado de la regla comprobada');
 CALL pp67_caso('Cerrar periodo: no prolongar', 'CALL sp_cerrar_periodo(1,@periodo,CURRENT_TIMESTAMP(6)+INTERVAL 4 DAY)', 1644, 'Solo se permite cerrar o acortar', TRUE);
+SET @inicio_temporada=(SELECT fecha_fin FROM periodos_oferta WHERE id_periodo_oferta=@periodo), @fin_temporada=@inicio_temporada+INTERVAL 2 DAY;
+CALL pp67_caso('Temporada: nueva sugerencia abierta', 'CALL sp_registrar_sugerencia(1,9001,@inicio_temporada,NULL)', 0, NULL, TRUE);
+SET @sugerencia=(SELECT id_periodo_oferta FROM periodos_oferta WHERE id_plato=9001 AND fecha_inicio=@inicio_temporada);
+CALL pp67_caso('Temporada: cerrar tras dos dias', 'CALL sp_cerrar_periodo(1,@sugerencia,@fin_temporada)', 0, NULL, TRUE);
+CALL pp67_caso('Temporada: volver a carta', 'CALL sp_incorporar_carta(1,9001,@fin_temporada,NULL)', 0, NULL, TRUE);
+CALL pp67_comprobar('Temporada: cierre y nueva autorizacion', (SELECT fecha_fin=@fin_temporada FROM periodos_oferta WHERE id_periodo_oferta=@sugerencia) AND EXISTS(SELECT 1 FROM periodos_oferta p JOIN autorizaciones_carta a USING(id_periodo_oferta) WHERE p.id_plato=9001 AND p.tipo='CARTA_PERMANENTE' AND p.fecha_inicio=@fin_temporada AND a.id_emisor=1), 'La segunda sugerencia dura dos dias y la nueva carta tiene autorizacion propia');
 -- Regresiones nuevas: RC-12, RC-14, RC-15, RC-17 y orden de C-26.
 INSERT INTO recetas(id_receta,nombre,cantidad_rendimiento,unidad_rendimiento) VALUES
 (9201,'__pp67_un_componente',1,'racion'),(9202,'__pp67_destino',1,'racion'),(9203,'__pp67_masa',1,'kg');

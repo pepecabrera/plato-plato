@@ -239,7 +239,7 @@ El trigger `trg_periodo_bi_negocio` impide solapamientos entre periodos de ofert
 
 Cada incorporación a la carta requiere autorización, pero la prueba previa solo se exige para la primera incorporación.
 
-Los triggers adicionales impiden modificar o eliminar movimientos y autorizaciones. También protegen los periodos de oferta frente a eliminaciones o cambios de plato, tipo y fecha inicial. Se permite cerrar o acortar un periodo, pero no modificar las fechas finales de las sugerencias cuando ya existe una incorporación a la carta.
+Los triggers adicionales impiden modificar o eliminar movimientos y autorizaciones. También protegen los periodos de oferta frente a eliminaciones o cambios de plato, tipo y fecha inicial. Se puede cerrar o acortar una sugerencia, incluso después de retirar el plato de carta, siempre que la primera incorporación conserve una prueba previa válida de al menos 14 días.
 
 Los triggers `trg_merma_bu_historico` y `trg_merma_bd_historico` rechazan cualquier modificación o eliminación de mermas.
 
@@ -266,7 +266,7 @@ Los archivos se ejecutan con las tablas ya creadas, primero `sql/04_funciones_pr
 
 La instalación de triggers no comprueba retroactivamente los datos que ya existían. Las cuentas con acceso directo, incluida la instaladora, no tienen las restricciones de 08. La concurrencia general no está certificada.
 
-El bloque de negocio de 07 contiene 143 comprobaciones que cubren costes, límites temporales, autorizaciones, saldos, integridad de precios, recetas y unidades, y reversión de operaciones rechazadas. Véase 6.7 para los resultados previos y la validación final pendiente.
+El bloque de negocio de 07 contiene 147 comprobaciones que cubren costes, límites temporales, autorizaciones, saldos, integridad de precios, recetas y unidades, y reversión de operaciones rechazadas. Véase 6.7 para los resultados previos y la validación final pendiente.
 
 ## 6.6. Script de poblado de la base de datos mediante procedimientos (opcional)
 
@@ -352,10 +352,10 @@ El script selecciona el bloque de pruebas según la presencia de triggers:
 | Bloque | Preparación | Comprobaciones |
 |---|---|---:|
 | Esquema y poblado | 01 y uno de los poblados (02 o 06), sin 04/05. | 66 |
-| Funciones, triggers y procedimientos | 01, uno de los poblados y 04/05 completos. | 143 |
+| Funciones, triggers y procedimientos | 01, uno de los poblados y 04/05 completos. | 147 |
 | Regresiones del poblado por procedimientos | 06 instalado y sin los lotes auxiliares 9101 a 9103 de una pasada anterior. | 12 |
 
-El archivo define **221 comprobaciones (66 + 143 + 12)**, no todas en una misma pasada. Las marcas `PENDIENTE` no cuentan como comprobaciones aprobadas.
+El archivo define **225 comprobaciones (66 + 147 + 12)**, no todas en una misma pasada. Las marcas `PENDIENTE` no cuentan como comprobaciones aprobadas.
 
 Cuando está instalado `pob_registrar_movimiento`, se ejecutan las pruebas adicionales de salidas y ajustes retroactivos inválidos, movimientos retroactivos válidos, movimientos simultáneos, primera entrada y conservación de la transacción del llamador. Estas pruebas dejan datos auxiliares en la copia, por lo que solo se ejecutan la primera vez: si los lotes auxiliares 9101 a 9103 ya existen, se registra una entrada PENDIENTE en lugar de abortar.
 
@@ -397,8 +397,8 @@ Desde la raíz del repositorio, ejecutar los archivos de `sql/` con un cliente q
 
 | Ruta | Orden | Bloques de 07 |
 |---|---|---|
-| Pruebas con `INSERT` | `01 → 02 → 03 → 07 → 04 → 05 → 07` | 66 de esquema y después 143 de negocio |
-| Pruebas con procedimientos | `01 → 06 → 03 → 07 → 04 → 05 → 07` | 66 de esquema + 12 de movimientos; después 143 de negocio y aviso de que las 12 no se repiten |
+| Pruebas con `INSERT` | `01 → 02 → 03 → 07 → 04 → 05 → 07` | 66 de esquema y después 147 de negocio |
+| Pruebas con procedimientos | `01 → 06 → 03 → 07 → 04 → 05 → 07` | 66 de esquema + 12 de movimientos; después 147 de negocio y aviso de que las 12 no se repiten |
 | Demostración con cuentas | `01 → (02 o 06) → 04 → 05 → 08` | Sin 07; 03 es una consulta opcional de la cuenta instaladora, no un requisito de 08 |
 
 El archivo utiliza la base `plato_plato`, por lo que debe ejecutarse en un entorno de pruebas separado del entorno de trabajo. No debe utilizarse la opción `--force`.

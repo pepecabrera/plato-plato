@@ -82,6 +82,7 @@ END$$
 CREATE OR REPLACE TRIGGER trg_periodo_bu_negocio
 BEFORE UPDATE ON periodos_oferta FOR EACH ROW
 BEGIN
+    DECLARE v_primera_carta DATETIME(6);
     IF NEW.id_periodo_oferta<>OLD.id_periodo_oferta OR NEW.id_plato<>OLD.id_plato
        OR NEW.tipo<>OLD.tipo OR NEW.fecha_inicio<>OLD.fecha_inicio THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='No se pueden reescribir los datos iniciales de un periodo';
@@ -90,10 +91,17 @@ BEGIN
         IF NEW.fecha_fin IS NULL OR (OLD.fecha_fin IS NOT NULL AND NEW.fecha_fin>OLD.fecha_fin) THEN
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Solo se permite cerrar o acortar el periodo';
         END IF;
-        IF OLD.tipo='SUGERENCIA_CHEF' AND EXISTS(
-            SELECT 1 FROM periodos_oferta WHERE id_plato=OLD.id_plato AND tipo='CARTA_PERMANENTE'
-        ) THEN
-            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RN-04: conservar los periodos de prueba tras la incorporacion';
+        IF OLD.tipo='SUGERENCIA_CHEF' THEN
+            SELECT MIN(fecha_inicio) INTO v_primera_carta FROM periodos_oferta
+            WHERE id_plato=OLD.id_plato AND tipo='CARTA_PERMANENTE';
+            IF OLD.fecha_fin<=v_primera_carta AND OLD.fecha_fin>=OLD.fecha_inicio+INTERVAL 14 DAY
+               AND NEW.fecha_fin<OLD.fecha_inicio+INTERVAL 14 DAY AND NOT EXISTS(
+                   SELECT 1 FROM periodos_oferta WHERE id_plato=OLD.id_plato AND tipo='SUGERENCIA_CHEF'
+                   AND id_periodo_oferta<>OLD.id_periodo_oferta AND fecha_fin<=v_primera_carta
+                   AND fecha_fin>=fecha_inicio+INTERVAL 14 DAY
+               ) THEN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RN-04: conservar una prueba valida para la primera incorporacion';
+            END IF;
         END IF;
     END IF;
 END$$
