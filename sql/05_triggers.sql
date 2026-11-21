@@ -44,7 +44,7 @@ BEGIN
 END$$
 
 -- Evita eludir las comprobaciones convirtiendo una entrada en salida por UPDATE.
--- Coincide con S-07: los movimientos registrados se corrigen mediante ajustes.
+-- RC-09: los movimientos registrados se corrigen mediante ajustes.
 CREATE OR REPLACE TRIGGER trg_movimiento_bu_historico
 BEFORE UPDATE ON movimientos_stock FOR EACH ROW
 BEGIN
@@ -144,7 +144,7 @@ BEGIN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='RN-02: no se puede eliminar una autorizacion';
 END$$
 
--- RC-09 y S-07: mermas definitivas; esta version no permite corregirlas ni anularlas.
+-- RC-09: mermas definitivas; esta version no permite corregirlas ni anularlas.
 CREATE OR REPLACE TRIGGER trg_merma_bu_historico
 BEFORE UPDATE ON mermas FOR EACH ROW
 BEGIN

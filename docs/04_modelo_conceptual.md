@@ -16,13 +16,13 @@ Esta vista reúne todas las entidades, sus asociaciones y multiplicidades. Los e
 
 ## 4.2. Usuarios, roles y permisos
 
-Cada usuario tiene un rol. Para realizar una operación debe estar activo y tener el permiso correspondiente, concedido explícitamente a su rol o de forma individual (D-03, RC-10). Por ejemplo, Luis, encargado, puede recibir el permiso de consultar la información económica sin cambiar de rol. El rol de administrador no concede por sí solo `AUTORIZAR_CARTA` (RN-02).
+Cada usuario tiene un rol. Para las operaciones generales, `fn_tiene_permiso` exige que el usuario esté activo y, salvo si es administrador, que tenga el permiso correspondiente por rol o por concesión individual (RC-10). Por ejemplo, Luis, encargado, puede recibir el permiso de consultar la información económica sin cambiar de rol. Esta excepción no se aplica a RN-02: para autorizar una incorporación a carta se exige la concesión explícita de `AUTORIZAR_CARTA`, también al administrador.
 
 ![Figura 4.2. Usuarios, roles y permisos: concesión por rol o individual y requisito de cuenta activa.](img/mc_acceso.png)
 
 ## 4.3. Proveedores, ingredientes y precios
 
-PrecioCompra conserva el histórico de precios de cada proveedor e ingrediente. Se selecciona manualmente, como máximo, un precio por ingrediente para calcular costes, que debe estar vigente en el momento del cálculo (D-01). Si no hay uno válido seleccionado, el coste queda desconocido (RC-11).
+PrecioCompra conserva el histórico de precios de cada proveedor e ingrediente. Se selecciona manualmente, como máximo, un precio por ingrediente para calcular costes, que debe estar vigente en el momento del cálculo (RI-04, RC-05). Si no hay uno válido seleccionado, el coste queda desconocido (RC-11).
 
 UnidadMedida define las unidades admitidas, su magnitud y su factor de conversión a la unidad base de esa magnitud, lo que permite combinar, por ejemplo, gramos en una receta con un precio por kilogramo, y rechazar la conversión entre kilogramos y litros (RC-15).
 
@@ -30,7 +30,7 @@ UnidadMedida define las unidades admitidas, su magnitud y su factor de conversi�
 
 ## 4.4. Platos y recetas
 
-Cada plato tiene exactamente una receta. Una receta puede no pertenecer a ningún plato y actúa como subreceta cuando otra receta la utiliza como componente (D-07). Cada componente utiliza un ingrediente o una receta, con su cantidad y unidad. El rendimiento indica cuánto produce una receta y permite calcular el coste de la cantidad utilizada (D-02, RC-05). Las dependencias no pueden formar ciclos (RC-12).
+Cada plato tiene exactamente una receta. Una receta actúa como subreceta cuando otra la utiliza como componente, esté o no asociada a un plato (RI-06). Cada componente utiliza un ingrediente o una receta, con su cantidad y unidad. El rendimiento indica cuánto produce una receta y, si está asociada a un plato, se expresa en raciones (RI-06, RC-15). El rendimiento permite calcular el coste de la cantidad utilizada (RC-05). Las dependencias no pueden formar ciclos (RC-12).
 
 ![Figura 4.4. Platos, recetas y componentes: elección exclusiva de ingrediente o receta y cálculo del coste.](img/mc_recetas.png)
 
@@ -54,11 +54,11 @@ Los escenarios muestran objetos concretos del modelo. Las cabeceras subrayadas i
 
 | Escenario | Objetivo | Reglas principales | Resultado esperado |
 |---|---|---|---|
-| 1. Precio seleccionado | Elegir un precio entre dos proveedores | D-01, RC-03, RC-04, RC-11 | Válido; referencia de 1,20 €/kg |
-| 2. Coste con subreceta | Aplicar cantidades y rendimiento al escandallo | D-02, D-07, RC-01, RC-02, RC-05, RC-07, RC-11, RC-12 | Válido; coste del plato de 0,60 € |
+| 1. Precio seleccionado | Elegir un precio entre dos proveedores | RI-04, RC-03, RC-04, RC-05, RC-11 | Válido; referencia de 1,20 €/kg |
+| 2. Coste con subreceta | Aplicar cantidades y rendimiento al escandallo | RI-06, RC-01, RC-02, RC-05, RC-07, RC-11, RC-12, RC-15 | Válido; coste del plato de 0,60 € |
 | 3. Merma de lote | Registrar una pérdida y descontar el stock una sola vez | RC-09, RC-13, RC-14, RC-17 | Válido; saldo de 8 kg y pérdida de 4 € |
-| 4. Límite de frescura | Rechazar una elaboración al cumplir 72 horas | RN-03, D-04 | Rechazado; saldo sin cambios |
-| 5. Incorporación a carta | Comprobar la prueba previa y el permiso explícito | RN-02, RN-04, D-03, D-05, RC-09, RC-10 | Administradora sin permiso: denegado; encargado con permiso: incorporación autorizada |
+| 4. Límite de frescura | Rechazar una elaboración al cumplir 72 horas | RI-07, RN-03 | Rechazado; saldo sin cambios |
+| 5. Incorporación a carta | Comprobar la prueba previa y el permiso explícito | RC-09, RC-10, RN-02, RN-04 | Administradora sin permiso: denegado; encargado con permiso: incorporación autorizada |
 | 6. Límite de caducidad | Contrastar las 48 horas exactas con el instante siguiente | RN-01, RC-13, RC-17 | A 48 h se admite el plato ordinario; con menos de 48 h se rechaza el ordinario y se admite el menú del día |
 
 Los seis escenarios ilustran reglas que también comprueba `sql/07_pruebas.sql`. La correspondencia es de reglas y resultados esperados, no de identidad de datos ni de reproducción literal de los diagramas.
@@ -69,7 +69,7 @@ El 29 de octubre de 2026, la harina tiene dos precios vigentes: 1,20 €/kg de D
 
 ![Figura 4.7. Escenario 1: dos precios vigentes de harina y selección explícita de uno para calcular costes.](img/esc_1.png)
 
-**Resultado: válido.** Los importes son positivos (RC-03), no hay vigencias solapadas para un mismo par proveedor-ingrediente (RC-04) y hay un único precio seleccionado (D-01).
+**Resultado: válido.** Los importes son positivos (RC-03), no hay vigencias solapadas para un mismo par proveedor-ingrediente (RC-04) y hay un único precio seleccionado (RI-04, RC-05).
 
 ### 4.7.2. Coste de un plato con una subreceta
 

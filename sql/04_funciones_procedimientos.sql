@@ -241,7 +241,7 @@ BEGIN
     END;
 END$$
 
--- RC-14 y S-07: alta definitiva de una merma de lote O de plato.
+-- RC-09 y RC-14: alta definitiva de una merma de lote O de plato.
 -- El coste es el importe historico total comunicado; NULL significa desconocido.
 -- La merma de lote y su salida se confirman juntas; la de plato no descuenta stock.
 CREATE OR REPLACE PROCEDURE sp_registrar_merma(

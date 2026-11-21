@@ -8,8 +8,8 @@
 - **Margen bruto:** diferencia entre el precio de venta de un plato y su coste de producción.
 - **Menú del día:** conjunto de platos que el restaurante marca como tales. Son los únicos a los que pueden destinarse los lotes próximos a caducar (RN-01).
 - **Merma:** pérdida de ingredientes, platos u otros productos gestionados por el restaurante debido a causas como caducidad, deterioro, elaboración incorrecta o desecho de un plato.
-- **Precio seleccionado:** precio de compra elegido manualmente para calcular los costes de un ingrediente. Como máximo hay uno por ingrediente (D-01).
+- **Precio seleccionado:** precio de compra elegido manualmente para calcular los costes de un ingrediente. Como máximo hay uno por ingrediente (RI-04, RC-05).
 - **Rendimiento:** cantidad que produce una elaboración completa de una receta, expresada en una unidad de medida.
 - **Saldo de un lote:** existencias de un lote en un instante, calculadas como entradas menos salidas más ajustes firmados registrados hasta ese instante. Un saldo positivo no implica que el lote pueda usarse para elaborar: también cuentan la aptitud, la caducidad, la frescura y, cuando corresponda, el plato de destino (RN-01, RN-03).
-- **Subreceta:** receta utilizada como componente de otra receta. Es un papel que puede desempeñar una receta, no un elemento distinto (D-07).
+- **Subreceta:** receta utilizada como componente de otra receta. Es un papel que puede desempeñar cualquier receta, aunque esté asociada a un plato (RI-06).
 - **Sugerencia del chef:** oferta de prueba de un plato, previa a su primera incorporación a la carta permanente (RN-04).

@@ -477,8 +477,8 @@ def mc_vistas(sal):
     d.arista("rol", "R=78", "usuario", "L=78", "tieneRol", "1", "0..*")
     d.arista("rol", "B", "permiso", "L=318", "concede", "0..*", "0..*", nombre_en=(125, 235))
     d.arista("usuario", "B", "permiso", "R=318", "tienePermisoAdicional", "0..*", "0..*", nombre_en=(535, 262))
-    d.nota(470, 420, 265, "Para operar, la cuenta debe estar activa y el permiso debe estar concedido por rol o "
-                           "individualmente (RC-10, D-03). El rol de administrador no sustituye AUTORIZAR_CARTA (RN-02).",
+    d.nota(470, 420, 265, "fn_tiene_permiso exige cuenta activa y, salvo al administrador, permiso por rol o "
+                           "individual (RC-10). RN-02 exige AUTORIZAR_CARTA explícito también al administrador.",
             titulo="Control de acceso")
     d.guardar(os.path.join(sal, "mc_acceso.png"))
 
@@ -493,8 +493,8 @@ def mc_vistas(sal):
     d.arista("ing", "L=100", "precio", "T=560", "tienePrecio", "1", "0..*", nombre_en=(660, 100))
     d.arista("ing", "B", "unidad", "T", "seMideEn", "0..*", "1")
     d.arista("precio", "R=320", "unidad", "L=320", "expresaPrecioEn", "0..*", "1", ma_off=(0, 22), mb_off=(0, 22))
-    d.nota(370, 400, 250, "Como máximo un precio seleccionado por ingrediente, vigente al calcular. "
-                          "Sin selección válida, el coste queda sin valor (D-01, RC-11).",
+    d.nota(370, 400, 250, "Como máximo un precio seleccionado por ingrediente, vigente al calcular (RI-04, RC-05). "
+                          "Sin selección válida, el coste queda sin valor (RC-11).",
            titulo="Selección para el costeo")
     d.guardar(os.path.join(sal, "mc_compras.png"))
 
@@ -511,8 +511,8 @@ def mc_vistas(sal):
     d.arista("comp", "R=322", "ing", "L=322", "utilizaIngrediente", "0..*", "0..1", ma_off=(0, 22), mb_off=(0, 22))
     d.arista("unidad", "T", "comp", "B", "seExpresaEn", "1", "0..*")
     d.arista("unidad", "L=490", "receta", "L=130", "rindeEn", "1", "0..*", hvh=385, nombre_en=(385, 320))
-    d.nota(40, 330, 300, "Una receta sin plato actúa como subreceta cuando otra receta la utiliza (D-07). "
-                          "El rendimiento de la receta de un plato se expresa en raciones (D-02).",
+    d.nota(40, 330, 300, "Una receta usada por otra es subreceta, incluso si está asociada a un plato (RI-06). "
+                          "Si tiene plato, su rendimiento se expresa en raciones (RI-06, RC-15).",
             titulo="Subreceta: un papel, no una clase")
     d.nota(40, 445, 300, "Cada componente utiliza exactamente un ingrediente o una receta: nunca ambos ni ninguno. "
                           "No se permiten ciclos entre recetas (RC-12).", titulo="Exclusividad obligatoria")

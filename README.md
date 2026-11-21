@@ -155,7 +155,7 @@ mariadb --protocol=SOCKET -u pp_empleado -p plato_plato -e "CALL sp_consultar_es
 
 ## 10. Calidad y pruebas
 
-`07_pruebas.sql` comprueba el esquema y los flujos de negocio en una copia desechable. La secuencia de verificación, los resultados previos y lo que queda pendiente se detallan en el [seguimiento de clase](docs/pendientes_clase_plato_plato.md). Los privilegios se verifican desde las conexiones separadas indicadas arriba.
+`07_pruebas.sql` comprueba el esquema y los flujos de negocio en una copia desechable. La secuencia, los resultados previos y lo que queda pendiente se detallan en la [verificación de la entrega](docs/06_modelo_tecnologico.md#verificación-de-la-entrega). Los privilegios se verifican desde las conexiones separadas indicadas arriba.
 
 ## 11. Colaboración
 
@@ -185,7 +185,7 @@ La documentación oficial está en los seis capítulos Markdown de [`docs/`](doc
 
 ## 14. Hoja de ruta
 
-El [seguimiento de clase](docs/pendientes_clase_plato_plato.md) recoge la validación final y los límites aceptados. Una aplicación completa queda fuera de esta entrega.
+La [verificación de la entrega](docs/06_modelo_tecnologico.md#verificación-de-la-entrega) recoge la validación final pendiente y los límites de las pruebas. Una aplicación completa queda fuera de esta entrega.
 
 ## 15. Equipo y licencia
 

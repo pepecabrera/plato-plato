@@ -9,16 +9,17 @@ SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
 SET SESSION sql_mode='STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ZERO_DATE,NO_ZERO_IN_DATE,NO_ENGINE_SUBSTITUTION';
 USE plato_plato;
 
--- Parámetros. @ahora es el instante en que se evalúan vigencias, saldos y plazos, en hora local (S-14).
+-- Parámetros. @ahora es el instante en que se evalúan vigencias, saldos y plazos, en hora local Europe/Madrid
+-- (docs/06_modelo_tecnologico.md, sección 6.1).
 -- Se fija en una fecha del escenario de 02_datos.sql para que los resultados sean reproducibles;
 -- para consultar la situación real basta con sustituirla por NOW(6).
--- Los umbrales de los avisos toman los valores por defecto de S-08.
+-- Los umbrales de los avisos toman los valores por defecto de RF-11 y RF-12.
 SET @ahora='2026-11-15 12:00:00';
 SET @horas_aviso_caducidad=48;
 SET @porcentaje_aviso_precio=10;
 
 -- Acceso: cuentas, roles y permisos efectivos.
--- C-01. Cuentas de usuario con su rol y cuántos permisos reciben por el rol y cuántos a título individual (RF-01, RI-01, D-03).
+-- C-01. Cuentas de usuario con su rol y cuántos permisos reciben por el rol y cuántos a título individual (RF-01, RI-01, RC-10).
 -- Subconsultas escalares correlacionadas. La contraseña protegida no se consulta (RNF-02).
 SELECT u.nombre AS usuario, u.correo_electronico, r.nombre AS rol, u.estado, u.fecha_creacion,
        (SELECT COUNT(*) FROM roles_permisos rp WHERE rp.id_rol=u.id_rol) AS permisos_del_rol,
@@ -27,7 +28,7 @@ FROM usuarios u
 JOIN roles r ON r.id_rol=u.id_rol
 ORDER BY FIELD(r.nombre,'ADMINISTRADOR','ENCARGADO','EMPLEADO'), u.nombre;
 
--- C-02. Concesiones registradas para cada usuario activo: por rol o individuales, con su origen (RC-10, D-03, RNF-01).
+-- C-02. Concesiones registradas para cada usuario activo: por rol o individuales, con su origen (RC-10, RNF-01).
 -- No representa excepciones de la política efectiva, como el acceso general del administrador.
 -- UNION ALL de las dos vías y agrupación, para que un permiso concedido por ambas aparezca una sola vez.
 SELECT u.nombre AS usuario, r.nombre AS rol, p.nombre AS permiso,
@@ -59,7 +60,7 @@ LEFT JOIN precios_compra pc ON pc.id_proveedor=pr.id_proveedor
 GROUP BY pr.id_proveedor, pr.nombre, pr.estado, pr.persona_contacto, pr.telefono, pr.correo_contacto, pr.forma_pago
 ORDER BY pr.estado, ingredientes_con_precio_vigente DESC, pr.nombre;
 
--- C-04. Comparación de proveedores: precios vigentes de cada ingrediente activo, del más barato al más caro (RF-13, D-01).
+-- C-04. Comparación de proveedores: precios vigentes de cada ingrediente activo, del más barato al más caro (RF-13, RI-04, RC-05).
 -- Tabla derivada y funciones de ventana RANK y MIN. Para compararlos, cada precio se convierte a la unidad del ingrediente (RC-15).
 SELECT t.ingrediente, t.proveedor, t.precio_compra, t.unidad_precio,
        ROUND(t.precio_comparable,4) AS precio_comparable, t.unidad_medida,
@@ -96,8 +97,8 @@ WINDOW w AS (PARTITION BY pc.id_ingrediente,pc.id_proveedor ORDER BY pc.fecha_in
 ORDER BY i.nombre, pr.nombre, pc.fecha_inicio_vigencia;
 
 -- C-06. Avisos de sobrecoste: ingredientes cuyo precio de costeo ha subido al menos @porcentaje_aviso_precio % respecto al anterior
--- del mismo proveedor, con los platos activos afectados (RF-11, RC-06, S-08). La selección de precio no guarda histórico
--- (limitación B.2): solo puede compararse con el precio previo del proveedor seleccionado.
+-- del mismo proveedor, con los platos activos afectados (RF-11, RC-06). La selección de precios no se versiona
+-- (docs/06_modelo_tecnologico.md, sección 6.3): se compara el precio seleccionado actualmente con el anterior de su proveedor.
 -- CTE recursiva «uso»: ingredientes que utiliza cada receta, directamente o a través de sus subrecetas.
 -- UNION descarta las filas repetidas, por lo que la recursión termina aunque los datos contengan un ciclo.
 WITH RECURSIVE uso AS (
@@ -147,7 +148,7 @@ LEFT JOIN ingredientes i ON i.id_ingrediente=cr.id_ingrediente
 LEFT JOIN recetas sr ON sr.id_receta=cr.id_receta_componente
 ORDER BY r.nombre, tipo_componente, componente;
 
--- C-08. Recetas que actúan como subreceta: en cuántas recetas se utilizan y si además son la receta de un plato (D-07).
+-- C-08. Recetas que actúan como subreceta: en cuántas recetas se utilizan y si además son la receta de un plato (RI-06).
 SELECT sr.nombre AS subreceta, sr.estado, p.nombre AS plato_propio, COUNT(*) AS recetas_que_la_usan,
        GROUP_CONCAT(r.nombre ORDER BY r.nombre SEPARATOR ', ') AS utilizada_en
 FROM componentes_receta cr
@@ -208,7 +209,7 @@ JOIN ingredientes i ON i.id_ingrediente=d.id_ingrediente
 ORDER BY p.nombre, d.nivel, e.nombre, i.nombre;
 
 -- C-10. Coste de cada receta y rentabilidad de las que son plato: coste de elaboración, coste unitario (en un plato, su coste de
--- producción), margen bruto, porcentaje de margen y cumplimiento del objetivo (RF-07, RF-08, RC-05 a RC-08, RC-11, D-02, D-06).
+-- producción), margen bruto, porcentaje de margen y cumplimiento del objetivo (RF-07, RF-08, RI-06, RC-05 a RC-08, RC-11, RC-15).
 -- Misma CTE «despiece» que en C-09. El coste queda en NULL si falta un precio seleccionado y vigente, hay unidades de distinta
 -- magnitud, una receta no tiene componentes, existe un ciclo o se exceden 64 enlaces.
 -- Coste unitario a ocho decimales como en la función; cuatro para mostrarlo, no para calcular margen u objetivo.
@@ -269,7 +270,7 @@ SELECT nombre AS receta, cantidad_rendimiento, unidad_rendimiento,
 FROM importes
 ORDER BY id_plato IS NULL, nombre;
 
--- C-11. Ingredientes que impiden costear platos, con el motivo y los platos afectados (RC-11, D-01, S-12).
+-- C-11. Ingredientes que impiden costear platos, con el motivo y los platos afectados (RI-04, RC-05, RC-11).
 -- EXISTS y NOT EXISTS correlacionados. La CTE «uso» alcanza también los ingredientes de las subrecetas.
 WITH RECURSIVE uso AS (
     SELECT id_receta AS id_receta_raiz, id_ingrediente, id_receta_componente
@@ -342,7 +343,7 @@ LEFT JOIN platos p ON p.id_plato=m.id_plato_destino
 ORDER BY l.identificador_lote, m.fecha_movimiento, m.id_movimiento;
 
 -- C-15. Avisos de caducidad: lotes con existencias a los que les quedan menos de @horas_aviso_caducidad horas, a qué pueden destinarse
--- y qué platos del menú del día utilizan su ingrediente (RF-12, RN-01, RN-03, S-08).
+-- y qué platos del menú del día utilizan su ingrediente (RF-12, RN-01, RN-03).
 WITH RECURSIVE uso AS (
     SELECT id_receta AS id_receta_raiz, id_ingrediente, id_receta_componente
     FROM componentes_receta
@@ -375,7 +376,7 @@ GROUP BY l.id_lote, l.identificador_lote, i.nombre, l.ubicacion_almacen, s.saldo
 ORDER BY l.fecha_caducidad, l.identificador_lote;
 
 -- C-16. Existencias que ya no pueden destinarse a elaborar platos y su valor al precio de costeo: lotes no aptos, caducados o
--- frescos con 72 horas o más desde su recepción (RN-01, RN-03, D-04, S-05). Son candidatas a registrarse como merma.
+-- frescos con 72 horas o más desde su recepción (RI-07, RN-01, RN-03). Son candidatas a registrarse como merma (RF-10, RC-14).
 SELECT l.identificador_lote, i.nombre AS ingrediente, l.ubicacion_almacen,
        CASE WHEN l.apto_para_consumo=0 THEN 'NO APTO' WHEN l.fecha_caducidad<=@ahora THEN 'CADUCADO' ELSE 'FRESCO FUERA DE PLAZO' END AS motivo,
        s.saldo, i.unidad_medida,
@@ -463,7 +464,7 @@ LEFT JOIN usuarios u ON u.id_usuario=a.id_emisor
 ORDER BY p.nombre, po.fecha_inicio;
 
 -- C-22. Platos que ya pueden proponerse para la carta permanente: activos, con precio de venta, que nunca han estado en ella y han
--- completado una prueba cerrada de al menos 14 días como sugerencia del chef (RN-02, RN-04, D-05). NOT EXISTS correlacionado.
+-- completado una prueba cerrada de al menos 14 días como sugerencia del chef (RN-02, RN-04). NOT EXISTS correlacionado.
 -- Antes de autorizar hay que comprobar en C-10 que su coste es calculable.
 SELECT p.nombre AS plato, p.categoria, p.precio_venta,
        MAX(po.fecha_fin) AS fin_de_la_prueba,

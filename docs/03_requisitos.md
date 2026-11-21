@@ -1,6 +1,6 @@
 # 3. Catálogo de requisitos
 
-Los identificadores se conservan respecto a la segunda entrega. La correspondencia con la numeración de la primera entrega y todos los cambios introducidos se recogen en el Anexo A.
+Este catálogo reúne los requisitos y las reglas vigentes de Plato-Plató. Sus identificadores se usan en los modelos, los escenarios, los scripts SQL y las pruebas.
 
 ## 3.1. Usuarios del sistema
 
@@ -92,6 +92,8 @@ El sistema deberá almacenar información sobre los precios de compra de los ing
 
 El sistema deberá conservar el histórico de precios de los ingredientes.
 
+Cada ingrediente podrá tener, como máximo, un precio seleccionado para el cálculo de costes. La selección es explícita: el sistema no elige automáticamente el precio más barato (RC-05).
+
 #### RI-05 — Platos
 
 El sistema deberá almacenar la siguiente información sobre los platos:
@@ -120,6 +122,8 @@ El sistema deberá almacenar la información necesaria para representar la compo
 - Cantidad necesaria de cada componente.
 - Unidad de medida utilizada.
 
+Una subreceta es una receta utilizada como componente de otra, no una entidad aparte. Una receta puede reutilizarse en varias recetas, tanto si pertenece a un plato como si no.
+
 #### RI-07 — Lotes
 
 El sistema deberá almacenar la siguiente información sobre los lotes de ingredientes:
@@ -129,7 +133,7 @@ El sistema deberá almacenar la siguiente información sobre los lotes de ingred
 - Cantidad, calculada como saldo de sus movimientos de stock.
 - Fecha de entrada.
 - Fecha de caducidad (opcional).
-- Fresco (indicador lógico).
+- Fresco (indicador lógico del lote, no del ingrediente).
 - Apto para el consumo (indicador lógico).
 - Ubicación en el almacén.
 
@@ -143,6 +147,8 @@ El sistema deberá almacenar información sobre los movimientos de stock de los 
 - Fecha del movimiento.
 - Finalidad de la salida (elaboración, merma u otra), cuando el movimiento sea una salida.
 - Plato de destino, cuando la salida se destine a elaborar un plato.
+
+El inventario registra existencias de ingredientes por lote, no existencias de recetas ni de platos elaborados. Una salida de elaboración descuenta los ingredientes de los lotes.
 
 #### RI-09 — Mermas
 
@@ -208,11 +214,11 @@ La entrega deberá permitir registrar mermas mediante un procedimiento y consult
 
 #### RF-11 — Consulta de subidas del precio de referencia
 
-La entrega deberá ofrecer una consulta a demanda que compare el precio seleccionado y vigente de cada ingrediente con el precio anterior del mismo proveedor, en una unidad común. La consulta mostrará las subidas de al menos el 10 % por defecto, con umbral configurable, y los platos activos que usan el ingrediente (S-08). No mide la variación del margen del plato ni envía notificaciones automáticas.
+La entrega deberá ofrecer una consulta a demanda que compare el precio seleccionado y vigente de cada ingrediente con el precio anterior del mismo proveedor, en una unidad común. La consulta mostrará las subidas de al menos el 10 % por defecto, con umbral configurable, y los platos activos que usan el ingrediente. No mide la variación del margen del plato ni envía notificaciones automáticas.
 
 #### RF-12 — Consulta de lotes próximos a caducar
 
-La entrega deberá ofrecer una consulta a demanda de lotes con existencias que aún no hayan caducado y a los que les queden menos de 48 horas por defecto. El plazo de la consulta es configurable (S-08) y no modifica la regla RN-01. No se incluyen notificaciones automáticas.
+La entrega deberá ofrecer una consulta a demanda de lotes con existencias que aún no hayan caducado y a los que les queden menos de 48 horas por defecto. El plazo de la consulta es configurable y no modifica la regla RN-01. No se incluyen notificaciones automáticas.
 
 #### RF-13 — Comparación de proveedores
 
@@ -238,17 +244,17 @@ Para un determinado proveedor e ingrediente no podrá existir más de un precio 
 
 #### RC-05 — Cálculo del coste
 
-El coste de producción de un plato deberá calcularse a partir de la suma del coste de todos los componentes necesarios para elaborar una unidad del plato. El cálculo se aplica de forma recursiva a través de las subrecetas:
+El coste de producción de un plato se calcula a partir de la composición registrada, recorriendo las subrecetas. Para cada ingrediente se usa el precio actualmente seleccionado si está vigente en la fecha de referencia (RI-04, RC-04). El cálculo no filtra por estado del proveedor, del ingrediente ni de la receta:
 
 - **Coste de una línea de ingrediente:** cantidad convertida a la unidad del precio × precio de compra seleccionado y vigente.
 - **Coste de una línea de subreceta:** cantidad convertida a la unidad de rendimiento × coste unitario de la receta utilizada.
 - **Coste de elaboración de una receta:** suma de los costes de sus líneas.
 - **Coste unitario de una receta:** coste de elaboración / cantidad de rendimiento.
-- **Coste de producción de un plato:** coste unitario de su receta, cuyo rendimiento se expresa en unidades del plato.
+- **Coste de producción de un plato:** coste por ración de su receta (RC-15).
 
 #### RC-06 — Actualización del coste
 
-Cuando cambie el precio aplicable de un ingrediente, el coste de los platos que lo utilicen deberá actualizarse en consecuencia.
+El coste corriente y el margen se derivan al consultar los datos; no se mantienen copias que haya que actualizar al cambiar un precio. Los importes históricos de autorizaciones y mermas se conservan según RC-09.
 
 #### RC-07 — Margen bruto
 
@@ -256,19 +262,19 @@ El margen bruto por unidad de un plato se calculará como la diferencia entre su
 
 #### RC-08 — Margen objetivo
 
-El sistema deberá permitir establecer un margen objetivo para los platos, que podrá ser modificado por los usuarios con permisos suficientes.
+Cada plato podrá tener un porcentaje de margen objetivo opcional, expresado sobre su precio de venta. Se utilizará para evaluar si el margen calculado alcanza el objetivo, no como condición para autorizar la incorporación a carta (RN-02).
 
 #### RC-09 — Integridad del histórico
 
-Los elementos que formen parte de información histórica no deberán eliminarse de forma que se pierda dicha información.
+Los movimientos de stock, las mermas y las autorizaciones registradas no se modifican ni se eliminan. Una corrección de inventario se registra como un ajuste nuevo: no modifica ni anula una merma ni su importe. Las autorizaciones conservan el coste y el precio evaluados y las mermas conservan el importe aportado, si se conoce. No se eliminan los datos referenciados si con ello se pierde información histórica.
 
 #### RC-10 — Permisos según el rol
 
-Cada usuario únicamente podrá realizar las operaciones que correspondan a los permisos asociados a su rol más los permisos adicionales del usuario.
+Las operaciones se autorizan para usuarios de aplicación activos según los permisos concedidos a su rol o individualmente. En las comprobaciones generales, el administrador activo dispone de acceso general; RN-02 exige una concesión explícita incluso para él. Los permisos de aplicación no otorgan por sí solos privilegios a las cuentas de MariaDB (RNF-01).
 
 #### RC-11 — Coste calculable
 
-Un plato no podrá considerarse correctamente costeado cuando alguno de los componentes necesarios para su receta, incluidos los de sus subrecetas, no disponga de un precio de compra válido. En ese caso, el coste queda sin valor y no se sustituye por cero.
+Si alguna rama de la receta no puede costearse, el coste queda sin valor (`NULL`): no se sustituye por cero ni se devuelve un total parcial. Esto incluye la falta de un precio seleccionado y vigente, las unidades incompatibles, las recetas sin componentes y las dependencias cíclicas. El modelo tecnológico documenta el límite técnico del recorrido.
 
 #### RC-12 — Recetas cíclicas
 
@@ -280,11 +286,11 @@ El saldo de un lote no podrá ser negativo en ningún instante. Al registrar un 
 
 #### RC-14 — Merma exclusiva y sin doble descuento
 
-Cada merma afectará exactamente a un lote o a un plato. La merma de un lote originará una única salida con finalidad de merma, por la misma cantidad y fecha. La merma de un plato no generará movimientos de stock, porque sus ingredientes ya se descontaron al elaborarlo.
+Cada merma afectará exactamente a un lote o a un plato. El procedimiento de registro guardará en una sola transacción la merma de lote y su única salida con finalidad `MERMA`, para el mismo lote, cantidad y fecha. Una merma de plato no generará movimientos de stock, porque sus ingredientes ya se descontaron al elaborarlo. El importe de pérdida, cuando se conozca, se aporta según RF-10.
 
 #### RC-15 — Unidades compatibles
 
-Una cantidad solo podrá convertirse a otra unidad de su misma magnitud. No se supone que kilogramos, litros y unidades sean intercambiables. La receta de un plato deberá expresar su rendimiento en raciones.
+Una cantidad solo podrá convertirse a otra unidad de su misma magnitud mediante los factores de conversión de RI-11. La receta de un plato deberá usar la unidad base `racion` (magnitud `RACION`, factor 1). Las demás recetas podrán declarar el rendimiento en otra unidad; las cantidades de subreceta se convierten a su unidad de rendimiento al costear (RC-05).
 
 #### RC-16 — Periodos de oferta sin solape
 
@@ -320,13 +326,15 @@ Los lotes catalogados por el restaurante como frescos no podrán utilizarse una 
 
 Todo plato de nueva creación deberá ofrecerse inicialmente durante un mínimo de catorce días como sugerencia del chef antes de poder incorporarse a la carta permanente.
 
-*Criterio de aplicación:* es de nueva creación el plato que aún no ha tenido ningún periodo de carta permanente. Se exige un periodo de sugerencia del chef cerrado, de al menos 14 días consecutivos, terminado a más tardar cuando empieza la carta permanente.
+*Criterio de aplicación:* es de nueva creación el plato que aún no ha tenido ningún periodo de carta permanente. En su primera incorporación se exige que un solo periodo cerrado de sugerencia del chef reúna al menos 14 días consecutivos y termine a más tardar al inicio de la carta. No se suman varios periodos ni se repite la prueba para posteriores incorporaciones.
 
 ### 3.3.5. Requisitos no funcionales
 
 #### RNF-01 — Control de acceso
 
 La entrega deberá incluir cuentas operativas autenticadas por MariaDB y con privilegios diferenciados, comprobables mediante operaciones permitidas y denegadas al conectarse con cada cuenta. Las cuentas del servidor se distinguen de los usuarios y permisos de aplicación (RI-01, RC-10). Las comprobaciones sobre un usuario de aplicación no sustituyen la autenticación de la conexión; la autenticación propia de una futura aplicación queda fuera de esta entrega.
+
+Las tres cuentas operativas de demostración solo tendrán acceso a las vistas y los procedimientos públicos que se les concedan en MariaDB, sin acceso directo a las tablas. En particular, el privilegio SQL de ejecutar la incorporación a carta no sustituye el permiso de aplicación `AUTORIZAR_CARTA` exigido por RN-02.
 
 #### RNF-02 — Seguridad de las credenciales
 
@@ -347,38 +355,6 @@ La base de datos deberá ofrecer consultas y procedimientos documentados que pue
 #### RNF-06 — Integridad de los datos
 
 El esquema deberá aplicar sus restricciones declarativas, y las operaciones de escritura de la entrega deberán respetar las reglas de integridad que validan sus procedimientos y triggers. Los controles de diagnóstico complementan esas garantías, pero no impiden por sí mismos escrituras incoherentes.
-
-### 3.3.6. Decisiones de modelado
-
-Las decisiones de modelado recogen criterios adoptados por el equipo al construir el modelo conceptual. Se citan en los escenarios de prueba y en los diagramas.
-
-#### D-01 — Precio seleccionado
-
-Cada ingrediente tiene, como máximo, un precio seleccionado explícitamente para calcular costes, que debe estar vigente al calcular. La selección es manual: no se elige automáticamente el precio más barato.
-
-#### D-02 — Rendimiento de las recetas
-
-Cada receta declara la cantidad y la unidad que produce. La receta de un plato expresa su rendimiento en unidades del plato.
-
-#### D-03 — Permisos adicionales
-
-Un usuario puede tener permisos adicionales individuales, además de los de su rol.
-
-#### D-04 — Clasificación de frescura
-
-La clasificación como fresco pertenece a cada lote, no al ingrediente.
-
-#### D-05 — Periodo de prueba
-
-La prueba de un plato nuevo se realiza como sugerencia del chef durante 14 días consecutivos.
-
-#### D-06 — Margen objetivo
-
-El porcentaje de margen objetivo es opcional, se define por plato y se expresa sobre el precio de venta.
-
-#### D-07 — Subreceta como papel
-
-Una subreceta no es una entidad propia, sino una receta utilizada como componente de otra. Una receta puede no pertenecer a ningún plato y puede utilizarse en varias recetas.
 
 ## 3.4. Matriz de trazabilidad
 

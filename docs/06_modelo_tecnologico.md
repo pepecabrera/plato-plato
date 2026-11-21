@@ -9,7 +9,7 @@ El archivo `sql/01_tablas.sql` crea una base nueva `plato_plato` y sus 17 tablas
 - Identificadores: INT UNSIGNED autogenerados; claves compuestas en las dos concesiones N:M.
 - Unidades: código ASCII binario de hasta 10 caracteres, magnitud y factor positivo DECIMAL(18,6). La unidad base de cada magnitud deberá fijarse en los datos iniciales.
 - Cantidades y rendimientos: DECIMAL(14,4); precios de compra: DECIMAL(14,4); precios de venta e importes históricos: DECIMAL(14,2). El redondeo económico final corresponde a las rutinas de cálculo.
-- Fechas: DATETIME(6) en hora local Europe/Madrid (S-14). DEFAULT CURRENT_TIMESTAMP exige que la conexión tenga la hora local correcta; el script no configura la zona con nombre porque depende de las tablas horarias del servidor. Los cálculos de 48/72 horas siguen la convención local adoptada; si se necesitan horas reales durante cambios de horario, el equipo deberá migrar coherentemente a UTC.
+- Fechas: `DATETIME(6)` en hora local Europe/Madrid, sin almacenar la zona horaria. `DEFAULT CURRENT_TIMESTAMP` exige que la conexión tenga la hora local correcta; el script no configura la zona con nombre porque depende de las tablas horarias del servidor. Los plazos de RN-01 y RN-03 se calculan en hora local, no como tiempo real transcurrido al cruzar un cambio de hora. Si se necesitan horas reales, habría que migrar coherentemente a UTC.
 - Nombres únicos según el MR. La colación utf8mb4_unicode_ci compara sin distinguir mayúsculas; deben revisarse sus efectos sobre las denominaciones del catálogo.
 - Porcentaje objetivo opcional en [0,100); imágenes y costes desconocidos admiten NULL.
 - FK restrictivas, salvo concesiones y composición ON DELETE CASCADE y códigos de unidad ON UPDATE CASCADE, según 5.1.4. Como un cambio de código, magnitud o factor de una unidad en uso lo rechaza un trigger de 05, el CASCADE solo actúa sobre unidades sin datos relacionados.
@@ -21,7 +21,7 @@ El archivo `sql/01_tablas.sql` crea una base nueva `plato_plato` y sus 17 tablas
 | Regla | Garantía declarativa incluida | Pendiente de otros bloques |
 |---|---|---|
 | RC-01–03 | Cantidades, rendimientos y precios positivos; componentes únicos | — |
-| RC-04, D-01 | Fechas ordenadas, inicio único por proveedor/ingrediente y selección única | Validación al costear (funciones de 04). Solapamientos de vigencias: triggers `trg_precio_*` de 05; concurrencia pendiente |
+| RI-04, RC-04, RC-05 | Fechas ordenadas, inicio único por proveedor/ingrediente y selección única | Validación al costear (funciones de 04). Solapamientos de vigencias: triggers `trg_precio_*` de 05; concurrencia pendiente |
 | RC-05–08, RC-11 | Objetivo opcional en rango; derivados ausentes de las tablas | Funciones de coste, margen, propagación de NULL y permisos en 04; consultas en 03 |
 | RC-09–10 | FK según política y tablas de permisos | Protección del historial en 05, permisos de aplicación en 04 y cuentas operativas de demostración en 08 |
 | RC-12 | Impide receta componente igual a receta contenedora | Ciclos indirectos, incluidos UPDATE: triggers `trg_componente_*` de 05. Alta completa en 04 y protección de la última línea en 05; inserción manual de cabeceras vacías aún posible |
@@ -53,7 +53,7 @@ El poblado inicial se realiza mediante el archivo `02_datos.sql`, que contiene s
 | Mermas | 3 mermas: dos de ingredientes y una de un plato elaborado. |
 | Oferta | 4 periodos de oferta y 2 autorizaciones de incorporación a carta. |
 
-Los usuarios representan los perfiles de administrador, encargado y empleado. Luis está inactivo; Marta recibe `CONSULTAR_COSTES` como concesión individual y el encargado no lo tiene en el poblado. `AUTORIZAR_CARTA` se concede al rol `ADMINISTRADOR`. Estas son concesiones de aplicación; no amplían los privilegios MariaDB de 08.
+Los usuarios representan los perfiles de administrador, encargado y empleado. Luis está inactivo; Marta recibe `CONSULTAR_COSTES` como concesión individual y el encargado no lo tiene en el poblado. `GESTIONAR_PLATOS` se concede a administrador y encargado; `AUTORIZAR_CARTA`, solo al rol `ADMINISTRADOR`. Estas son concesiones de aplicación; no amplían los privilegios MariaDB de 08.
 
 Los proveedores e ingredientes incluyen registros activos e inactivos. Los precios permiten comparar dos proveedores para el tomate y consultar un precio histórico cerrado. Cada ingrediente activo tiene un único precio seleccionado para costeo; el perejil, inactivo, solo conserva un precio histórico. Los importes se expresan en euros.
 
@@ -63,7 +63,7 @@ Los platos tienen precio de venta y margen objetivo. La pasta pertenece al menú
 
 ### Inventario y mermas
 
-Los movimientos incluyen entradas, salidas para elaboración, salidas por merma y ajustes de inventario positivos y negativos. Las cantidades se expresan en la unidad del ingrediente asociado al lote. Las salidas de elaboración corresponden a ocho raciones de pasta y cuatro de tortilla, incluyendo el consumo proporcional de ingredientes de la salsa.
+Los movimientos incluyen entradas, salidas para elaboración, salidas por merma y ajustes de inventario positivos y negativos. Las cantidades se expresan en la unidad del ingrediente asociado al lote. No se lleva stock de recetas ni subrecetas: elaborar platos descuenta ingredientes de sus lotes. Las salidas de elaboración corresponden a ocho raciones de pasta y cuatro de tortilla, incluyendo el consumo proporcional de ingredientes de la salsa.
 
 Se registran 2 kg de tomate retirados por caducidad, 0,5 kg retirados por deterioro y una ración de pasta desechada. Las mermas de lote están asociadas a sus movimientos de salida, con la misma cantidad y fecha. La merma de pasta no vuelve a descontar ingredientes, porque su consumo ya se registró durante la elaboración.
 
@@ -80,7 +80,7 @@ El lote caducado queda sin existencias y marcado como no apto para consumo. Ning
 | HUE-20261109 | 26 ud |
 | TOM-20261101 | 0,00 kg |
 
-El saldo se obtiene sumando entradas y ajustes con su signo y restando las salidas. No se almacena directamente en los lotes. Los ajustes de ejemplo representan diferencias detectadas en el recuento físico; el esquema actual no dispone de un campo para documentar su motivo.
+El saldo se obtiene sumando entradas y ajustes con su signo y restando las salidas. No se almacena directamente en los lotes. Los ajustes de ejemplo representan diferencias detectadas en el recuento físico; los movimientos, incluidos los ajustes, no registran el usuario responsable ni el motivo.
 
 ### Oferta y autorizaciones
 
@@ -106,13 +106,13 @@ El archivo `03_consultas.sql` contiene 27 consultas numeradas (C-01 a C-27) que 
 
 ### Parámetros
 
-Al principio del script se fijan tres variables. `@ahora` es el instante en que se evalúan vigencias, saldos y plazos; se fija en el 15 de noviembre de 2026 a las 12:00, dentro del escenario de `02_datos.sql`, para que los resultados sean reproducibles, y puede sustituirse por `NOW(6)` para consultar la situación real. `@horas_aviso_caducidad` (48) y `@porcentaje_aviso_precio` (10) son los umbrales por defecto de RF-11 y RF-12 (S-08).
+Al principio del script se fijan tres variables. `@ahora` es el instante en que se evalúan vigencias, saldos y plazos; se fija en el 15 de noviembre de 2026 a las 12:00, dentro del escenario de ambos poblados, y puede sustituirse por `NOW(6)` para consultar la situación real. RF-11 muestra subidas del precio de referencia de al menos `@porcentaje_aviso_precio` (10 % por defecto); RF-12 muestra lotes con existencias que aún no han caducado y a los que les quedan menos de `@horas_aviso_caducidad` (48 horas por defecto). Cambiar el umbral de la consulta no modifica RN-01.
 
 ### Consultas incluidas
 
 | Bloque | Consultas | Contenido | Requisitos |
 | --- | --- | --- | --- |
-| Acceso | C-01, C-02 | Cuentas con su rol y recuentos; concesiones registradas para usuarios activos, con su origen (`ROL`, `ADICIONAL` o `ROL Y ADICIONAL`). | RF-01, RC-10, D-03, RNF-01 |
+| Acceso | C-01, C-02 | Cuentas con su rol y recuentos; concesiones registradas para usuarios activos, con su origen (`ROL`, `ADICIONAL` o `ROL Y ADICIONAL`). | RF-01, RC-10, RNF-01 |
 | Compras | C-03 a C-06 | Proveedores, comparación de precios vigentes, histórico con variación y avisos de sobrecoste con los platos afectados. | RF-02, RF-04, RF-11, RF-13, RC-04 |
 | Recetas | C-07 a C-11 | Composición, subrecetas reutilizadas, escandallo detallado, coste y margen de cada plato, e ingredientes que impiden costear. | RF-06 a RF-08, RC-05 a RC-08, RC-11 |
 | Inventario | C-12 a C-16 | Saldo por lote, existencias por ingrediente, extracto de movimientos, avisos de caducidad y existencias que ya no pueden usarse. | RF-03, RF-09, RF-12, RC-13, RN-01, RN-03 |
@@ -122,21 +122,19 @@ Al principio del script se fijan tres variables. `@ahora` es el instante en que 
 
 Cada consulta va precedida de un comentario con su objetivo, las reglas que trata y la técnica empleada. Se usan combinaciones internas y externas, agrupaciones con `HAVING` y `WITH ROLLUP`, subconsultas escalares, correlacionadas y en `FROM`, `EXISTS` y `NOT EXISTS`, `UNION`, funciones de ventana (`RANK`, `LAG` y sumas acumuladas) y expresiones de tabla comunes recursivas. No se usa `SELECT *`.
 
-C-02 agrupa por usuario y permiso para no duplicar una concesión recibida por ambas vías. No enumera permisos efectivos: no aplica el acceso general del administrador ni informa de los `GRANT` de MariaDB. C-27 comprueba el tipo de periodo y la fecha de la autorización, no quién tenía el permiso en el pasado; tampoco reconstruye la aptitud ni el destino al menú del día de RN-01.
+C-02 agrupa por usuario y permiso para no duplicar una concesión recibida por ambas vías. No enumera permisos efectivos: no aplica el acceso general del administrador ni informa de los `GRANT` de MariaDB. C-12 y C-13 muestran saldo registrado, no aptitud para elaboración; esta depende también de la caducidad, la frescura y el estado del lote.
+
+Los controles son diagnósticos: no bloquean ni corrigen escrituras. C-23 detecta recetas sin componentes y periodos de carta sin autorización. C-26 detecta saldos negativos, mermas discordantes y salidas por merma sin merma asociada. Para detectar saldos negativos intermedios entre movimientos de igual fecha, ordena por fecha e identificador con un marco `ROWS`, igual que los procedimientos de movimientos. C-27 comprueba el tipo de periodo y la fecha de la autorización; no hay historial de concesiones para saber quién tenía permiso entonces. Tampoco reconstruye la aptitud ni comprueba el destino al menú del día de RN-01.
 
 ### Cálculo del coste
 
-La fecha de consulta filtra la vigencia del precio seleccionado actualmente. La composición de las recetas y la selección de precios no tienen versionado: consultar una fecha pasada no reconstruye el escandallo de entonces y puede devolver NULL aunque exista otro precio histórico no seleccionado.
+Tanto las consultas como las funciones usan la composición registrada y el precio seleccionado actualmente, cuya vigencia se comprueba en la fecha de referencia (RI-04, RC-05). No hay versiones de la composición ni historial de cambios de selección: consultar una fecha pasada no reconstruye el escandallo de entonces y puede devolver `NULL` aunque exista otro precio histórico no seleccionado. El cálculo no filtra por estado del proveedor, del ingrediente ni de la receta. Desactivar un proveedor no cierra automáticamente sus precios.
 
-El coste recorre las subrecetas con una CTE recursiva. Para cada receta se calcula cuántas elaboraciones de cada subreceta necesita, convirtiendo la cantidad a la unidad de rendimiento mediante `factor_a_base`. Cada ingrediente se valora con su precio seleccionado y vigente en `@ahora`, convertido a la unidad de la línea (RC-05, D-01). Solo se convierten unidades de la misma magnitud (RC-15).
+El coste recorre las subrecetas con una CTE recursiva. Para cada receta se calcula cuántas elaboraciones de cada subreceta necesita, convirtiendo la cantidad a la unidad de rendimiento mediante `factor_a_base`. El precio aplicable de cada ingrediente se convierte a la unidad de la línea. Solo se convierten unidades de la misma magnitud (RC-15).
 
 Para C-09 y C-10 el recorrido admite hasta 64 enlaces de subreceta, igual que `fn_coste_receta`. Un precio no válido, unidades incompatibles, una receta vacía, un ciclo o necesitar un enlace 65 invalidan el coste en vez de devolver cero o un subtotal (RC-11). Para el coste por ración de un plato, la unidad de rendimiento debe ser `racion`, de magnitud `RACION` y factor 1. Los costes se presentan a cuatro decimales; las valoraciones y los porcentajes, a dos.
 
-Con los dos poblados, el coste por ración a la fecha de referencia es de 0,7232 € para la pasta con tomate y de 0,8416 € para la tortilla. Redondeados a dos decimales, coinciden con los importes evaluados de las autorizaciones (0,72 € y 0,84 €).
-
-### Verificación
-
-La comparación ya observada entre C-10 y `fn_coste_plato` se recoge en 6.7. En la validación final de clase se volverán a ejecutar las consultas sobre ambos poblados limpios y se guardará la salida, incluidos los controles C-23 a C-27 (se esperan cero filas). No se da por verificado `ONLY_FULL_GROUP_BY`.
+La comparación entre C-10 y `fn_coste_plato` se recoge en la [verificación de la entrega](#verificación-de-la-entrega).
 
 ## 6.4. Script de creación de funciones y procedimientos
 
@@ -185,7 +183,7 @@ Las operaciones generales comprueban el permiso correspondiente (`CONSULTAR_COST
 
 El identificador recibido por un procedimiento de 04 no demuestra la identidad. En la demostración sin aplicación, 08 autentica mediante las cuentas locales de MariaDB y vincula la conexión al usuario de demostración en sus procedimientos públicos (véase 6.8). No expone las rutinas que aceptan un identificador de usuario del llamador.
 
-sp_registrar_merma exige el permiso REGISTRAR_MERMAS. Para una merma de lote, bloquea el lote, comprueba los saldos históricos y registra conjuntamente la salida y la merma, revirtiendo ambas ante cualquier error. Para una merma de plato no genera movimientos de stock. El coste recibido representa el importe histórico total; admite NULL cuando se desconoce. Las mermas registradas son definitivas: no se permite editarlas, borrarlas ni anularlas en esta versión. Un ajuste de stock no modifica los informes de pérdidas de la merma original.
+`sp_registrar_merma` exige el permiso `REGISTRAR_MERMAS`. Para una merma de lote, bloquea el lote, comprueba los saldos históricos y registra conjuntamente la salida y la merma, revirtiendo ambas ante cualquier error. Para una merma de plato no genera movimientos de stock. En ambos casos, el importe total de la pérdida se aporta al registrarla o queda en `NULL` (RI-09, RF-10). No hay valoración automática: el lote no se vincula a un proveedor ni a un precio de compra, así que no se puede deducir su coste real ni verificar la procedencia de una valoración externa. Las mermas registradas son definitivas: no se permite editarlas, borrarlas ni anularlas. Un ajuste de stock no modifica sus importes históricos ni los informes de pérdidas.
 
 Los triggers de 05 impiden introducir ciclos al editar recetas y solapamientos de precios. La detección de ciclos durante el cálculo evita devolver un coste válido para una composición cíclica, pero no sustituye la validación de su registro.
 
@@ -202,10 +200,6 @@ CALL sp_registrar_receta(2, 'Pasta de prueba', 4, 'racion',
 ```
 
 La llamada es autónoma, exige GESTIONAR_RECETAS y rechaza una lista vacía o un documento JSON inválido. Un fallo en cualquier línea revierte cabecera y componentes. El procedimiento devuelve id_receta. No se impide insertar manualmente una cabecera vacía: se adopta este procedimiento como flujo operativo del proyecto. Un borrado de receta completa por ON DELETE CASCADE no ejecuta los triggers de componentes; sigue sujeto a las FK que impiden eliminar recetas referenciadas.
-
-### Alcance de las fechas al costear
-
-sp_consultar_escandallo utiliza la composición y selección de precios actuales; p_fecha comprueba la vigencia del precio seleccionado. No reconstruye versiones históricas de recetas o selecciones. Se conserva este alcance sin añadir tablas de histórico.
 
 ## 6.5. Script de creación de triggers asociados a reglas de negocio
 
@@ -225,7 +219,7 @@ El archivo `sql/05_triggers.sql` contiene los triggers que aplican las reglas RN
 
 ### Comprobaciones sobre los lotes
 
-El trigger `trg_movimiento_bi_negocio` aplica RN-01 y RN-03 únicamente a movimientos de tipo `SALIDA` cuya finalidad sea `ELABORACION`.
+El trigger `trg_movimiento_bi_negocio` aplica RN-01 y RN-03 únicamente a movimientos de tipo `SALIDA` cuya finalidad sea `ELABORACION`. Se considera perecedero el lote con fecha de caducidad.
 
 Las comprobaciones utilizan la fecha del movimiento. Exactamente a 48 horas de la caducidad todavía no se aplica la limitación del menú del día. En cambio, exactamente a las 72 horas desde la recepción ya se prohíbe utilizar un lote fresco.
 
@@ -264,7 +258,7 @@ Estos triggers comprueban sin bloqueos explícitos: dos conexiones simultáneas 
 - trg_merma_bi_coherencia exige que una merma de lote coincida con su movimiento en lote, cantidad, fecha, tipo SALIDA y finalidad MERMA. UNIQUE(id_movimiento) impide duplicar el enlace. Las mermas de plato siguen sin movimiento.
 - `trg_plato_bi_raciones` y `trg_plato_bu_raciones` exigen rendimiento en `racion` (magnitud `RACION`, factor 1, no docenas). `trg_receta_bu_negocio` mantiene esa condición al cambiar la unidad de la receta. Las subrecetas sin plato asociado pueden rendir en kg o litros.
 - trg_componente_bd_minimo impide borrar la última línea de una receta conservada. trg_componente_bu_negocio impide trasladarla a otra receta. No se certifica concurrencia entre conexiones.
-- trg_lote_bu_historico impide cambiar ingrediente o fecha de recepción cuando hay movimientos. Permite editar ubicación y conserva el alcance actual para caducidad, frescura y aptitud; no incorpora historial de aptitud.
+- `trg_lote_bu_historico` impide cambiar ingrediente o fecha de recepción cuando hay movimientos. No impide editar ubicación, caducidad, frescura o aptitud, ni conserva el historial de aptitud.
 
 ### Ejecución y validación
 
@@ -393,11 +387,13 @@ Se comprueba expresamente que un error al insertar una merma no deje su salida g
 
 Al finalizar se muestran el detalle y los totales. Si existe algún FALLO, se lanza un error SQL. Las entradas PENDIENTE no se consideran pruebas aprobadas.
 
-### Ejecución
+### Verificación de la entrega
+
+#### Rutas de ejecución
 
 Utilizar una instancia MariaDB 10.6 o superior dedicada a pruebas. No ejecutar sobre una base con datos reales ni dentro de una transacción de trabajo.
 
-Desde la raíz del repositorio, ejecutar los archivos de `sql/` con un cliente que admita `DELIMITER`, como `mariadb`. Preparar una copia nueva por ruta; **02 y 06 son alternativas**.
+Desde la raíz del repositorio, ejecutar los archivos de `sql/` con un cliente que admita `DELIMITER`, como `mariadb`. Preparar una copia nueva y desechable por ruta; **02 y 06 son alternativas**. No ejecutar 07 en la copia de demostración, pues algunas pruebas confirman escrituras.
 
 | Ruta | Orden | Bloques de 07 |
 |---|---|---|
@@ -407,29 +403,32 @@ Desde la raíz del repositorio, ejecutar los archivos de `sql/` con un cliente q
 
 El archivo utiliza la base `plato_plato`, por lo que debe ejecutarse en un entorno de pruebas separado del entorno de trabajo. No debe utilizarse la opción `--force`.
 
-Las pruebas de negocio crean datos auxiliares y ejecutan operaciones que confirman transacciones. Antes de repetir ese bloque debe prepararse una copia nueva. El archivo no elimina ni recrea automáticamente la base.
+Las pruebas de negocio crean datos auxiliares. Antes de repetir ese bloque debe prepararse una copia nueva: 07 no elimina ni recrea automáticamente la base.
 
 Se necesitan permisos para crear y eliminar rutinas, crear tablas temporales y ejecutar las operaciones comprobadas. Los auxiliares se eliminan al finalizar correctamente; si ocurre un fallo, pueden permanecer hasta la siguiente ejecución o hasta eliminar la copia de pruebas.
 
-### Validaciones ya observadas
+#### Validaciones ya observadas
 
 En ejecuciones anteriores con **MariaDB 13.0.2** se observaron 66 comprobaciones de esquema y 143 de negocio aprobadas en cada ruta de poblado, y las 12 regresiones de movimientos aprobadas en la ruta de 06. Las entradas `PENDIENTE` de la suite no forman parte de esos recuentos.
 
-En ambos poblados se observó que C-10 y `fn_coste_plato` coincidían a cuatro decimales para la fecha de referencia (`2026-11-15 12:00:00`): 0,7232 € para la pasta y 0,8416 € para la tortilla. La suite 07 incluye también una referencia SQL independiente para el coste de la pasta; no ejecuta C-10.
+En ambos poblados se observó que C-10 y `fn_coste_plato` coincidían a cuatro decimales para la fecha de referencia (`2026-11-15 12:00:00`): 0,7232 € por ración para la pasta y 0,8416 € para la tortilla. Redondeados a dos decimales, coinciden con los importes de las autorizaciones de ejemplo (6.2). La suite 07 incluye una referencia SQL independiente para el coste de la pasta, pero no ejecuta C-10.
 
 Por separado se observaron comprobaciones de 08 desde conexiones operativas: acceso a las vistas y llamadas concedidas, denegación de costes al encargado y de proveedores al empleado, y rechazo de escritura directa incluso al administrador y de una llamada del empleado a una rutina interna que acepta un ID de usuario. Estas comprobaciones no son parte de 07 ni certifican todos los privilegios de un despliegue.
 
-### Validación final pendiente
+#### Validación final pendiente
 
-Falta repetir las dos rutas de pruebas sobre copias limpias en el entorno de clase, comprobar C-23 a C-27, volver a contrastar C-10 con la función y revisar los casos de 07 correspondientes a los escenarios 5 y 6. En una copia separada de demostración, verificar 08 desde las tres cuentas locales, incluidos accesos permitidos y denegados. Conservar fecha, versión concreta y salidas de consultas, pruebas y comprobaciones de acceso. Las observaciones previas no sustituyen esta validación final.
+En la versión de MariaDB de clase, repetir las dos rutas de pruebas sobre copias limpias. Comprobar que C-23 a C-27 devuelven cero filas y volver a contrastar C-10 con `fn_coste_plato` en ambos poblados. En el bloque de negocio de 07, revisar expresamente estos casos:
 
-La prueba de privilegios debe hacerse fuera de 07, que usa una cuenta de pruebas. Siguen sin certificarse la concurrencia entre conexiones (también en precios, componentes y unidades) y la cobertura de las demás rutinas del poblado opcional 06.
+- **Escenario 5: Incorporación autorizada a la carta (RN-02/RN-04).** Se rechaza al administrador sin `AUTORIZAR_CARTA` y se admite al encargado activo con concesión individual. El periodo y la autorización se guardan juntos, con coste y precio históricos. Se verifica sobre las rutinas de negocio, no desde `pp_encargado`, que no puede ejecutar la incorporación pública de 08.
+- **Escenario 6: Límite de 48 horas antes de caducar (RN-01).** Justo a 48 horas se admite una salida para un plato ordinario. Un microsegundo después se rechaza para ese destino y se admite para el menú del día. Las tres salidas se evalúan por separado.
 
-La detección de NULL al calcular un coste complementa, pero no sustituye, a los triggers que impiden registrar composiciones inválidas.
+En una copia de demostración separada, comprobar los accesos y llamadas permitidos y denegados de 08 por socket desde las tres cuentas locales, con las claves asignadas y las cuentas desbloqueadas según el [README](../README.md#comprobación-desde-conexiones-separadas). Estas comprobaciones se hacen fuera de 07, que usa una cuenta de pruebas.
+
+Guardar la fecha, la versión exacta de MariaDB y las salidas de consultas, accesos y pruebas (`OK`, `FALLO`, `PENDIENTE`). Las observaciones anteriores no sustituyen la validación final. Las pruebas son secuenciales: no certifican la concurrencia entre conexiones ni cubren por completo las demás rutinas del poblado 06. Tampoco se ha verificado `ONLY_FULL_GROUP_BY`.
 
 ## 6.8. Cuentas y privilegios de MariaDB
 
-`sql/08_cuentas_privilegios.sql` se instala una sola vez con una cuenta instaladora, después de 04 y 05 completos y en una instancia donde no existan las tres cuentas locales. Se crean bloqueadas; antes de probarlas, asignar una clave distinta a cada una y desbloquearlas según el README. La cuenta instaladora conserva los privilegios requeridos por los objetos `SQL SECURITY DEFINER`; no es una cuenta operativa.
+`sql/08_cuentas_privilegios.sql` se instala una sola vez con una cuenta instaladora, después de 04 y 05 completos y en una instancia donde no existan las tres cuentas locales. Se crean bloqueadas; antes de probarlas, asignar una clave distinta a cada una y desbloquearlas según el README. La cuenta instaladora conserva los privilegios requeridos por los objetos `SQL SECURITY DEFINER`; las restricciones de 08 se aplican solo a las tres cuentas operativas, no a la instaladora ni a otras cuentas.
 
 ### Matriz de privilegios de 08
 
@@ -457,10 +456,4 @@ Las cuentas se conectan por socket local. Los procedimientos `sp_demo_*` resuelv
 | RN-01/RN-03 | `sp_registrar_movimiento` y `trg_movimiento_bi_negocio` | Escenarios 6 y 4; casos de aptitud, destino y límites de 48/72 h en 07 | Pruebas secuenciales observadas |
 | RN-02/RN-04, RC-10/16 | Concesiones de 01/02/06 y procedimientos y triggers de oferta de 04/05 | Escenario 5; C-23/C-24/C-27 y casos de permiso, reversión, prueba y solape de 07 | Pruebas secuenciales observadas |
 | RNF-01/RNF-02 | Cuentas y vistas de 08; hashes de demostración en 02/06 | Conexiones separadas e inspección de los poblados | Accesos observados; sin autenticación de aplicación |
-| RNF-03 a RNF-06 | Operaciones documentadas, restricciones y diagnósticos | Ejecución de 07 para integridad | Disponibilidad y rendimiento no evaluados; sin interfaz ni certificación concurrente |
-
-En el escenario 5 se rechaza al administrador sin concesión y se admite al encargado activo con concesión individual: periodo y autorización se guardan juntos, con coste y precio históricos. Esto se prueba en 07 sobre las rutinas de negocio, no desde `pp_encargado`, que no tiene `EXECUTE` sobre la incorporación pública de 08. En el escenario 6, se admite una salida a un plato ordinario justo a 48 horas de la caducidad; un microsegundo después se rechaza para ese destino y se admite para el menú del día. Las tres salidas se evalúan por separado.
-
-## Alcance acordado para la entrega de clase
-
-C-12/C-13 muestran saldo registrado, no garantizan aptitud para elaboración. Se consultan aparte caducidad, frescura y aptitud. No se incorpora historial de aptitud ni de permisos, usuario/motivo en movimientos y ajustes, ni validación de que el ingrediente retirado pertenezca a la receta destino. Se mantienen la convención local Europe/Madrid, con su limitación durante cambios de hora, y el alcance secuencial de las pruebas.
+| RNF-03 a RNF-06 | Operaciones documentadas, restricciones y diagnósticos | Ejecución de 07 para integridad | Disponibilidad y rendimiento dependen del despliegue y no se evalúan con los scripts; sin interfaz ni certificación concurrente |

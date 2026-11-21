@@ -1,7 +1,7 @@
 -- Plato-Plató: esquema definitivo (persona 1).
 -- MariaDB 10.6+ como objetivo; pendiente de validación en ejecución. InnoDB, utf8mb4.
 -- Ejecutar desde una base nueva; no elimina ni sustituye datos existentes.
--- Las fechas DATETIME(6) representan hora local Europe/Madrid (S-14).
+-- Las fechas DATETIME(6) representan hora local Europe/Madrid (docs/06_modelo_tecnologico.md, sección 6.1).
 -- No incluye datos, funciones, procedimientos ni triggers de negocio.
 SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
 SET SESSION sql_mode='STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ZERO_DATE,NO_ZERO_IN_DATE,NO_ENGINE_SUBSTITUTION';
@@ -236,7 +236,8 @@ CREATE TABLE periodos_oferta (
     CHECK (fecha_fin IS NULL OR fecha_fin>fecha_inicio)
 ) ENGINE=InnoDB;
 
--- Se conservan los importes evaluados al autorizar. Validar administrador, prueba previa y autorización obligatoria queda pendiente.
+-- Se conservan los importes evaluados al autorizar. El procedimiento registra el periodo y su autorización juntos;
+-- el trigger valida el permiso explícito AUTORIZAR_CARTA (RN-02). El trigger de periodos verifica la prueba previa (RN-04).
 CREATE TABLE autorizaciones_carta (
     id_autorizacion INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     id_periodo_oferta INT UNSIGNED NOT NULL UNIQUE,
