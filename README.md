@@ -128,17 +128,54 @@ No es necesario crear directorios vacíos ni adoptar esta estructura si el frame
 
 ## 9. Instalación y ejecución
 
-**Pendiente de definir.** Las instrucciones reproducibles se incorporarán cuando exista una primera versión ejecutable. Esta sección deberá indicar:
+La entrega de clase se ejecuta en **MariaDB 10.6 o superior**, sin aplicación. Usad una instancia local desechable y un cliente que admita `DELIMITER`, como `mariadb`. Desde la raíz del repositorio, conectad por socket con la cuenta instaladora. Esa cuenta debe conservar los privilegios que utilizan las vistas y rutinas con `SQL SECURITY DEFINER`; no se usa para la demostración operativa.
 
-1. Requisitos previos y versiones compatibles.
-2. Clonado del repositorio.
-3. Instalación de dependencias.
-4. Configuración local mediante variables de entorno.
-5. Preparación de la base de datos, si procede.
-6. Comando de arranque y acceso a la aplicación.
-7. Ejecución de pruebas.
+```sql
+SOURCE sql/01_tablas.sql
+SOURCE sql/02_datos.sql
+SOURCE sql/04_funciones_procedimientos.sql
+SOURCE sql/05_triggers.sql
+SOURCE sql/08_cuentas_privilegios.sql
+```
 
-No se publicarán credenciales reales. Cuando corresponda, se incluirá un archivo `.env.example` con nombres de variables y valores ficticios.
+Para usar el poblado por procedimientos, sustituid `02_datos.sql` por `06_poblado_procedimientos.sql` en una base recién creada. No carguéis ambos. `03_consultas.sql` y `07_pruebas.sql` no son necesarios para instalar las cuentas. No ejecutéis `07` sobre una copia que queráis conservar para la demo: las pruebas de negocio confirman algunos cambios.
+
+### Cuentas operativas de MariaDB
+
+`08` crea estas tres cuentas locales, bloqueadas y sin claves en el repositorio. Ejecutad el script una sola vez en una instancia donde no existan ya esos nombres. Después, como instalador, asignad una clave distinta a cada cuenta y desbloqueadla. Introducid los comandos en una sesión local sin guardar historial (por ejemplo, iniciando el cliente con `MYSQL_HISTFILE=/dev/null`); los valores entre ángulos son marcadores, no claves de ejemplo para usar.
+
+```sql
+ALTER USER 'pp_administrador'@'localhost' IDENTIFIED BY '<clave de administrador>' ACCOUNT UNLOCK;
+ALTER USER 'pp_encargado'@'localhost' IDENTIFIED BY '<clave de encargado>' ACCOUNT UNLOCK;
+ALTER USER 'pp_empleado'@'localhost' IDENTIFIED BY '<clave de empleado>' ACCOUNT UNLOCK;
+```
+
+| Cuenta | Vistas de consulta | Operaciones mediante `CALL` |
+|---|---|---|
+| `pp_empleado` | `v_operativa_*`: platos, recetas y lotes, sin importes económicos. | Registrar movimientos y mermas. |
+| `pp_encargado` | Las anteriores y `v_gestion_*`: proveedores y periodos de oferta sin importes. | También dar de alta recetas, registrar sugerencias y cerrar periodos. |
+| `pp_administrador` | Las anteriores y `v_admin_*`: costes y usuarios, sin hashes de contraseñas. | También consultar el escandallo e incorporar platos a carta, sujeto a RN-02. |
+
+Las cuentas solo reciben `SELECT` sobre las vistas indicadas y `EXECUTE` sobre procedimientos públicos concretos (`sp_demo_*`). No reciben acceso directo a tablas ni a las rutinas internas de negocio, carga o pruebas. Cada procedimiento público toma la identidad de la conexión local y busca el usuario activo de demostración por correo y perfil: Ana, Carlos o Marta. No acepta un ID de usuario elegido por el cliente. Las concesiones de aplicación no amplían por sí solas los privilegios SQL; por ejemplo, el permiso individual de Marta no habilita las vistas de costes para `pp_empleado`.
+
+### Comprobación desde conexiones separadas
+
+Ejecutad los comandos desde una base de demostración recién instalada. `-p` pide la clave sin ponerla en el comando. El primer grupo debe funcionar; la llamada del empleado añade una merma de plato al poblado.
+
+```sh
+mariadb --protocol=SOCKET -u pp_administrador -p plato_plato -e "SELECT nombre, coste_por_racion FROM v_admin_costes; CALL sp_demo_consultar_escandallo(1, '2026-11-15 12:00:00');"
+mariadb --protocol=SOCKET -u pp_encargado -p plato_plato -e "SELECT nombre FROM v_gestion_proveedores;"
+mariadb --protocol=SOCKET -u pp_empleado -p plato_plato -e "SELECT nombre FROM v_operativa_platos; CALL sp_demo_registrar_merma(NULL, 1, 1, '2026-11-15 12:00:00', 'PLATO_DESECHADO', 'Prueba de permisos', NULL);"
+```
+
+Cada comando siguiente debe fallar por permisos: lectura de costes por el encargado, consulta de proveedores por el empleado, escritura directa incluso como administrador y llamada a una rutina que recibe un ID de usuario.
+
+```sh
+mariadb --protocol=SOCKET -u pp_encargado -p plato_plato -e "SELECT * FROM v_admin_costes;"
+mariadb --protocol=SOCKET -u pp_empleado -p plato_plato -e "SELECT * FROM v_gestion_proveedores;"
+mariadb --protocol=SOCKET -u pp_administrador -p plato_plato -e "UPDATE platos SET descripcion = descripcion WHERE id_plato = 1;"
+mariadb --protocol=SOCKET -u pp_empleado -p plato_plato -e "CALL sp_consultar_escandallo(1, 1, '2026-11-15 12:00:00');"
+```
 
 ## 10. Calidad y pruebas
 
