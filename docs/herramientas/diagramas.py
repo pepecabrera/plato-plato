@@ -3,7 +3,7 @@
 """Genera los diagramas de la memoria de Plato-Plató (MC, escenarios y MR).
 
 Uso: python diagramas.py [directorio_de_salida]
-Por defecto escribe en ../memoria/img respecto a este archivo.
+Por defecto escribe en ../img respecto a este archivo (docs/img/).
 """
 import functools
 import os
@@ -863,7 +863,7 @@ def mr_vistas(sal):
 
 def main():
     base = os.path.dirname(os.path.abspath(__file__))
-    sal = sys.argv[1] if len(sys.argv) > 1 else os.path.join(base, "..", "memoria", "img")
+    sal = sys.argv[1] if len(sys.argv) > 1 else os.path.join(base, "..", "img")
     sal = os.path.abspath(sal)
     mc_global(sal)
     mc_vistas(sal)

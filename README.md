@@ -2,7 +2,7 @@
 
 **Sistema de apoyo a la gestión de costes, inventario y elaboración de platos para restaurantes.**
 
-> **Entrega de clase:** demostración de base de datos MariaDB. Incluye esquema, datos ficticios, consultas, procedimientos, triggers, pruebas y cuentas SQL. No incluye una aplicación ni una interfaz de usuario. Véase la [memoria vigente (PDF)](entregable_final/plato_plato_memoria.pdf).
+> **Entrega de clase:** demostración de base de datos MariaDB. Incluye esquema, datos ficticios, consultas, procedimientos, triggers, pruebas y cuentas SQL. No incluye una aplicación ni una interfaz de usuario. Véase la [documentación vigente](docs/).
 
 Plato-Plató es un proyecto de **cinco integrantes**. Reúne la información sobre proveedores, ingredientes, precios de compra, lotes, existencias, mermas, recetas y platos para calcular escandallos y analizar el margen unitario.
 
@@ -41,7 +41,7 @@ Plato-Plató busca centralizar esos datos y relacionarlos entre sí, reduciendo 
 
 ## 3. Alcance de la entrega
 
-La [especificación vigente](entregable_final/memoria/03_requisitos.md) distingue la carga de demostración, las consultas y las operaciones disponibles por procedimiento.
+La [especificación vigente](docs/03_requisitos.md) distingue la carga de demostración, las consultas y las operaciones disponibles por procedimiento.
 
 | Área | Capacidad de la demo |
 | --- | --- |
@@ -90,14 +90,14 @@ Un posible recorrido de uso del sistema es:
 
 ## 7. Arquitectura y tecnologías
 
-La entrega usa **MariaDB** para la persistencia y las reglas de negocio. Las cuentas operativas consultan vistas y llaman a procedimientos; no acceden directamente a las tablas. El [modelo tecnológico](entregable_final/memoria/06_modelo_tecnologico.md) documenta las garantías y sus límites.
+La entrega usa **MariaDB** para la persistencia y las reglas de negocio. Las cuentas operativas consultan vistas y llaman a procedimientos; no acceden directamente a las tablas. El [modelo tecnológico](docs/06_modelo_tecnologico.md) documenta las garantías y sus límites.
 
 ## 8. Organización del repositorio
 
 ```text
 plato-plato/
-├── docs/                 # Entregas anteriores y materiales de trabajo
-├── entregable_final/     # Memoria vigente, figuras y herramientas de generación
+├── docs/                 # Documentación vigente y figuras; material anterior en revisión
+├── entregable_final/     # Copia PDF y herramientas de composición
 ├── sql/                  # Instalación, poblados, consultas y pruebas de MariaDB
 └── README.md
 ```
@@ -155,7 +155,7 @@ mariadb --protocol=SOCKET -u pp_empleado -p plato_plato -e "CALL sp_consultar_es
 
 ## 10. Calidad y pruebas
 
-`07_pruebas.sql` comprueba el esquema y los flujos de negocio en una copia desechable. La secuencia de verificación, los resultados previos y lo que queda pendiente se detallan en el [seguimiento de clase](entregable_final/memoria/pendientes_clase_plato_plato.md). Los privilegios se verifican desde las conexiones separadas indicadas arriba.
+`07_pruebas.sql` comprueba el esquema y los flujos de negocio en una copia desechable. La secuencia de verificación, los resultados previos y lo que queda pendiente se detallan en el [seguimiento de clase](docs/pendientes_clase_plato_plato.md). Los privilegios se verifican desde las conexiones separadas indicadas arriba.
 
 ## 11. Colaboración
 
@@ -181,11 +181,11 @@ Estas convenciones son una propuesta de organización y podrán ajustarse por co
 
 ## 13. Documentación
 
-La [memoria vigente](entregable_final/plato_plato_memoria.pdf) se genera a partir de los Markdown de `entregable_final/memoria/`. Para regenerarla desde la raíz, ejecutad `bash entregable_final/herramientas/generar_memoria.sh` con Pandoc y XeLaTeX instalados. `docs/entregas/` conserva los PDF históricos sin modificaciones; los requisitos y modelos de trabajo en `docs/` no sustituyen a la memoria vigente.
+La documentación oficial está en los seis capítulos Markdown de [`docs/`](docs/), desde la [descripción del problema](docs/01_descripcion_problema.md) hasta el [modelo tecnológico](docs/06_modelo_tecnologico.md). Las figuras están en `docs/img/` y su generador en `docs/herramientas/diagramas.py`. Los PDF de `docs/entregas/` y los modelos de trabajo anteriores no sustituyen a los capítulos vigentes. La copia PDF de la memoria no se actualiza en este traslado.
 
 ## 14. Hoja de ruta
 
-El [seguimiento de clase](entregable_final/memoria/pendientes_clase_plato_plato.md) recoge la validación final y los límites aceptados. Una aplicación completa queda fuera de esta entrega.
+El [seguimiento de clase](docs/pendientes_clase_plato_plato.md) recoge la validación final y los límites aceptados. Una aplicación completa queda fuera de esta entrega.
 
 ## 15. Equipo y licencia
 
