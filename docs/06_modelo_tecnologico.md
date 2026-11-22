@@ -395,10 +395,13 @@ Utilizar una instancia MariaDB 10.6 o superior dedicada a pruebas. No ejecutar s
 
 Desde la raíz del repositorio, ejecutar los archivos de `sql/` con un cliente que admita `DELIMITER`, como `mariadb`. Preparar una copia nueva y desechable por ruta; **02 y 06 son alternativas**. No ejecutar 07 en la copia de demostración, pues algunas pruebas confirman escrituras.
 
+`07` comprueba los permisos de negocio (usuarios, roles y concesiones) mediante las rutinas del sistema. Los privilegios de MariaDB de `08` se comprueban por separado, conectándose como cada cuenta operativa, no con la cuenta que ejecuta `07`.
+
 | Ruta | Orden | Bloques de 07 |
 |---|---|---|
 | Pruebas con `INSERT` | `01 → 02 → 03 → 07 → 04 → 05 → 07` | 66 de esquema y después 147 de negocio |
 | Pruebas con procedimientos | `01 → 06 → 03 → 07 → 04 → 05 → 07` | 66 de esquema + 12 de movimientos; después 147 de negocio y aviso de que las 12 no se repiten |
+| Carga de 02 con triggers activos | `01 → 04 → 05 → 02 → 03` | Sin 07; ejecutar `SOURCE` con `--abort-source-on-error` y comprobar C-23 a C-27. Usar una fecha de sesión posterior a la última autorización del poblado (16/10/2026 a las 18:00). No sustituye la instalación oficial. |
 | Demostración con cuentas | `01 → (02 o 06) → 04 → 05 → 08` | Sin 07; 03 es una consulta opcional de la cuenta instaladora, no un requisito de 08 |
 
 El archivo utiliza la base `plato_plato`, por lo que debe ejecutarse en un entorno de pruebas separado del entorno de trabajo. No debe utilizarse la opción `--force`.
@@ -413,7 +416,17 @@ En ejecuciones anteriores con **MariaDB 13.0.2** se observaron 66 comprobaciones
 
 En ambos poblados se observó que C-10 y `fn_coste_plato` coincidían a cuatro decimales para la fecha de referencia (`2026-11-15 12:00:00`): 0,7232 € por ración para la pasta y 0,8416 € para la tortilla. Redondeados a dos decimales, coinciden con los importes de las autorizaciones de ejemplo (6.2). La suite 07 incluye una referencia SQL independiente para el coste de la pasta, pero no ejecuta C-10.
 
-Por separado se observaron comprobaciones de 08 desde conexiones operativas: acceso a las vistas y llamadas concedidas, denegación de costes al encargado y de proveedores al empleado, y rechazo de escritura directa incluso al administrador y de una llamada del empleado a una rutina interna que acepta un ID de usuario. Estas comprobaciones no son parte de 07 ni certifican todos los privilegios de un despliegue.
+El **22/11/2026**, en una instancia desechable con **MariaDB 13.0.2**, se cargó `01 → 04 → 05 → 02` sin errores. Quedaron **113 filas en 17 tablas**; C-23 a C-27 devolvieron **cero filas cada una**. Las autorizaciones registraron 0,72 € de coste y 9,50 € de venta para la pasta, y 0,84 € y 6,00 € para la tortilla.
+
+En esa misma copia se instaló `08` y, tras activar las cuentas, se comprobaron estos resultados desde conexiones independientes por socket:
+
+| Cuenta SQL | Accesos permitidos | Accesos denegados |
+|---|---|---|
+| `pp_administrador` | Vista de costes (2 platos) y procedimiento público de escandallo. | Lectura y actualización directas de `platos` (`1142`). |
+| `pp_encargado` | Vista de proveedores (3 filas). | Vista de costes (`1142`) y procedimiento público de escandallo (`1370`). |
+| `pp_empleado` | Vista de platos (2 filas). | Vista de proveedores (`1142`) y rutina interna `sp_consultar_escandallo` (`1370`). |
+
+Estos resultados no forman parte de `07` ni certifican todos los privilegios de un despliegue.
 
 #### Validación final pendiente
 
