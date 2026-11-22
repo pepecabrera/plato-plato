@@ -127,8 +127,8 @@ SELECT i.nombre AS ingrediente, pr.nombre AS proveedor, e.fecha_inicio_vigencia 
 FROM evolucion e
 JOIN ingredientes i ON i.id_ingrediente=e.id_ingrediente
 JOIN proveedores pr ON pr.id_proveedor=e.id_proveedor
-JOIN uso u ON u.id_ingrediente=e.id_ingrediente
-JOIN platos pl ON pl.id_receta=u.id_receta_raiz AND pl.estado='ACTIVO'
+LEFT JOIN uso u ON u.id_ingrediente=e.id_ingrediente
+LEFT JOIN platos pl ON pl.id_receta=u.id_receta_raiz AND pl.estado='ACTIVO'
 WHERE e.seleccionado_para_costeo=1
     AND e.fecha_inicio_vigencia<=@ahora AND (e.fecha_fin_vigencia IS NULL OR e.fecha_fin_vigencia>@ahora)
     AND e.precio>=e.precio_anterior*(1+@porcentaje_aviso_precio/100)
