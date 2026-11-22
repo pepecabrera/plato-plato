@@ -77,7 +77,14 @@ CREATE PROCEDURE pp67_ejecutar()
 BEGIN
  DECLARE v_triggers INT;
  DECLARE v_rutinas INT;
- DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+ DECLARE v_fecha_oferta DATETIME DEFAULT '2026-11-15 12:00:00';
+ DECLARE v_reloj_oferta BOOLEAN DEFAULT FALSE;
+ DECLARE EXIT HANDLER FOR SQLEXCEPTION
+ BEGIN
+  ROLLBACK;
+  IF v_reloj_oferta THEN SET SESSION timestamp=DEFAULT; END IF;
+  RESIGNAL;
+ END;
  IF @@foreign_key_checks<>1 OR @@check_constraint_checks<>1 THEN
   SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Activar las comprobaciones de integridad antes de ejecutar';
  END IF;
@@ -163,8 +170,11 @@ CALL pp67_comprobar('Oferta sin solapamientos', NOT EXISTS (
  WHERE (b.fecha_fin IS NULL OR a.fecha_inicio<b.fecha_fin)
  AND (a.fecha_fin IS NULL OR b.fecha_inicio<a.fecha_fin)
 ), 'Los intervalos actuales no deben solaparse');
-CALL pp67_comprobar('RN-04: prueba previa de 14 días', NOT EXISTS (
- SELECT 1 FROM periodos_oferta c WHERE c.tipo='CARTA_PERMANENTE' AND NOT EXISTS (
+CALL pp67_comprobar('RN-04: prueba previa de 14 días para la primera carta', NOT EXISTS (
+ SELECT 1 FROM periodos_oferta c WHERE c.tipo='CARTA_PERMANENTE'
+ AND NOT EXISTS (SELECT 1 FROM periodos_oferta a
+  WHERE a.id_plato=c.id_plato AND a.tipo='CARTA_PERMANENTE' AND a.fecha_inicio<c.fecha_inicio)
+ AND NOT EXISTS (
  SELECT 1 FROM periodos_oferta s WHERE s.id_plato=c.id_plato AND s.tipo='SUGERENCIA_CHEF'
  AND s.fecha_inicio <= c.fecha_inicio - INTERVAL 14 DAY
  AND s.fecha_fin IS NOT NULL AND s.fecha_fin <= c.fecha_inicio
@@ -301,6 +311,9 @@ INSERT INTO periodos_oferta(id_plato,tipo,fecha_inicio,fecha_fin)
 VALUES(9002,'SUGERENCIA_CHEF','2026-10-01','2026-10-15');
 CALL pp67_caso('14 dias exactos: carta permitida', 'INSERT INTO periodos_oferta(id_plato,tipo,fecha_inicio) VALUES(9002,''CARTA_PERMANENTE'',''2026-10-15'')', 0, NULL, FALSE);
 SET @permiso_carta=(SELECT id_permiso FROM permisos WHERE nombre='AUTORIZAR_CARTA');
+-- El 16 de octubre es posterior al inicio de la carta, pero no al reloj de prueba.
+SET SESSION timestamp=UNIX_TIMESTAMP(v_fecha_oferta);
+SET v_reloj_oferta=TRUE;
 -- Esta transaccion engloba el periodo, las concesiones temporales y la autorizacion.
 START TRANSACTION;
 INSERT INTO periodos_oferta(id_periodo_oferta,id_plato,tipo,fecha_inicio) VALUES(9002,9002,'CARTA_PERMANENTE','2026-10-15');
@@ -313,6 +326,8 @@ INSERT INTO roles_permisos VALUES(2,@permiso_carta);
 CALL pp67_caso('Autorizar: fecha posterior rechazada', 'INSERT INTO autorizaciones_carta(id_periodo_oferta,id_emisor,fecha_autorizacion,coste_evaluado,precio_venta_evaluado) VALUES(9002,2,''2026-10-16'',0,1)', 1644, 'RN-02: autorizacion posterior', TRUE);
 CALL pp67_caso('Autorizar: permiso por rol y fecha igual al inicio', 'INSERT INTO autorizaciones_carta(id_periodo_oferta,id_emisor,fecha_autorizacion,coste_evaluado,precio_venta_evaluado) VALUES(9002,2,''2026-10-15'',0,1)', 0, NULL, TRUE);
 ROLLBACK;
+SET SESSION timestamp=DEFAULT;
+SET v_reloj_oferta=FALSE;
 
 -- Procedimientos autonomos: sin START TRANSACTION global ni SAVEPOINT.
 CALL pp67_caso('Escandallo: acceso con permiso', 'CALL sp_consultar_escandallo(3,1,''2026-11-10'')', 0, NULL, TRUE);
@@ -357,6 +372,8 @@ CALL pp67_caso('Movimiento: saldo historico negativo', 'CALL sp_registrar_movimi
 CALL pp67_caso('Movimiento: entrada valida', 'CALL sp_registrar_movimiento(2,9004,''ENTRADA'',10,''2026-11-09 08:00:00'',NULL,NULL)', 0, NULL, TRUE);
 CALL pp67_caso('Movimiento: salida valida', 'CALL sp_registrar_movimiento(2,9004,''SALIDA'',1,''2026-11-10'',''OTRA'',NULL)', 0, NULL, TRUE);
 CALL pp67_comprobar('Movimiento: saldo final correcto', (fn_stock_lote(9004,'2026-11-30')=9), 'Resultado esperado de la regla comprobada');
+SET SESSION timestamp=UNIX_TIMESTAMP(v_fecha_oferta);
+SET v_reloj_oferta=TRUE;
 CALL pp67_caso('Sugerencia: inactivo rechazado', 'CALL sp_registrar_sugerencia(4,9001,''2026-10-01'',''2026-10-15'')', 1644, 'Sin permiso GESTIONAR_PLATOS', TRUE);
 CALL pp67_caso('Sugerencia: alta por administrador', 'CALL sp_registrar_sugerencia(1,9001,CURRENT_TIMESTAMP(6)-INTERVAL 15 DAY,CURRENT_TIMESTAMP(6))', 0, NULL, TRUE);
 SET @np=(SELECT COUNT(*) FROM periodos_oferta), @na=(SELECT COUNT(*) FROM autorizaciones_carta);
@@ -376,7 +393,7 @@ CALL pp67_comprobar('Carta: rechazo no deja periodo', ((SELECT COUNT(*) FROM per
 INSERT INTO permisos_adicionales_usuario VALUES(2,@permiso_carta);
 CALL pp67_caso('Carta: incorporacion con permiso individual', 'CALL sp_incorporar_carta(2,9001,CURRENT_TIMESTAMP(6)+INTERVAL 1 DAY,NULL)', 0, NULL, TRUE);
 DELETE FROM permisos_adicionales_usuario WHERE id_usuario=2 AND id_permiso=@permiso_carta;
-CALL pp67_comprobar('Carta: periodo y autorizacion confirmados', ((SELECT COUNT(*) FROM periodos_oferta)=@np+1 AND (SELECT COUNT(*) FROM autorizaciones_carta)=@na+1 AND (SELECT COUNT(*) FROM autorizaciones_carta a JOIN periodos_oferta p ON p.id_periodo_oferta=a.id_periodo_oferta WHERE p.id_plato=9001 AND p.tipo='CARTA_PERMANENTE' AND a.id_emisor=2 AND a.coste_evaluado=0.24 AND a.precio_venta_evaluado=5 AND a.fecha_autorizacion<=p.fecha_inicio)=1), 'Resultado esperado de la regla comprobada');
+CALL pp67_comprobar('Carta: periodo y autorizacion confirmados', ((SELECT COUNT(*) FROM periodos_oferta)=@np+1 AND (SELECT COUNT(*) FROM autorizaciones_carta)=@na+1 AND (SELECT COUNT(*) FROM autorizaciones_carta a JOIN periodos_oferta p ON p.id_periodo_oferta=a.id_periodo_oferta WHERE p.id_plato=9001 AND p.tipo='CARTA_PERMANENTE' AND a.id_emisor=2 AND a.coste_evaluado=0.24 AND a.precio_venta_evaluado=5 AND a.fecha_autorizacion=v_fecha_oferta AND a.fecha_autorizacion<=p.fecha_inicio)=1), 'Resultado esperado de la regla comprobada');
 SET @periodo=(SELECT id_periodo_oferta FROM periodos_oferta WHERE id_plato=9001 AND tipo='CARTA_PERMANENTE');
 CALL pp67_caso('Cerrar periodo: cierre valido', 'CALL sp_cerrar_periodo(1,@periodo,CURRENT_TIMESTAMP(6)+INTERVAL 3 DAY)', 0, NULL, TRUE);
 CALL pp67_comprobar('Cerrar periodo: fecha guardada', ((SELECT fecha_fin IS NOT NULL FROM periodos_oferta WHERE id_periodo_oferta=@periodo)), 'Resultado esperado de la regla comprobada');
@@ -387,6 +404,8 @@ SET @sugerencia=(SELECT id_periodo_oferta FROM periodos_oferta WHERE id_plato=90
 CALL pp67_caso('Temporada: cerrar tras dos dias', 'CALL sp_cerrar_periodo(1,@sugerencia,@fin_temporada)', 0, NULL, TRUE);
 CALL pp67_caso('Temporada: volver a carta', 'CALL sp_incorporar_carta(1,9001,@fin_temporada,NULL)', 0, NULL, TRUE);
 CALL pp67_comprobar('Temporada: cierre y nueva autorizacion', (SELECT fecha_fin=@fin_temporada FROM periodos_oferta WHERE id_periodo_oferta=@sugerencia) AND EXISTS(SELECT 1 FROM periodos_oferta p JOIN autorizaciones_carta a USING(id_periodo_oferta) WHERE p.id_plato=9001 AND p.tipo='CARTA_PERMANENTE' AND p.fecha_inicio=@fin_temporada AND a.id_emisor=1), 'La segunda sugerencia dura dos dias y la nueva carta tiene autorizacion propia');
+SET SESSION timestamp=DEFAULT;
+SET v_reloj_oferta=FALSE;
 -- Regresiones nuevas: RC-12, RC-14, RC-15, RC-17 y orden de C-26.
 INSERT INTO recetas(id_receta,nombre,cantidad_rendimiento,unidad_rendimiento) VALUES
 (9201,'__pp67_un_componente',1,'racion'),(9202,'__pp67_destino',1,'racion'),(9203,'__pp67_masa',1,'kg');

@@ -347,7 +347,6 @@ BEGIN
     END;
     SELECT v_receta AS id_receta;
 END$$
-DELIMITER ;
 
 -- RC-04 y RC-15 (precios). Devuelve NULL si el precio es válido; si no, el mensaje de error.
 -- p_excluir es el precio que se está modificando, para no compararlo consigo mismo.
@@ -407,3 +406,5 @@ BEGIN
     END IF;
     RETURN NULL;
 END$$
+
+DELIMITER ;
