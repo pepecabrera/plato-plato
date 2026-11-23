@@ -1,0 +1,234 @@
+@startuml
+title Plato-Plato | Modelo relacional
+hide circle
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+package "Acceso y permisos" {
+  entity roles {
+    id_rol : ID <<PK>>
+    --
+    nombre : TipoRol <<AK>>
+  }
+  entity permisos {
+    id_permiso : ID <<PK>>
+    --
+    nombre : TextoCorto <<AK>>
+    
+  }
+  entity usuarios {
+    id_usuario : ID <<PK>>
+    --
+    nombre : TextoCorto
+    correo_electronico : Correo <<AK>>
+    contrasena_protegida : Hash
+    estado : EstadoRegistro
+    fecha_creacion : Instante
+    id_rol : ID <<FK>>
+  }
+  entity roles_permisos {
+    id_rol : ID <<PK, FK>>
+    id_permiso : ID <<PK, FK>>
+  }
+  entity permisos_adicionales_usuario {
+    id_usuario : ID <<PK, FK>>
+    id_permiso : ID <<PK, FK>>
+  }
+}
+
+package "Compras y unidades" {
+  entity unidades_medida {
+    codigo : CodigoUnidad <<PK>>
+    --
+    nombre : TextoCorto <<AK>>
+    magnitud : TipoMagnitud
+    factor_a_base : Factor
+  }
+  entity proveedores {
+    id_proveedor : ID <<PK>>
+    --
+    nombre : TextoCorto <<AK>>
+    persona_contacto : TextoCorto ?
+    telefono : Telefono ?
+    correo_contacto : Correo ?
+    forma_pago : TextoCorto
+    estado : EstadoRegistro
+  }
+  entity ingredientes {
+    id_ingrediente : ID <<PK>>
+    --
+    nombre : TextoCorto <<AK>>
+    categoria : TextoCorto
+    unidad_medida : CodigoUnidad <<FK>>
+    estado : EstadoRegistro
+  }
+  entity precios_compra {
+    id_precio_compra : ID <<PK>>
+    --
+    id_proveedor : ID <<FK>>
+    id_ingrediente : ID <<FK>>
+    precio_compra : PrecioPositivo
+    unidad_precio : CodigoUnidad <<FK>>
+    fecha_inicio_vigencia : Instante
+    fecha_fin_vigencia : Instante ?
+    seleccionado_para_costeo : Booleano
+    --
+    {field} AK (id_proveedor, id_ingrediente, fecha_inicio_vigencia)
+  }
+}
+
+package "Platos y recetas" {
+  entity recetas {
+    id_receta : ID <<PK>>
+    --
+    nombre : TextoCorto <<AK>>
+    cantidad_rendimiento : CantidadPositiva
+    unidad_rendimiento : CodigoUnidad <<FK>>
+    estado : EstadoRegistro
+  }
+  entity platos {
+    id_plato : ID <<PK>>
+    --
+    id_receta : ID <<FK, AK>>
+    nombre : TextoCorto <<AK>>
+    imagen : Ruta ?
+    descripcion : Texto
+    categoria : TextoCorto
+    menu_del_dia : Booleano
+    precio_venta : ImportePositivo ?
+    estado : EstadoRegistro
+    porcentaje_margen_objetivo : Porcentaje ?
+  }
+  entity componentes_receta {
+    id_componente : ID <<PK>>
+    --
+    id_receta : ID <<FK>>
+    cantidad : CantidadPositiva
+    unidad_medida : CodigoUnidad <<FK>>
+    id_ingrediente : ID ? <<FK>>
+    id_receta_componente : ID ? <<FK>>
+    --
+    {field} UQ (id_receta, id_ingrediente)
+    {field} UQ (id_receta, id_receta_componente)
+  }
+}
+
+package "Lotes, stock y mermas" {
+  entity lotes {
+    id_lote : ID <<PK>>
+    --
+    identificador_lote : TextoCorto <<AK>>
+    id_ingrediente : ID <<FK>>
+    fecha_entrada : Instante
+    fecha_caducidad : Instante ?
+    ubicacion_almacen : TextoCorto
+    fresco : Booleano
+    apto_para_consumo : Booleano
+  }
+  entity movimientos_stock {
+    id_movimiento : ID <<PK>>
+    --
+    id_lote : ID <<FK>>
+    tipo : TipoMovimiento
+    cantidad : CantidadFirmada
+    fecha_movimiento : Instante
+    finalidad_salida : FinalidadSalida ?
+    id_plato_destino : ID ? <<FK>>
+  }
+  entity mermas {
+    id_merma : ID <<PK>>
+    --
+    cantidad_desperdiciada : CantidadPositiva
+    fecha_merma : Instante
+    motivo : MotivoMerma
+    detalle_motivo : Texto ?
+    coste_perdida : ImporteNoNegativo ?
+    id_lote : ID ? <<FK>>
+    id_plato : ID ? <<FK>>
+    id_movimiento : ID ? <<FK, UQ>>
+  }
+}
+
+package "Oferta y autorizacion" {
+  entity periodos_oferta {
+    id_periodo_oferta : ID <<PK>>
+    --
+    id_plato : ID <<FK>>
+    tipo : TipoOferta
+    fecha_inicio : Instante
+    fecha_fin : Instante ?
+    --
+    {field} AK (id_plato, fecha_inicio)
+  }
+  entity autorizaciones_carta {
+    id_autorizacion : ID <<PK>>
+    --
+    id_periodo_oferta : ID <<FK, AK>>
+    id_emisor : ID <<FK>>
+    fecha_autorizacion : Instante
+    coste_evaluado : ImporteNoNegativo
+    precio_venta_evaluado : ImportePositivo
+  }
+}
+
+roles ||--o{ usuarios : id_rol
+roles ||--o{ roles_permisos : id_rol
+permisos ||--o{ roles_permisos : id_permiso
+usuarios ||--o{ permisos_adicionales_usuario : id_usuario
+permisos ||--o{ permisos_adicionales_usuario : id_permiso
+usuarios ||--o{ autorizaciones_carta : id_emisor
+
+proveedores ||--o{ precios_compra : id_proveedor
+ingredientes ||--o{ precios_compra : id_ingrediente
+unidades_medida ||--o{ ingredientes : unidad_medida
+unidades_medida ||--o{ precios_compra : unidad_precio
+unidades_medida ||--o{ recetas : unidad_rendimiento
+unidades_medida ||--o{ componentes_receta : unidad_medida
+
+recetas ||--o| platos : id_receta
+recetas ||--o{ componentes_receta : id_receta
+ingredientes |o--o{ componentes_receta : id_ingrediente
+recetas |o--o{ componentes_receta : id_receta_componente
+
+ingredientes ||--o{ lotes : id_ingrediente
+lotes ||--o{ movimientos_stock : id_lote
+platos |o--o{ movimientos_stock : id_plato_destino
+lotes |o--o{ mermas : id_lote
+platos |o--o{ mermas : id_plato
+movimientos_stock |o--o| mermas : id_movimiento
+
+platos ||--o{ periodos_oferta : id_plato
+periodos_oferta ||--o| autorizaciones_carta : id_periodo_oferta
+
+note right of componentes_receta
+  Exactamente una de las dos FK de componente es no nula.
+  Cada UQ impide duplicar un componente de su tipo (RC-02).
+  El minimo de un componente por receta se comprueba
+  en el flujo operativo, no mediante la FK de la receta.
+end note
+
+note right of mermas
+  Lote o plato, exclusivamente. Solo la merma de lote
+  requiere una salida MERMA asociada, unica y coincidente
+  en lote, cantidad y fecha (RC-14).
+end note
+
+note right of precios_compra
+  La implementacion asegura un maximo de un precio seleccionado
+  por ingrediente con un indice unico sobre una columna virtual.
+end note
+
+note right of autorizaciones_carta
+  El esquema permite cero o una autorizacion por periodo.
+  El procedimiento de alta de carta inserta el periodo
+  y su autorizacion en una misma transaccion (RN-02).
+end note
+
+legend bottom
+  PK: clave primaria | FK: clave ajena | AK: clave alternativa
+  UQ: unicidad condicional | ?: admite NULL
+  Varias marcas PK en una tabla indican una clave primaria compuesta.
+  Cada enlace une la FK indicada con la PK de la tabla referenciada.
+  Las cardinalidades muestran la estructura de las FK, no las reglas adicionales.
+endlegend
+@enduml

@@ -1,0 +1,197 @@
+@startuml
+title Plato-Plato | Modelo conceptual
+hide empty methods
+hide circle
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+package "Acceso" {
+  class Rol {
+    nombre : TipoRol
+  }
+  class Permiso {
+    nombre
+  }
+  class Usuario {
+    nombre
+    correoElectronico
+    contrase<U+00F1>aProtegida
+    estado : EstadoRegistro
+    fechaCreacion
+  }
+}
+
+package "Compras y unidades" {
+  class Proveedor {
+    nombre
+    personaContacto [0..1]
+    telefono [0..1]
+    correoContacto [0..1]
+    formaPago
+    estado : EstadoRegistro
+  }
+  class UnidadMedida {
+    codigo
+    nombre
+    magnitud : TipoMagnitud
+    factorABase
+  }
+  class Ingrediente {
+    nombre
+    categoria
+    estado : EstadoRegistro
+    /cantidadTotalDisponible
+  }
+  class PrecioCompra {
+    precioCompra
+    fechaInicioVigencia
+    fechaFinVigencia [0..1]
+    seleccionadoParaCosteo
+  }
+}
+
+package "Platos y recetas" {
+  class Plato {
+    nombre
+    imagen [0..1]
+    descripcion
+    categoria
+    menuDelDia
+    precioVenta [0..1]
+    estado : EstadoRegistro
+    porcentajeMargenObjetivo [0..1]
+    /costeProduccion [0..1]
+    /margenBruto [0..1]
+    /porcentajeMargen [0..1]
+  }
+  class Receta {
+    nombre
+    cantidadRendimiento
+    estado : EstadoRegistro
+    /costeElaboracion [0..1]
+    /costeUnitario [0..1]
+  }
+  class ComponenteReceta {
+    cantidad
+  }
+}
+
+package "Inventario" {
+  class Lote {
+    identificadorLote
+    /cantidad
+    fechaEntrada
+    fechaCaducidad [0..1]
+    ubicacionAlmacen
+    fresco
+    aptoParaConsumo
+  }
+  class MovimientoStock {
+    tipo : TipoMovimiento
+    cantidad
+    fechaMovimiento
+    finalidadSalida : FinalidadSalida [0..1]
+  }
+  class Merma {
+    cantidadDesperdiciada
+    fechaMerma
+    motivo : MotivoMerma
+    detalleMotivo [0..1]
+    costePerdida [0..1]
+  }
+}
+
+package "Oferta" {
+  class PeriodoOferta {
+    tipo : TipoOferta
+    fechaInicio
+    fechaFin [0..1]
+  }
+  class AutorizacionCarta {
+    fechaAutorizacion
+    costeEvaluado
+    precioVentaEvaluado
+  }
+}
+
+Rol "1" -- "0..*" Usuario : tieneRol
+Rol "0..*" -- "0..*" Permiso : concede
+Usuario "0..*" -- "0..*" Permiso : tienePermisoAdicional
+Usuario "1" -- "0..*" AutorizacionCarta : emite
+
+Proveedor "1" -- "0..*" PrecioCompra : ofrece
+Ingrediente "1" -- "0..*" PrecioCompra : tienePrecio
+UnidadMedida "1" -- "0..*" Ingrediente : seMideEn
+UnidadMedida "1" -- "0..*" PrecioCompra : expresaPrecioEn
+UnidadMedida "1" -- "0..*" Receta : rindeEn
+UnidadMedida "1" -- "0..*" ComponenteReceta : seExpresaEn
+
+Plato "0..1" -- "1" Receta : tieneReceta
+Receta "1" *-- "1..*" ComponenteReceta : seComponeDe
+ComponenteReceta "0..*" -- "0..1" Ingrediente : utilizaIngrediente
+ComponenteReceta "0..*" -- "0..1" Receta : utilizaReceta
+
+Ingrediente "1" -- "0..*" Lote : tieneLote
+Lote "1" -- "0..*" MovimientoStock : recibeMovimiento
+MovimientoStock "0..*" -- "0..1" Plato : seDestinaA
+Merma "0..*" -- "0..1" Lote : afectaLote
+Merma "0..*" -- "0..1" Plato : afectaPlato
+Merma "0..1" -- "0..1" MovimientoStock : originaSalida
+
+Plato "1" -- "0..*" PeriodoOferta : tienePeriodoOferta
+PeriodoOferta "1" -- "0..1" AutorizacionCarta : tieneAutorizacion
+
+note right of ComponenteReceta
+  {xor} utilizaIngrediente o utilizaReceta, exactamente uno.
+  No se repite el mismo ingrediente o subreceta en una receta (RC-02).
+  Las referencias a subrecetas no forman ciclos (RC-12).
+end note
+
+note right of Merma
+  {xor} afectaLote o afectaPlato, exactamente uno (RC-14).
+  Una merma de lote origina una salida MERMA con el mismo lote,
+  cantidad y fecha. Una merma de plato no genera salida.
+end note
+
+note right of MovimientoStock
+  Solo una salida tiene finalidad; solo una salida
+  de ELABORACION tiene plato de destino (RC-17).
+  El saldo acumulado del lote no puede ser negativo (RC-13).
+end note
+
+note right of Lote
+  Para elaborar, el lote debe estar apto y no caducado.
+  Con menos de 48 h para caducar: solo menu del dia (RN-01).
+  Si es fresco: no se usa desde recepcion + 72 h (RN-03).
+end note
+
+note right of PrecioCompra
+  Como maximo un precio seleccionado por ingrediente.
+  Debe estar vigente para calcular el coste (RC-05).
+end note
+
+note right of PeriodoOferta
+  Los periodos de un mismo plato no se solapan (RC-16).
+  La carta exige una autorizacion a mas tardar al inicio;
+  la sugerencia no tiene autorizacion (RN-02).
+  La primera carta exige una unica sugerencia cerrada de
+  al menos 14 dias, finalizada a mas tardar al inicio (RN-04).
+end note
+
+note right of AutorizacionCarta
+  Emisor activo con AUTORIZAR_CARTA por rol o concesion individual.
+  Se exige coste calculable y precio definido, no margen minimo (RN-02).
+end note
+
+legend bottom
+  /atributo: derivado | [0..1]: opcional | rombo negro: composicion
+  **Enumerados**
+  TipoRol: ADMINISTRADOR, ENCARGADO, EMPLEADO
+  EstadoRegistro: ACTIVO, INACTIVO
+  TipoMagnitud: MASA, VOLUMEN, UNIDAD, RACION
+  TipoMovimiento: ENTRADA, SALIDA, AJUSTE
+  FinalidadSalida: ELABORACION, MERMA, OTRA
+  MotivoMerma: CADUCIDAD, DETERIORO, ELABORACION_INCORRECTA, PLATO_DESECHADO, OTRO
+  TipoOferta: SUGERENCIA_CHEF, CARTA_PERMANENTE
+endlegend
+@enduml
