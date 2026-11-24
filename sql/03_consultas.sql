@@ -659,20 +659,25 @@ LEFT JOIN usuarios u ON u.id_usuario = a.id_emisor
 ORDER BY p.nombre, po.fecha_inicio;
 
 -- C-22. Platos que ya pueden proponerse para la carta permanente: activos, con precio de venta, que nunca han estado en ella y han
--- completado una prueba cerrada de al menos 14 días como sugerencia del chef (RN-02, RN-04). NOT EXISTS correlacionado.
+-- completado una prueba cerrada de al menos 14 días como sugerencia del chef (RN-02, RN-04). Se muestra la última prueba válida.
 -- Antes de autorizar hay que comprobar en C-10 que su coste es calculable.
+WITH pruebas_validas AS (
+    SELECT po.id_plato, po.fecha_inicio, po.fecha_fin,
+        ROW_NUMBER() OVER (PARTITION BY po.id_plato ORDER BY po.fecha_fin DESC, po.id_periodo_oferta DESC) AS rn
+    FROM periodos_oferta po
+    WHERE po.tipo = 'SUGERENCIA_CHEF'
+        AND po.fecha_fin <= @ahora AND po.fecha_fin >= po.fecha_inicio + INTERVAL 14 DAY
+)
 SELECT
     p.nombre AS plato,
     p.categoria,
     p.precio_venta,
-    MAX(po.fecha_fin) AS fin_de_la_prueba,
-    MAX(TIMESTAMPDIFF(DAY, po.fecha_inicio, po.fecha_fin)) AS dias_de_prueba
+    pv.fecha_fin AS fin_de_la_prueba,
+    TIMESTAMPDIFF(DAY, pv.fecha_inicio, pv.fecha_fin) AS dias_de_prueba
 FROM platos p
-JOIN periodos_oferta po ON po.id_plato = p.id_plato AND po.tipo = 'SUGERENCIA_CHEF'
-    AND po.fecha_fin <= @ahora AND po.fecha_fin >= po.fecha_inicio + INTERVAL 14 DAY
+JOIN pruebas_validas pv ON pv.id_plato = p.id_plato AND pv.rn = 1
 WHERE p.estado = 'ACTIVO' AND p.precio_venta IS NOT NULL
     AND NOT EXISTS (SELECT 1 FROM periodos_oferta c WHERE c.id_plato = p.id_plato AND c.tipo = 'CARTA_PERMANENTE')
-GROUP BY p.id_plato, p.nombre, p.categoria, p.precio_venta
 ORDER BY fin_de_la_prueba, p.nombre;
 
 -- Diagnósticos C-23 a C-27: comprueban reglas que las claves y los CHECK no garantizan.
