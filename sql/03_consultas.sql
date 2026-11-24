@@ -18,6 +18,9 @@ SET @ahora = '2026-11-15 12:00:00';
 SET @horas_aviso_caducidad = 48;
 SET @porcentaje_aviso_precio = 10;
 
+-- Consultas sencillas
+-- Consultas elaboradas por el equipo para listar datos y obtener resúmenes básicos.
+
 -- Acceso: cuentas, roles y permisos efectivos.
 -- C-01. Cuentas de usuario con su rol y cuántos permisos reciben por el rol y cuántos a título individual (RF-01, RI-01, RC-10).
 -- Subconsultas escalares correlacionadas. La contraseña protegida no se consulta (RNF-02).
@@ -33,31 +36,8 @@ FROM usuarios u
 JOIN roles r ON r.id_rol = u.id_rol
 ORDER BY FIELD(r.nombre, 'ADMINISTRADOR', 'ENCARGADO', 'EMPLEADO'), u.nombre;
 
--- C-02. Concesiones registradas para cada usuario activo: por rol o individuales, con su origen (RC-10, RNF-01).
--- No representa excepciones de la política efectiva, como el acceso general del administrador.
--- UNION ALL de las dos vías y agrupación, para que un permiso concedido por ambas aparezca una sola vez.
-SELECT
-    u.nombre AS usuario,
-    r.nombre AS rol,
-    p.nombre AS permiso,
-    CASE WHEN MIN(c.origen) <> MAX(c.origen) THEN 'ROL Y ADICIONAL' ELSE MIN(c.origen) END AS origen
-FROM (
-    SELECT us.id_usuario, rp.id_permiso, 'ROL' AS origen
-    FROM usuarios us
-    JOIN roles_permisos rp ON rp.id_rol = us.id_rol
-    UNION ALL
-    SELECT pa.id_usuario, pa.id_permiso, 'ADICIONAL'
-    FROM permisos_adicionales_usuario pa
-) c
-JOIN usuarios u ON u.id_usuario = c.id_usuario
-JOIN roles r ON r.id_rol = u.id_rol
-JOIN permisos p ON p.id_permiso = c.id_permiso
-WHERE u.estado = 'ACTIVO'
-GROUP BY u.id_usuario, u.nombre, r.nombre, p.id_permiso, p.nombre
-ORDER BY u.nombre, p.nombre;
-
 -- Compras: proveedores, comparación e histórico de precios.
--- C-03. Proveedores con el número de ingredientes que suministran ahora y cuántos de sus precios se usan para costear (RF-02, RI-02).
+-- C-02. Proveedores con el número de ingredientes que suministran ahora y cuántos de sus precios se usan para costear (RF-02, RI-02).
 -- La vigencia se filtra en el ON del LEFT JOIN para conservar a los proveedores sin precios vigentes.
 SELECT
     pr.nombre AS proveedor,
@@ -81,7 +61,179 @@ GROUP BY
     pr.forma_pago
 ORDER BY pr.estado, ingredientes_con_precio_vigente DESC, pr.nombre;
 
--- C-04. Comparación de proveedores: precios vigentes de cada ingrediente activo, del más barato al más caro (RF-13, RI-04, RC-05).
+-- Recetas: composición, escandallo y rentabilidad.
+-- C-03. Composición directa de cada receta: sus líneas, de ingrediente o de subreceta, y el plato al que pertenece si lo tiene (RF-06, RI-06).
+-- La clave ajena exclusiva de cada línea se resuelve con dos LEFT JOIN y COALESCE.
+SELECT
+    r.nombre AS receta,
+    p.nombre AS plato,
+    r.cantidad_rendimiento,
+    r.unidad_rendimiento,
+    CASE WHEN cr.id_ingrediente IS NOT NULL THEN 'INGREDIENTE' ELSE 'SUBRECETA' END AS tipo_componente,
+    COALESCE(i.nombre, sr.nombre) AS componente,
+    cr.cantidad,
+    cr.unidad_medida
+FROM recetas r
+JOIN componentes_receta cr ON cr.id_receta = r.id_receta
+LEFT JOIN platos p ON p.id_receta = r.id_receta
+LEFT JOIN ingredientes i ON i.id_ingrediente = cr.id_ingrediente
+LEFT JOIN recetas sr ON sr.id_receta = cr.id_receta_componente
+ORDER BY r.nombre, tipo_componente, componente;
+
+-- C-04. Recetas que actúan como subreceta: en cuántas recetas se utilizan y si además son la receta de un plato (RI-06).
+SELECT
+    sr.nombre AS subreceta,
+    sr.estado,
+    p.nombre AS plato_propio,
+    COUNT(*) AS recetas_que_la_usan,
+    GROUP_CONCAT(r.nombre ORDER BY r.nombre SEPARATOR ', ') AS utilizada_en
+FROM componentes_receta cr
+JOIN recetas sr ON sr.id_receta = cr.id_receta_componente
+JOIN recetas r ON r.id_receta = cr.id_receta
+LEFT JOIN platos p ON p.id_receta = sr.id_receta
+GROUP BY sr.id_receta, sr.nombre, sr.estado, p.nombre
+ORDER BY recetas_que_la_usan DESC, sr.nombre;
+
+-- Inventario: saldos, existencias, movimientos y avisos.
+-- C-05. Saldo de cada lote con existencias: entradas menos salidas más ajustes con su signo (RI-07, RF-03, RC-13).
+-- Agregación condicional con GROUP BY y HAVING. Se ordena para consumir antes lo que antes caduca.
+SELECT
+    l.identificador_lote,
+    i.nombre AS ingrediente,
+    l.ubicacion_almacen,
+    l.fecha_entrada,
+    l.fecha_caducidad,
+    l.fresco,
+    l.apto_para_consumo,
+    SUM(CASE WHEN m.tipo = 'SALIDA' THEN -m.cantidad ELSE m.cantidad END) AS saldo,
+    i.unidad_medida
+FROM lotes l
+JOIN ingredientes i ON i.id_ingrediente = l.id_ingrediente
+JOIN movimientos_stock m ON m.id_lote = l.id_lote
+WHERE m.fecha_movimiento <= @ahora
+GROUP BY
+    l.id_lote,
+    l.identificador_lote,
+    i.nombre,
+    l.ubicacion_almacen,
+    l.fecha_entrada,
+    l.fecha_caducidad,
+    l.fresco,
+    l.apto_para_consumo,
+    i.unidad_medida
+HAVING saldo > 0
+ORDER BY i.nombre, l.fecha_caducidad IS NULL, l.fecha_caducidad, l.fecha_entrada;
+
+-- C-06. Existencias de cada ingrediente activo: cantidad total disponible, lotes con existencias y la caducidad más temprana
+-- entre ellos (RI-03, RF-03). LEFT JOIN con una tabla derivada, para incluir también los ingredientes sin existencias.
+SELECT
+    i.nombre AS ingrediente,
+    i.categoria,
+    COALESCE(SUM(s.saldo), 0) AS cantidad_total_disponible,
+    i.unidad_medida,
+    COUNT(CASE WHEN s.saldo > 0 THEN 1 END) AS lotes_con_existencias,
+    MIN(CASE WHEN s.saldo > 0 THEN s.fecha_caducidad END) AS primera_caducidad
+FROM ingredientes i
+LEFT JOIN (
+    SELECT
+        l.id_lote,
+        l.id_ingrediente,
+        l.fecha_caducidad,
+        SUM(CASE WHEN m.tipo = 'SALIDA' THEN -m.cantidad ELSE m.cantidad END) AS saldo
+    FROM lotes l
+    JOIN movimientos_stock m ON m.id_lote = l.id_lote
+    WHERE m.fecha_movimiento <= @ahora
+    GROUP BY l.id_lote, l.id_ingrediente, l.fecha_caducidad
+) s ON s.id_ingrediente = i.id_ingrediente
+WHERE i.estado = 'ACTIVO'
+GROUP BY i.id_ingrediente, i.nombre, i.categoria, i.unidad_medida
+ORDER BY i.categoria, i.nombre;
+
+-- Mermas: detalle y análisis de las pérdidas.
+-- C-07. Detalle de las mermas con el elemento afectado, sea un lote o un plato (RF-10, RI-09, RC-14).
+SELECT
+    me.fecha_merma,
+    CASE WHEN me.id_lote IS NOT NULL THEN 'LOTE' ELSE 'PLATO' END AS elemento,
+    COALESCE(CONCAT(i.nombre, ' (', l.identificador_lote, ')'), p.nombre) AS afectado,
+    me.cantidad_desperdiciada,
+    COALESCE(i.unidad_medida, r.unidad_rendimiento) AS unidad,
+    me.motivo,
+    me.detalle_motivo,
+    me.coste_perdida
+FROM mermas me
+LEFT JOIN lotes l ON l.id_lote = me.id_lote
+LEFT JOIN ingredientes i ON i.id_ingrediente = l.id_ingrediente
+LEFT JOIN platos p ON p.id_plato = me.id_plato
+LEFT JOIN recetas r ON r.id_receta = p.id_receta
+ORDER BY me.fecha_merma DESC, me.id_merma DESC;
+
+-- C-08. Pérdidas por motivo: mermas de lote y de plato, cuántas están sin valorar y su peso en el coste conocido (RF-10, RI-09).
+-- El coste desconocido no se cuenta como cero. Subconsulta escalar para el total.
+SELECT
+    me.motivo,
+    COUNT(*) AS mermas,
+    COUNT(me.id_lote) AS de_lote,
+    COUNT(me.id_plato) AS de_plato,
+    COUNT(*) - COUNT(me.coste_perdida) AS sin_valorar,
+    SUM(me.coste_perdida) AS coste_conocido,
+    ROUND(100 * SUM(me.coste_perdida) / (SELECT NULLIF(SUM(coste_perdida), 0) FROM mermas), 2) AS porcentaje_del_coste
+FROM mermas me
+GROUP BY me.motivo
+ORDER BY coste_conocido DESC, me.motivo;
+
+-- Oferta: periodos y autorizaciones.
+-- C-09. Historial de oferta de cada plato: periodos, situación, días ofrecido y, en la carta permanente, la autorización con el
+-- margen que se evaluó (RI-10, RN-02, RC-09, RC-16). El periodo incluye su inicio y excluye su fin.
+SELECT
+    p.nombre AS plato,
+    po.tipo,
+    po.fecha_inicio,
+    po.fecha_fin,
+    CASE
+        WHEN po.fecha_inicio > @ahora THEN 'FUTURO'
+        WHEN po.fecha_fin <= @ahora THEN 'FINALIZADO'
+        ELSE 'VIGENTE'
+    END AS situacion,
+    GREATEST(TIMESTAMPDIFF(DAY, po.fecha_inicio, CASE WHEN po.fecha_fin <= @ahora THEN po.fecha_fin ELSE @ahora END), 0) AS dias_ofrecido,
+    u.nombre AS autorizado_por,
+    a.fecha_autorizacion,
+    a.coste_evaluado,
+    a.precio_venta_evaluado,
+    ROUND(100 * (a.precio_venta_evaluado - a.coste_evaluado) / a.precio_venta_evaluado, 2) AS porcentaje_margen_evaluado
+FROM periodos_oferta po
+JOIN platos p ON p.id_plato = po.id_plato
+LEFT JOIN autorizaciones_carta a ON a.id_periodo_oferta = po.id_periodo_oferta
+LEFT JOIN usuarios u ON u.id_usuario = a.id_emisor
+ORDER BY p.nombre, po.fecha_inicio;
+
+-- Consultas complejas
+-- Consultas elaboradas por LLMs que el equipo decidió incorporar por su utilidad
+-- para el análisis y la comprobación de los datos.
+
+-- C-10. Concesiones registradas para cada usuario activo: por rol o individuales, con su origen (RC-10, RNF-01).
+-- No representa excepciones de la política efectiva, como el acceso general del administrador.
+-- UNION ALL de las dos vías y agrupación, para que un permiso concedido por ambas aparezca una sola vez.
+SELECT
+    u.nombre AS usuario,
+    r.nombre AS rol,
+    p.nombre AS permiso,
+    CASE WHEN MIN(c.origen) <> MAX(c.origen) THEN 'ROL Y ADICIONAL' ELSE MIN(c.origen) END AS origen
+FROM (
+    SELECT us.id_usuario, rp.id_permiso, 'ROL' AS origen
+    FROM usuarios us
+    JOIN roles_permisos rp ON rp.id_rol = us.id_rol
+    UNION ALL
+    SELECT pa.id_usuario, pa.id_permiso, 'ADICIONAL'
+    FROM permisos_adicionales_usuario pa
+) c
+JOIN usuarios u ON u.id_usuario = c.id_usuario
+JOIN roles r ON r.id_rol = u.id_rol
+JOIN permisos p ON p.id_permiso = c.id_permiso
+WHERE u.estado = 'ACTIVO'
+GROUP BY u.id_usuario, u.nombre, r.nombre, p.id_permiso, p.nombre
+ORDER BY u.nombre, p.nombre;
+
+-- C-11. Comparación de proveedores: precios vigentes de cada ingrediente activo, del más barato al más caro (RF-13, RI-04, RC-05).
 -- Tabla derivada y funciones de ventana RANK y MIN. Para compararlos, cada precio se convierte a la unidad del ingrediente (RC-15).
 SELECT
     t.ingrediente,
@@ -113,7 +265,7 @@ FROM (
 ) t
 ORDER BY t.ingrediente, posicion, t.proveedor;
 
--- C-05. Histórico de precios de cada ingrediente y proveedor, con su situación y la variación respecto al precio anterior (RF-04, RI-04, RC-04).
+-- C-12. Histórico de precios de cada ingrediente y proveedor, con su situación y la variación respecto al precio anterior (RF-04, RI-04, RC-04).
 -- Función de ventana LAG. La variación se calcula sobre el precio comparable, de modo que admite un cambio de unidad entre dos vigencias.
 SELECT
     i.nombre AS ingrediente,
@@ -137,7 +289,7 @@ LEFT JOIN unidades_medida ui ON ui.codigo = i.unidad_medida AND ui.magnitud = up
 WINDOW w AS (PARTITION BY pc.id_ingrediente, pc.id_proveedor ORDER BY pc.fecha_inicio_vigencia)
 ORDER BY i.nombre, pr.nombre, pc.fecha_inicio_vigencia;
 
--- C-06. Avisos de sobrecoste: ingredientes cuyo precio de costeo ha subido al menos @porcentaje_aviso_precio % respecto al anterior
+-- C-13. Avisos de sobrecoste: ingredientes cuyo precio de costeo ha subido al menos @porcentaje_aviso_precio % respecto al anterior
 -- del mismo proveedor, con los platos activos afectados (RF-11, RC-06). La selección de precios no se versiona
 -- (docs/06_modelo_tecnologico.md, sección 6.3): se compara el precio seleccionado actualmente con el anterior de su proveedor.
 -- CTE recursiva «uso»: ingredientes que utiliza cada receta, directamente o a través de sus subrecetas.
@@ -193,42 +345,9 @@ GROUP BY
     i.unidad_medida
 ORDER BY subida_pct DESC, i.nombre;
 
--- Recetas: composición, escandallo y rentabilidad.
--- C-07. Composición directa de cada receta: sus líneas, de ingrediente o de subreceta, y el plato al que pertenece si lo tiene (RF-06, RI-06).
--- La clave ajena exclusiva de cada línea se resuelve con dos LEFT JOIN y COALESCE.
-SELECT
-    r.nombre AS receta,
-    p.nombre AS plato,
-    r.cantidad_rendimiento,
-    r.unidad_rendimiento,
-    CASE WHEN cr.id_ingrediente IS NOT NULL THEN 'INGREDIENTE' ELSE 'SUBRECETA' END AS tipo_componente,
-    COALESCE(i.nombre, sr.nombre) AS componente,
-    cr.cantidad,
-    cr.unidad_medida
-FROM recetas r
-JOIN componentes_receta cr ON cr.id_receta = r.id_receta
-LEFT JOIN platos p ON p.id_receta = r.id_receta
-LEFT JOIN ingredientes i ON i.id_ingrediente = cr.id_ingrediente
-LEFT JOIN recetas sr ON sr.id_receta = cr.id_receta_componente
-ORDER BY r.nombre, tipo_componente, componente;
-
--- C-08. Recetas que actúan como subreceta: en cuántas recetas se utilizan y si además son la receta de un plato (RI-06).
-SELECT
-    sr.nombre AS subreceta,
-    sr.estado,
-    p.nombre AS plato_propio,
-    COUNT(*) AS recetas_que_la_usan,
-    GROUP_CONCAT(r.nombre ORDER BY r.nombre SEPARATOR ', ') AS utilizada_en
-FROM componentes_receta cr
-JOIN recetas sr ON sr.id_receta = cr.id_receta_componente
-JOIN recetas r ON r.id_receta = cr.id_receta
-LEFT JOIN platos p ON p.id_receta = sr.id_receta
-GROUP BY sr.id_receta, sr.nombre, sr.estado, p.nombre
-ORDER BY recetas_que_la_usan DESC, sr.nombre;
-
--- C-09. Escandallo detallado de cada plato: ingredientes básicos, bajando por sus subrecetas, con la cantidad y el coste por ración
+-- C-14. Escandallo detallado de cada plato: ingredientes básicos, bajando por sus subrecetas, con la cantidad y el coste por ración
 -- (RF-07, RC-05, RC-15). CTE recursiva «despiece»: «veces» indica cuántas elaboraciones de cada receta hacen falta para una
--- elaboración de la receta raíz. Mismo límite de 64 enlaces, conversiones y criterio de NULL que C-10 y fn_coste_receta.
+-- elaboración de la receta raíz. Mismo límite de 64 enlaces, conversiones y criterio de NULL que C-15 y fn_coste_receta.
 -- Si una rama no puede costearse, no se muestran importes parciales como si el plato fuera calculable.
 WITH RECURSIVE despiece AS (
     SELECT
@@ -301,9 +420,9 @@ JOIN unidades_medida ur ON ur.codigo = r.unidad_rendimiento
 JOIN ingredientes i ON i.id_ingrediente = d.id_ingrediente
 ORDER BY p.nombre, d.nivel, e.nombre, i.nombre;
 
--- C-10. Coste de cada receta y rentabilidad de las que son plato: coste de elaboración, coste unitario (en un plato, su coste de
+-- C-15. Coste de cada receta y rentabilidad de las que son plato: coste de elaboración, coste unitario (en un plato, su coste de
 -- producción), margen bruto, porcentaje de margen y cumplimiento del objetivo (RF-07, RF-08, RI-06, RC-05 a RC-08, RC-11, RC-15).
--- Misma CTE «despiece» que en C-09. El coste queda en NULL si falta un precio seleccionado y vigente, hay unidades de distinta
+-- Misma CTE «despiece» que en C-14. El coste queda en NULL si falta un precio seleccionado y vigente, hay unidades de distinta
 -- magnitud, una receta no tiene componentes, existe un ciclo o se exceden 64 enlaces.
 -- Coste unitario a ocho decimales como en la función; cuatro para mostrarlo, no para calcular margen u objetivo.
 WITH RECURSIVE despiece AS (
@@ -385,7 +504,7 @@ SELECT
 FROM importes
 ORDER BY id_plato IS NULL, nombre;
 
--- C-11. Ingredientes que impiden costear platos, con el motivo y los platos afectados (RI-04, RC-05, RC-11).
+-- C-16. Ingredientes que impiden costear platos, con el motivo y los platos afectados (RI-04, RC-05, RC-11).
 -- EXISTS y NOT EXISTS correlacionados. La CTE «uso» alcanza también los ingredientes de las subrecetas.
 WITH RECURSIVE uso AS (
     SELECT id_receta AS id_receta_raiz, id_ingrediente, id_receta_componente
@@ -412,62 +531,7 @@ WHERE NOT EXISTS (SELECT 1 FROM precios_compra pc WHERE pc.id_ingrediente = i.id
 GROUP BY i.id_ingrediente, i.nombre
 ORDER BY platos_sin_coste DESC, i.nombre;
 
--- Inventario: saldos, existencias, movimientos y avisos.
--- C-12. Saldo de cada lote con existencias: entradas menos salidas más ajustes con su signo (RI-07, RF-03, RC-13).
--- Agregación condicional con GROUP BY y HAVING. Se ordena para consumir antes lo que antes caduca.
-SELECT
-    l.identificador_lote,
-    i.nombre AS ingrediente,
-    l.ubicacion_almacen,
-    l.fecha_entrada,
-    l.fecha_caducidad,
-    l.fresco,
-    l.apto_para_consumo,
-    SUM(CASE WHEN m.tipo = 'SALIDA' THEN -m.cantidad ELSE m.cantidad END) AS saldo,
-    i.unidad_medida
-FROM lotes l
-JOIN ingredientes i ON i.id_ingrediente = l.id_ingrediente
-JOIN movimientos_stock m ON m.id_lote = l.id_lote
-WHERE m.fecha_movimiento <= @ahora
-GROUP BY
-    l.id_lote,
-    l.identificador_lote,
-    i.nombre,
-    l.ubicacion_almacen,
-    l.fecha_entrada,
-    l.fecha_caducidad,
-    l.fresco,
-    l.apto_para_consumo,
-    i.unidad_medida
-HAVING saldo > 0
-ORDER BY i.nombre, l.fecha_caducidad IS NULL, l.fecha_caducidad, l.fecha_entrada;
-
--- C-13. Existencias de cada ingrediente activo: cantidad total disponible, lotes con existencias y la caducidad más temprana
--- entre ellos (RI-03, RF-03). LEFT JOIN con una tabla derivada, para incluir también los ingredientes sin existencias.
-SELECT
-    i.nombre AS ingrediente,
-    i.categoria,
-    COALESCE(SUM(s.saldo), 0) AS cantidad_total_disponible,
-    i.unidad_medida,
-    COUNT(CASE WHEN s.saldo > 0 THEN 1 END) AS lotes_con_existencias,
-    MIN(CASE WHEN s.saldo > 0 THEN s.fecha_caducidad END) AS primera_caducidad
-FROM ingredientes i
-LEFT JOIN (
-    SELECT
-        l.id_lote,
-        l.id_ingrediente,
-        l.fecha_caducidad,
-        SUM(CASE WHEN m.tipo = 'SALIDA' THEN -m.cantidad ELSE m.cantidad END) AS saldo
-    FROM lotes l
-    JOIN movimientos_stock m ON m.id_lote = l.id_lote
-    WHERE m.fecha_movimiento <= @ahora
-    GROUP BY l.id_lote, l.id_ingrediente, l.fecha_caducidad
-) s ON s.id_ingrediente = i.id_ingrediente
-WHERE i.estado = 'ACTIVO'
-GROUP BY i.id_ingrediente, i.nombre, i.categoria, i.unidad_medida
-ORDER BY i.categoria, i.nombre;
-
--- C-14. Extracto de movimientos de cada lote con el saldo tras cada uno (RF-09, RI-08, RC-13, RC-17).
+-- C-17. Extracto de movimientos de cada lote con el saldo tras cada uno (RF-09, RI-08, RC-13, RC-17).
 -- Suma acumulada con función de ventana, en el orden del índice ix_mov_lote_fecha.
 SELECT
     l.identificador_lote,
@@ -486,7 +550,7 @@ JOIN ingredientes i ON i.id_ingrediente = l.id_ingrediente
 LEFT JOIN platos p ON p.id_plato = m.id_plato_destino
 ORDER BY l.identificador_lote, m.fecha_movimiento, m.id_movimiento;
 
--- C-15. Avisos de caducidad: lotes con existencias a los que les quedan menos de @horas_aviso_caducidad horas, a qué pueden destinarse
+-- C-18. Avisos de caducidad: lotes con existencias a los que les quedan menos de @horas_aviso_caducidad horas, a qué pueden destinarse
 -- y qué platos del menú del día utilizan su ingrediente (RF-12, RN-01, RN-03).
 WITH RECURSIVE uso AS (
     SELECT id_receta AS id_receta_raiz, id_ingrediente, id_receta_componente
@@ -533,7 +597,7 @@ GROUP BY
          l.apto_para_consumo, l.fresco, l.fecha_entrada
 ORDER BY l.fecha_caducidad, l.identificador_lote;
 
--- C-16. Existencias que ya no pueden destinarse a elaborar platos y su valor al precio de costeo: lotes no aptos, caducados o
+-- C-19. Existencias que ya no pueden destinarse a elaborar platos y su valor al precio de costeo: lotes no aptos, caducados o
 -- frescos con 72 horas o más desde su recepción (RI-07, RN-01, RN-03). Son candidatas a registrarse como merma (RF-10, RC-14).
 SELECT
     l.identificador_lote,
@@ -565,39 +629,7 @@ WHERE l.apto_para_consumo = 0
     OR (l.fresco = 1 AND l.fecha_entrada + INTERVAL 72 HOUR <= @ahora)
 ORDER BY valor_estimado DESC, l.identificador_lote;
 
--- Mermas: detalle y análisis de las pérdidas.
--- C-17. Detalle de las mermas con el elemento afectado, sea un lote o un plato (RF-10, RI-09, RC-14).
-SELECT
-    me.fecha_merma,
-    CASE WHEN me.id_lote IS NOT NULL THEN 'LOTE' ELSE 'PLATO' END AS elemento,
-    COALESCE(CONCAT(i.nombre, ' (', l.identificador_lote, ')'), p.nombre) AS afectado,
-    me.cantidad_desperdiciada,
-    COALESCE(i.unidad_medida, r.unidad_rendimiento) AS unidad,
-    me.motivo,
-    me.detalle_motivo,
-    me.coste_perdida
-FROM mermas me
-LEFT JOIN lotes l ON l.id_lote = me.id_lote
-LEFT JOIN ingredientes i ON i.id_ingrediente = l.id_ingrediente
-LEFT JOIN platos p ON p.id_plato = me.id_plato
-LEFT JOIN recetas r ON r.id_receta = p.id_receta
-ORDER BY me.fecha_merma DESC, me.id_merma DESC;
-
--- C-18. Pérdidas por motivo: mermas de lote y de plato, cuántas están sin valorar y su peso en el coste conocido (RF-10, RI-09).
--- El coste desconocido no se cuenta como cero. Subconsulta escalar para el total.
-SELECT
-    me.motivo,
-    COUNT(*) AS mermas,
-    COUNT(me.id_lote) AS de_lote,
-    COUNT(me.id_plato) AS de_plato,
-    COUNT(*) - COUNT(me.coste_perdida) AS sin_valorar,
-    SUM(me.coste_perdida) AS coste_conocido,
-    ROUND(100 * SUM(me.coste_perdida) / (SELECT NULLIF(SUM(coste_perdida), 0) FROM mermas), 2) AS porcentaje_del_coste
-FROM mermas me
-GROUP BY me.motivo
-ORDER BY coste_conocido DESC, me.motivo;
-
--- C-19. Evolución mensual de las pérdidas, separando las de lotes y las de platos, con una fila de total (RF-10).
+-- C-20. Evolución mensual de las pérdidas, separando las de lotes y las de platos, con una fila de total (RF-10).
 -- GROUP BY con WITH ROLLUP, que no admite ORDER BY: los meses salen en orden ascendente y el total, al final.
 SELECT
     COALESCE(t.mes, 'TOTAL') AS mes,
@@ -611,7 +643,7 @@ FROM (
 ) t
 GROUP BY t.mes WITH ROLLUP;
 
--- C-20. Ingredientes con más pérdida: cantidad desperdiciada, porcentaje sobre lo recibido en sus lotes y coste (RF-10, RG-02).
+-- C-21. Ingredientes con más pérdida: cantidad desperdiciada, porcentaje sobre lo recibido en sus lotes y coste (RF-10, RG-02).
 SELECT
     i.nombre AS ingrediente,
     COUNT(*) AS mermas,
@@ -633,34 +665,9 @@ GROUP BY i.id_ingrediente, i.nombre, i.unidad_medida, e.cantidad_recibida
 ORDER BY coste_conocido DESC, cantidad_desperdiciada DESC, i.nombre
 LIMIT 10;
 
--- Oferta: periodos y autorizaciones.
--- C-21. Historial de oferta de cada plato: periodos, situación, días ofrecido y, en la carta permanente, la autorización con el
--- margen que se evaluó (RI-10, RN-02, RC-09, RC-16). El periodo incluye su inicio y excluye su fin.
-SELECT
-    p.nombre AS plato,
-    po.tipo,
-    po.fecha_inicio,
-    po.fecha_fin,
-    CASE
-        WHEN po.fecha_inicio > @ahora THEN 'FUTURO'
-        WHEN po.fecha_fin <= @ahora THEN 'FINALIZADO'
-        ELSE 'VIGENTE'
-    END AS situacion,
-    GREATEST(TIMESTAMPDIFF(DAY, po.fecha_inicio, CASE WHEN po.fecha_fin <= @ahora THEN po.fecha_fin ELSE @ahora END), 0) AS dias_ofrecido,
-    u.nombre AS autorizado_por,
-    a.fecha_autorizacion,
-    a.coste_evaluado,
-    a.precio_venta_evaluado,
-    ROUND(100 * (a.precio_venta_evaluado - a.coste_evaluado) / a.precio_venta_evaluado, 2) AS porcentaje_margen_evaluado
-FROM periodos_oferta po
-JOIN platos p ON p.id_plato = po.id_plato
-LEFT JOIN autorizaciones_carta a ON a.id_periodo_oferta = po.id_periodo_oferta
-LEFT JOIN usuarios u ON u.id_usuario = a.id_emisor
-ORDER BY p.nombre, po.fecha_inicio;
-
 -- C-22. Platos que ya pueden proponerse para la carta permanente: activos, con precio de venta, que nunca han estado en ella y han
 -- completado una prueba cerrada de al menos 14 días como sugerencia del chef (RN-02, RN-04). Se muestra la última prueba válida.
--- Antes de autorizar hay que comprobar en C-10 que su coste es calculable.
+-- Antes de autorizar hay que comprobar en C-15 que su coste es calculable.
 WITH pruebas_validas AS (
     SELECT po.id_plato, po.fecha_inicio, po.fecha_fin,
         ROW_NUMBER() OVER (PARTITION BY po.id_plato ORDER BY po.fecha_fin DESC, po.id_periodo_oferta DESC) AS rn
