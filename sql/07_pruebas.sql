@@ -600,14 +600,15 @@ BEGIN
             (ABS(fn_coste_plato(2, '2026-11-10') - 0.8416) < 0.000001),
             'Resultado esperado de la regla comprobada'
         );
-        -- Referencia SQL independiente para la pasta, a la misma fecha que C-10.
+        -- Referencia SQL independiente para la pasta, a la misma fecha que C-15.
+        -- Calcula el coste por ración sin ejecutar la consulta del archivo 03.
         CALL pp67_comprobar('Coste por racion: funcion y consulta de referencia a cuatro decimales', (
                 SELECT ROUND(fn_coste_plato(1, '2026-11-15 12:00:00'), 4) = ROUND((0.4 * MAX(CASE WHEN id_ingrediente = 5 THEN precio_compra END)
                         + 0.6 * (1.2 * MAX(CASE WHEN id_ingrediente = 1 THEN precio_compra END) + 0.2 * MAX(CASE WHEN id_ingrediente = 2 THEN precio_compra END)
                             + 0.05 * MAX(CASE WHEN id_ingrediente = 3 THEN precio_compra END) + 0.01 * MAX(CASE WHEN id_ingrediente = 4 THEN precio_compra END))) / 4, 4)
                 FROM precios_compra WHERE seleccionado_para_costeo = 1 AND fecha_inicio_vigencia <= '2026-11-15 12:00:00'
                 AND (fecha_fin_vigencia IS NULL OR fecha_fin_vigencia > '2026-11-15 12:00:00')
-            ), 'Mismas cantidades, vigencias y rendimiento que C-10');
+            ), 'Mismas cantidades, vigencias y rendimiento que C-15');
         CALL pp67_comprobar('Carta: costes del poblado coinciden con la evaluacion a su fecha', (SELECT COUNT(*) = 2 AND
                 SUM(COALESCE(a.coste_evaluado = ROUND(fn_coste_plato(p.id_plato, a.fecha_autorizacion), 2), 0)) = 2
                 FROM autorizaciones_carta a JOIN periodos_oferta p ON p.id_periodo_oferta = a.id_periodo_oferta), 'El importe historico se almacena a dos decimales');
@@ -804,6 +805,7 @@ BEGIN
             FALSE
         );
         -- Datos propios de la prueba, persistentes solo en esta base desechable.
+        -- Un plato ordinario y otro del menú del día permiten contrastar los límites de uso de los lotes.
         INSERT INTO recetas(id_receta, nombre, cantidad_rendimiento, unidad_rendimiento) VALUES
             (9001, '__pp67_receta_1', 1, 'racion'), (9002, '__pp67_receta_2', 1, 'racion');
         INSERT INTO componentes_receta(id_receta, cantidad, unidad_medida, id_ingrediente) VALUES
@@ -1593,6 +1595,7 @@ BEGIN
             'Regresion de integridad academica'
         );
         -- Datos inválidos deliberados dentro de una transacción que se revierte.
+        -- La entrada compensa la salida, pero antes queda un saldo negativo a la misma hora.
         START TRANSACTION;
         INSERT INTO movimientos_stock(id_lote, tipo, cantidad, fecha_movimiento, finalidad_salida)
         VALUES (9201, 'SALIDA', 10, '2026-11-01 07:00:00', 'OTRA'), (9201, 'ENTRADA', 10, '2026-11-01 07:00:00', NULL);
@@ -1602,6 +1605,7 @@ BEGIN
             'Regresion de integridad academica'
         );
         ROLLBACK;
+        -- Una sola cadena permite probar ambos límites empezando desde sus dos primeras recetas.
         START TRANSACTION;
         INSERT INTO recetas(id_receta, nombre, cantidad_rendimiento, unidad_rendimiento)
         SELECT 9300 + seq, CONCAT('__pp67_nivel_', seq), 1, 'racion' FROM seq_0_to_65;
