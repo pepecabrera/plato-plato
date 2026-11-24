@@ -267,7 +267,7 @@ Para cada relación se indican sus claves candidatas (CC) y dependencias funcion
 
 ### 5.3.3. Atributos derivados
 
-Los atributos derivados del modelo conceptual se calculan al consultar los datos, sin mantener copias del saldo, coste corriente o margen. El cálculo del coste usa la composición actual y la selección de precios actual, con la vigencia evaluada en la fecha de referencia; no reconstruye el escandallo de esa fecha (véase [§6.3, «Cálculo del coste»](06_modelo_tecnologico.md#cálculo-del-coste)).
+Los atributos derivados del modelo conceptual se calculan al consultar los datos, sin mantener copias del saldo, coste corriente o margen. El cálculo del coste usa la composición actual y la selección de precios actual, con la vigencia evaluada en la fecha de referencia; no reconstruye el escandallo de esa fecha (véase [§6.3, «Consultas a tablas en SQL»](06_modelo_tecnologico.md#63-script-de-consultas-a-tablas-en-sql)).
 
 **Tabla 5.6. Cálculo de los atributos derivados.**
 

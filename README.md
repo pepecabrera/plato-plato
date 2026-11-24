@@ -53,10 +53,10 @@ En cada par, la primera consulta debe funcionar y la segunda debe devolver `ERRO
 
 Ejecuta `sql/07_pruebas.sql` solo en una copia desechable: comprueba reglas y permisos de negocio definidos mediante usuarios, roles y concesiones, y algunas pruebas confirman escrituras. No sustituye las conexiones separadas de `08`.
 
-Para verificar que los datos de `02` pasan también con los triggers activos, usa **otra copia nueva** y ejecuta `01 → 04 → 05 → 02 → 03`. Para esa carga, el reloj de la sesión debe ser posterior a la última autorización del poblado (16/10/2026 a las 18:00). Los diagnósticos C-23 a C-27 deben devolver cero filas. Esta ruta no cambia el orden de instalación oficial. La [verificación de la entrega](docs/06_modelo_tecnologico.md#verificación-de-la-entrega) recoge los resultados observados en MariaDB 13.0.2.
+Para verificar que los datos de `02` pasan también con los triggers activos, usa **otra copia nueva** y ejecuta `01 → 04 → 05 → 02 → 03`. Para esa carga, el reloj de la sesión debe ser posterior a la última autorización del poblado (16/10/2026 a las 18:00). Los diagnósticos C-23 a C-27 deben devolver cero filas. Esta ruta no cambia el orden de instalación oficial.
 
 ## Documentación
 
 - [Descripción del problema](docs/01_descripcion_problema.md), [glosario](docs/02_glosario.md) y [requisitos](docs/03_requisitos.md).
 - [Modelo conceptual y escenarios](docs/04_modelo_conceptual.md) y [modelo relacional](docs/05_modelo_relacional.md).
-- [Modelo tecnológico](docs/06_modelo_tecnologico.md), con las rutas de [verificación](docs/06_modelo_tecnologico.md#verificación-de-la-entrega) y la [matriz de privilegios](docs/06_modelo_tecnologico.md#matriz-de-privilegios-de-08).
+- [Modelo tecnológico](docs/06_modelo_tecnologico.md), con un resumen de cada script SQL.
