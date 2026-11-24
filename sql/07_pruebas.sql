@@ -1,7 +1,7 @@
 -- Plato-Plató: pruebas de esquema y de negocio (apartado 6.7). MariaDB 10.6+.
 -- Archivo autónomo: no necesita Python ni archivos auxiliares.
 -- SOLO sobre una copia desechable con 01 y UNO de los poblados: 02 o 06.
--- Primera ejecución: sin 04/05, ejecuta 66 comprobaciones del esquema.
+-- Primera ejecución: sin 04/05, ejecuta 68 comprobaciones del esquema.
 -- Segunda ejecución: instalar 04 y 05 completos y ejecutar de nuevo;
 -- realiza 147 comprobaciones de negocio y tres entradas PENDIENTE; una cuarta si se omiten regresiones de 06 ya ejecutadas.
 -- Detecta el modo por la presencia de triggers. Rechaza instalaciones parciales.
@@ -116,7 +116,7 @@ BEGIN
     WHERE trigger_schema = DATABASE();
     IF v_triggers = 0 THEN
         -- Esquema y datos: ejecutar con 01 y uno de los poblados (02 o 06), sin triggers.
-        SELECT 'ESQUEMA: 66 comprobaciones; no hay triggers instalados' AS bloque;
+        SELECT 'ESQUEMA: 68 comprobaciones; no hay triggers instalados' AS bloque;
         -- Cada sentencia negativa comprueba el código exacto, no cualquier error.
         -- 4025: CHECK; 1062: duplicado; 1451/1452: integridad referencial; 1048: NOT NULL.
         CALL pp67_comprobar(
@@ -159,6 +159,20 @@ BEGIN
             (SELECT COUNT(*) = 8 FROM ingredientes),
             'Se esperan 8 filas del poblado original'
         );
+        START TRANSACTION;
+        INSERT INTO ingredientes (nombre, categoria) VALUES ('Prueba RI-03 sin unidad', 'Pruebas');
+        INSERT INTO ingredientes (nombre, categoria, unidad_medida) VALUES ('Prueba RI-03 con unidad', 'Pruebas', 'l');
+        CALL pp67_comprobar(
+            'RI-03: ingrediente sin unidad explicita',
+            (SELECT unidad_medida = 'kg' FROM ingredientes WHERE nombre = 'Prueba RI-03 sin unidad'),
+            'Al omitir la unidad se debe usar kg'
+        );
+        CALL pp67_comprobar(
+            'RI-03: ingrediente con unidad explicita',
+            (SELECT unidad_medida = 'l' FROM ingredientes WHERE nombre = 'Prueba RI-03 con unidad'),
+            'La unidad explicita debe prevalecer sobre el valor por defecto'
+        );
+        ROLLBACK;
         CALL pp67_comprobar(
             'Carga de precios_compra',
             (SELECT COUNT(*) = 10 FROM precios_compra),

@@ -87,7 +87,7 @@ CREATE TABLE ingredientes (
     nombre VARCHAR(100) NOT NULL UNIQUE,
     CHECK (CHAR_LENGTH(TRIM(nombre)) > 0),
     categoria VARCHAR(100) NOT NULL,
-    unidad_medida VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    unidad_medida VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'kg',
     FOREIGN KEY (unidad_medida) REFERENCES unidades_medida (codigo) ON DELETE RESTRICT ON UPDATE CASCADE,
     estado VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'ACTIVO',
     CHECK (estado IN ('ACTIVO', 'INACTIVO')),

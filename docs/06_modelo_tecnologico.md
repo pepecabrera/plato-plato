@@ -8,6 +8,7 @@ El archivo `sql/01_tablas.sql` crea una base nueva `plato_plato` y sus 17 tablas
 
 - Identificadores: INT UNSIGNED autogenerados; claves compuestas en las dos concesiones N:M.
 - Unidades: código ASCII binario de hasta 10 caracteres, magnitud y factor positivo DECIMAL(18,6). La unidad base de cada magnitud deberá fijarse en los datos iniciales.
+- Alta de ingredientes (RI-03): si se omite `ingredientes.unidad_medida`, se usa `kg`, que ambos poblados cargan en el catálogo antes de los ingredientes. Se puede indicar otra unidad del catálogo al dar de alta el ingrediente. La base de conversión de masa sigue siendo `g`; precios, componentes y rendimientos no tienen este valor por defecto.
 - Cantidades y rendimientos: DECIMAL(14,4); precios de compra: DECIMAL(14,4); precios de venta e importes históricos: DECIMAL(14,2). El redondeo económico final corresponde a las rutinas de cálculo.
 - Fechas: `DATETIME(6)` en hora local Europe/Madrid, sin almacenar la zona horaria. `DEFAULT CURRENT_TIMESTAMP` exige que la conexión tenga la hora local correcta; el script no configura la zona con nombre porque depende de las tablas horarias del servidor. Los plazos de RN-01 y RN-03 se calculan en hora local, no como tiempo real transcurrido al cruzar un cambio de hora. Si se necesitan horas reales, habría que migrar coherentemente a UTC.
 - Nombres únicos según el MR. La colación utf8mb4_unicode_ci compara sin distinguir mayúsculas; deben revisarse sus efectos sobre las denominaciones del catálogo.
@@ -351,11 +352,11 @@ El script selecciona el bloque de pruebas según la presencia de triggers:
 
 | Bloque | Preparación | Comprobaciones |
 |---|---|---:|
-| Esquema y poblado | 01 y uno de los poblados (02 o 06), sin 04/05. | 66 |
+| Esquema y poblado | 01 y uno de los poblados (02 o 06), sin 04/05. | 68 |
 | Funciones, triggers y procedimientos | 01, uno de los poblados y 04/05 completos. | 147 |
 | Regresiones del poblado por procedimientos | 06 instalado y sin los lotes auxiliares 9101 a 9103 de una pasada anterior. | 12 |
 
-El archivo define **225 comprobaciones (66 + 147 + 12)**, no todas en una misma pasada. Las marcas `PENDIENTE` no cuentan como comprobaciones aprobadas.
+El archivo define **227 comprobaciones (68 + 147 + 12)**, no todas en una misma pasada. Las marcas `PENDIENTE` no cuentan como comprobaciones aprobadas.
 
 Cuando está instalado `pob_registrar_movimiento`, se ejecutan las pruebas adicionales de salidas y ajustes retroactivos inválidos, movimientos retroactivos válidos, movimientos simultáneos, primera entrada y conservación de la transacción del llamador. Estas pruebas dejan datos auxiliares en la copia, por lo que solo se ejecutan la primera vez: si los lotes auxiliares 9101 a 9103 ya existen, se registra una entrada PENDIENTE en lugar de abortar.
 
@@ -399,8 +400,8 @@ Desde la raíz del repositorio, ejecutar los archivos de `sql/` con un cliente q
 
 | Ruta | Orden | Bloques de 07 |
 |---|---|---|
-| Pruebas con `INSERT` | `01 → 02 → 03 → 07 → 04 → 05 → 07` | 66 de esquema y después 147 de negocio |
-| Pruebas con procedimientos | `01 → 06 → 03 → 07 → 04 → 05 → 07` | 66 de esquema + 12 de movimientos; después 147 de negocio y aviso de que las 12 no se repiten |
+| Pruebas con `INSERT` | `01 → 02 → 03 → 07 → 04 → 05 → 07` | 68 de esquema y después 147 de negocio |
+| Pruebas con procedimientos | `01 → 06 → 03 → 07 → 04 → 05 → 07` | 68 de esquema + 12 de movimientos; después 147 de negocio y aviso de que las 12 no se repiten |
 | Carga de 02 con triggers activos | `01 → 04 → 05 → 02 → 03` | Sin 07; ejecutar `SOURCE` con `--abort-source-on-error` y comprobar C-23 a C-27. Usar una fecha de sesión posterior a la última autorización del poblado (16/10/2026 a las 18:00). No sustituye la instalación oficial. |
 | Demostración con cuentas | `01 → (02 o 06) → 04 → 05 → 08` | Sin 07; 03 es una consulta opcional de la cuenta instaladora, no un requisito de 08 |
 
