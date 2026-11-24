@@ -5,6 +5,8 @@ SET NAMES utf8mb4;
 
 DELIMITER $$
 
+-- Movimientos de stock: salidas para elaboración y protección del historial
+
 -- RN-01 y RN-03 se evalúan en la fecha de la salida, no en la fecha actual.
 -- Una salida por merma no es una elaboración: puede retirar un lote caducado.
 CREATE OR REPLACE TRIGGER trg_movimiento_bi_negocio
@@ -57,6 +59,8 @@ BEFORE DELETE ON movimientos_stock FOR EACH ROW
 BEGIN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Movimiento historico: registrar un ajuste, no eliminar';
 END$$
+
+-- Periodos de oferta: incorporación a carta, solapes e historial
 
 -- RN-04: solo la primera incorporación requiere la prueba, en un único periodo.
 -- La ausencia de solapes permite distinguir etapas reales de la oferta.
@@ -114,6 +118,8 @@ BEGIN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'RN-04: conservar el historial de oferta';
 END$$
 
+-- Autorizaciones de carta: permiso, valoración y protección del historial
+
 -- RN-02: exige un usuario activo con AUTORIZAR_CARTA y guarda la evaluación económica real.
 -- sp_incorporar_carta se encarga de crear la autorización junto al periodo de carta.
 CREATE OR REPLACE TRIGGER trg_autorizacion_bi_negocio
@@ -157,6 +163,8 @@ BEGIN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'RN-02: no se puede eliminar una autorizacion';
 END$$
 
+-- Mermas: protección del historial
+
 -- RC-09: las mermas son definitivas; en esta versión no se pueden corregir ni anular.
 CREATE OR REPLACE TRIGGER trg_merma_bu_historico
 BEFORE UPDATE ON mermas FOR EACH ROW
@@ -169,6 +177,8 @@ BEFORE DELETE ON mermas FOR EACH ROW
 BEGIN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Merma definitiva: no se permite eliminar';
 END$$
+
+-- Precios de compra: vigencia y unidades compatibles
 
 -- RC-04 y RC-15: el alta de precios comprueba vigencia y unidades con fn_validar_precio.
 CREATE OR REPLACE TRIGGER trg_precio_bi_negocio
@@ -192,6 +202,8 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = v_error;
     END IF;
 END$$
+
+-- Componentes de receta: alta y modificación
 
 -- RC-12 y RC-15 (componentes). Válida la magnitud de la línea y que no se cree un ciclo.
 CREATE OR REPLACE TRIGGER trg_componente_bi_negocio
@@ -220,6 +232,8 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = v_error;
     END IF;
 END$$
+
+-- Unidades, ingredientes y recetas: protección de las medidas en uso
 
 -- RC-15: una unidad en uso no puede cambiar de código, magnitud ni factor, porque
 -- reinterpretaría cantidades y precios ya registrados.
@@ -265,6 +279,8 @@ BEGIN
     END IF;
 END$$
 
+-- Mermas: coherencia con la salida de stock
+
 -- RC-14: la FK garantiza existencia, este trigger comprueba el hecho enlazado.
 -- La asociación única ya está garantizada por UNIQUE(id_movimiento).
 CREATE OR REPLACE TRIGGER trg_merma_bi_coherencia
@@ -278,6 +294,8 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'RC-14: la merma no coincide con su salida';
     END IF;
 END$$
+
+-- Platos: rendimiento de la receta en raciones
 
 -- RC-15: el rendimiento de la receta principal debe estar en raciones para calcular el coste por ración.
 CREATE OR REPLACE TRIGGER trg_plato_bi_raciones
@@ -299,6 +317,8 @@ BEGIN
     END IF;
 END$$
 
+-- Componentes de receta: borrado del último componente
+
 -- No bloquea el borrado de una receta completa por CASCADE: protege recetas conservadas.
 -- Alcance secuencial: no se certifica concurrencia entre conexiones.
 CREATE OR REPLACE TRIGGER trg_componente_bd_minimo
@@ -309,6 +329,8 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'RC-12: no se puede dejar una receta sin componentes';
     END IF;
 END$$
+
+-- Lotes: protección de los datos de recepción
 
 -- Protección mínima del lote: no reinterpreta movimientos ya registrados.
 CREATE OR REPLACE TRIGGER trg_lote_bu_historico

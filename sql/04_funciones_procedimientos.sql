@@ -5,6 +5,8 @@ SET NAMES utf8mb4;
 
 DELIMITER $$
 
+-- Funciones de cálculo: conversiones, costes, márgenes y existencias
+
 -- NULL significa unidad inexistente o conversión entre magnitudes distintas.
 CREATE OR REPLACE FUNCTION fn_convertir(
     p_cantidad DECIMAL(30, 8),
@@ -92,6 +94,8 @@ BEGIN
             FROM movimientos_stock WHERE id_lote = p_lote AND fecha_movimiento <= p_fecha);
 END$$
 
+-- Funciones de comprobación de permisos
+
 -- La aplicación debe autenticar al usuario: recibir un ID no demuestra identidad.
 CREATE OR REPLACE FUNCTION fn_tiene_permiso(p_usuario INT UNSIGNED, p_permiso VARCHAR(100))
 RETURNS BOOLEAN READS SQL DATA
@@ -116,6 +120,8 @@ BEGIN
     );
 END$$
 
+-- Procedimientos de consulta
+
 -- La fecha filtra la vigencia del precio seleccionado ACTUALMENTE; se usa la receta actual.
 -- No reconstruye versiones históricas de recetas ni selecciones de precios.
 CREATE OR REPLACE PROCEDURE sp_consultar_escandallo(
@@ -136,6 +142,8 @@ BEGIN
            ROUND(100 * fn_margen_plato(id_plato, p_fecha) / precio_venta, 2) porcentaje_margen
     FROM platos WHERE id_plato = p_plato;
 END$$
+
+-- Procedimientos de escritura: inventario, oferta, mermas y recetas
 
 -- Procedimientos de escritura: llamadas autónomas, nunca dentro de otra transacción.
 -- READ COMMITTED + bloqueo del lote serializan los movimientos de ese lote.
@@ -438,6 +446,8 @@ BEGIN
     END;
     SELECT v_receta AS id_receta;
 END$$
+
+-- Funciones auxiliares de validación para triggers
 
 -- RC-04 y RC-15 (precios). Devuelve NULL si el precio es válido; si no, el mensaje de error.
 -- p_excluir es el precio que se está modificando, para no compararlo consigo mismo.
