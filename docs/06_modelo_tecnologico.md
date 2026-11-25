@@ -24,14 +24,16 @@ La base de datos usa MariaDB 10.6 o superior con InnoDB. Las cuentas operativas 
 
 ## 6.6. Script de poblado de la base de datos mediante procedimientos (opcional)
 
-[`06_poblado_procedimientos.sql`](../sql/06_poblado_procedimientos.sql) es una alternativa a `02_datos.sql`. Carga los mismos datos de demostración mediante procedimientos con validaciones de carga; no sustituye a los flujos operativos de `04` y `05`.
+[`06_poblado_procedimientos.sql`](../sql/06_poblado_procedimientos.sql) es una alternativa a `02_datos.sql`. Carga los mismos datos de demostración mediante procedimientos con validaciones de carga; no sustituye a los flujos operativos de `04` y `05`. Sus regresiones de movimientos se ejecutan solo en la pasada de negocio de `07` cuando se ha elegido este poblado.
 
 ## 6.7. Script de creación de pruebas y llamadas
 
-[`07_pruebas.sql`](../sql/07_pruebas.sql) comprueba que las restricciones y reglas de negocio aceptan los casos válidos y rechazan los incorrectos. Se ejecuta en una copia desechable de la base de datos.
+[`07_pruebas.sql`](../sql/07_pruebas.sql) es una suite secuencial con [dos pasadas](../README.md#dos-pasadas-de-07) sobre una copia desechable. La primera comprueba el esquema con `01` y un solo poblado (`02` o `06`), sin `04` ni `05`. La segunda, tras instalar `04` y `05` completos, comprueba las reglas y los permisos de negocio. Si se usó `06`, también comprueba el rechazo de una segunda carga y ejecuta las 12 regresiones de movimientos. El resumen esperado contiene solo `OK`. Las escrituras confirmadas se conservan, así que cada repetición empieza en una copia nueva.
 
-[`verificar_consultas.py`](../scripts/verificar_consultas.py) compara las salidas de `03` con los dos poblados y comprueba en una copia aparte que los diagnósticos detectan las anomalías sin contaminar los datos de demostración.
+La [verificación adicional del README](../README.md#verificación-adicional) resume los casos de concurrencia para las rutinas de stock y oferta; no cubre escrituras directas. Para comparar los poblados, ejecuta `03` en copias limpias con el mismo corte.
 
-## 6.8. Cuentas y privilegios de MariaDB
+## 6.8. Cuentas y privilegios de MariaDB (opcional)
 
 [`08_cuentas_privilegios.sql`](../sql/08_cuentas_privilegios.sql) crea las cuentas de demostración de administrador, encargado y empleado. Define qué vistas puede consultar y qué procedimientos puede ejecutar cada cuenta, sin darles acceso directo a las tablas.
+
+Los comentarios al inicio de `08` explican cómo activar las cuentas y comprobar los privilegios desde conexiones separadas. Estos privilegios de MariaDB son distintos de los permisos de negocio que comprueba `07`.

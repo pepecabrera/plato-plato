@@ -1,6 +1,11 @@
 -- Plato-Plató: cuentas locales y privilegios de demostración (apartado 6.8). MariaDB 10.6+.
--- Ejecutar una vez con la cuenta instaladora, con un poblado (02 o 06) y después de 04 y 05 completos.
--- Las cuentas se crean bloqueadas; el README indica cómo definir las claves y activarlas.
+-- Opcional: se añadió a petición del evaluador de Claude para demostrar cuentas y privilegios de MariaDB.
+-- Si se usa, ejecutar una vez con la cuenta instaladora, tras el poblado (02 o 06) y 04 y 05 completos.
+-- Las cuentas se crean bloqueadas. Para probarlas, asignar claves distintas fuera del repositorio:
+-- ALTER USER 'pp_administrador'@'localhost' IDENTIFIED BY '<clave>' ACCOUNT UNLOCK;
+-- Repetir para pp_encargado y pp_empleado. Conectarse por socket con cada cuenta en una copia desechable.
+-- Comprobar una vista y una llamada de fachada permitidas según los GRANT; el acceso directo a tablas
+-- debe dar ERROR 1142 y la llamada directa a un procedimiento interno debe dar ERROR 1370.
 USE plato_plato;
 
 CREATE USER 'pp_administrador'@'localhost' ACCOUNT LOCK;

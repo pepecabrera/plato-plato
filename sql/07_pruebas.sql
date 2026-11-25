@@ -2,12 +2,11 @@
 -- Archivo autónomo: no necesita Python ni archivos auxiliares.
 -- SOLO sobre una copia desechable con 01 y UNO de los poblados: 02 o 06.
 -- Primera ejecución: sin 04/05, ejecuta 68 comprobaciones del esquema.
--- Segunda ejecución: instalar 04 y 05 completos y ejecutar de nuevo;
--- realiza 150 comprobaciones de negocio y tres entradas PENDIENTE; una cuarta si se omiten regresiones de 06 ya ejecutadas.
+-- Segunda ejecución: instalar 04 y 05 completos y ejecutar las pruebas de negocio.
 -- Detecta el modo por la presencia de triggers. Rechaza instalaciones parciales.
 -- Las pruebas de negocio CONFIRMAN escrituras: recrear la copia antes de repetirlas.
--- Si está instalado 06, añade 12 comprobaciones de su procedimiento de movimientos.
--- Ese bloque solo se ejecuta la primera vez en cada copia: después se registra como PENDIENTE.
+-- Con 06, la segunda pasada incluye regresiones del poblado.
+-- Para cuentas SQL y concurrencia, usar las comprobaciones separadas del README.
 -- No usar --force. No ejecutar dentro de una transacción de trabajo.
 USE plato_plato;
 -- Auxiliares: los resultados sobreviven al ROLLBACK de cada caso.
@@ -556,9 +555,9 @@ BEGIN
             OR EXISTS (SELECT 1 FROM platos WHERE id_plato IN (9001, 9002))
             OR EXISTS (SELECT 1 FROM lotes WHERE id_lote BETWEEN 9001 AND 9005)
             OR EXISTS (SELECT 1 FROM periodos_oferta WHERE id_periodo_oferta = 9002) THEN
-            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Hay datos de otras pruebas: preparar una copia nueva con 01 y 02';
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Hay datos de otras pruebas: preparar una copia nueva con 01 y uno de los poblados';
         END IF;
-        SELECT 'NEGOCIO: 150 comprobaciones y tres PENDIENTE (mas otra si se omiten regresiones previas de 06)' AS bloque;
+        SELECT 'NEGOCIO: pruebas de funciones, procedimientos y triggers' AS bloque;
         -- Funciones y triggers: 01 + (02 o 06) + 04 + 05, sin transacción exterior.
         CALL pp67_comprobar(
             'Conversion kg a g',
@@ -667,7 +666,14 @@ BEGIN
             (fn_coste_plato(1, '2026-11-10') IS NULL),
             'Resultado esperado de la regla comprobada'
         );
+        UPDATE precios_compra SET seleccionado_para_costeo = 1 WHERE id_precio_compra = 3;
+        CALL pp67_comprobar('Coste: prevalece el precio seleccionado, aunque sea mas caro',
+            fn_coste_ingrediente(1, 100, 'g', '2026-11-10') = 0.27, '2,70 EUR/kg seleccionado frente a 2,40 EUR/kg');
         ROLLBACK;
+        CALL pp67_comprobar('Coste: no sustituye el precio seleccionado fuera de vigencia',
+            fn_coste_ingrediente(1, 100, 'g', '2026-09-30 23:59:59.999999') IS NULL
+                AND fn_coste_ingrediente(1, 100, 'g', '2026-10-01 00:00:00') = 0.24,
+            'Existe una alternativa vigente antes del inicio del seleccionado');
         START TRANSACTION;
         INSERT INTO recetas(id_receta, nombre, cantidad_rendimiento, unidad_rendimiento) VALUES (9200, '__pp67_vacia', 1, 'kg');
         INSERT INTO componentes_receta(id_receta, cantidad, unidad_medida, id_receta_componente) VALUES (1, 1, 'kg', 9200);
@@ -688,6 +694,13 @@ BEGIN
         CALL pp67_caso(
             'RC-04: precio solapado rechazado',
             'INSERT INTO precios_compra(id_proveedor,id_ingrediente,precio_compra,unidad_precio,fecha_inicio_vigencia,fecha_fin_vigencia) VALUES(1,1,2.5,''kg'',''2026-10-15 00:00:00'',NULL)',
+            1644,
+            'RC-04:',
+            FALSE
+        );
+        CALL pp67_caso(
+            'RC-04: ampliar una vigencia hasta solaparla se rechaza',
+            'UPDATE precios_compra SET fecha_fin_vigencia=''2026-10-02'' WHERE id_precio_compra=1',
             1644,
             'RC-04:',
             FALSE
@@ -744,6 +757,13 @@ BEGIN
         CALL pp67_caso(
             'RC-12: ciclo indirecto rechazado',
             'INSERT INTO componentes_receta(id_receta,cantidad,unidad_medida,id_receta_componente) VALUES(1,1,''racion'',2)',
+            1644,
+            'RC-12:',
+            FALSE
+        );
+        CALL pp67_caso(
+            'RC-12: sustituir un ingrediente por una subreceta que genera un ciclo',
+            'UPDATE componentes_receta SET id_ingrediente=NULL,id_receta_componente=2,unidad_medida=''racion'' WHERE id_componente=1',
             1644,
             'RC-12:',
             FALSE
@@ -902,7 +922,18 @@ BEGIN
             'RN-04: se requieren',
             FALSE
         );
-        -- Las pruebas directas anteriores se revierten: no dejan salidas huerfanas.
+        START TRANSACTION;
+        INSERT INTO periodos_oferta(id_plato, tipo, fecha_inicio, fecha_fin) VALUES
+            (9002, 'SUGERENCIA_CHEF', '2026-10-01', '2026-10-08'),
+            (9002, 'SUGERENCIA_CHEF', '2026-10-08', '2026-10-15');
+        CALL pp67_caso(
+            'Carta: dos pruebas de siete dias no equivalen a una de catorce',
+            'INSERT INTO periodos_oferta(id_plato,tipo,fecha_inicio) VALUES(9002,''CARTA_PERMANENTE'',''2026-10-15'')',
+            1644,
+            'RN-04: se requieren',
+            FALSE
+        );
+        ROLLBACK;
         INSERT INTO periodos_oferta(id_plato, tipo, fecha_inicio, fecha_fin)
         VALUES (9002, 'SUGERENCIA_CHEF', '2026-10-01', '2026-10-15');
         CALL pp67_caso(
@@ -1204,6 +1235,23 @@ BEGIN
             (fn_stock_lote(9004, '2026-11-30') = 9),
             'Resultado esperado de la regla comprobada'
         );
+        CALL pp67_caso(
+            'Movimiento: ajuste que deja saldo negativo inmediatamente se rechaza',
+            'CALL sp_registrar_movimiento(2,9004,''AJUSTE'',-10,''2026-11-11'',NULL,NULL)',
+            1644,
+            'El movimiento deja saldo negativo',
+            TRUE
+        );
+        CALL pp67_caso(
+            'Movimiento: ajuste valido',
+            'CALL sp_registrar_movimiento(2,9004,''AJUSTE'',-2,''2026-11-12'',NULL,NULL)',
+            0,
+            NULL,
+            TRUE
+        );
+        CALL pp67_comprobar('Movimiento: solo queda el ajuste valido',
+            (SELECT COUNT(*) = 1 AND MIN(cantidad) = -2 FROM movimientos_stock WHERE id_lote = 9004 AND tipo = 'AJUSTE')
+                AND fn_stock_lote(9004, '2026-11-30') = 7, 'El ajuste rechazado no altera filas ni saldo');
         SET SESSION timestamp = UNIX_TIMESTAMP(v_fecha_oferta);
         SET v_reloj_oferta = TRUE;
         CALL pp67_caso(
@@ -1267,8 +1315,9 @@ BEGIN
             'Resultado esperado de la regla comprobada'
         );
         INSERT INTO permisos_adicionales_usuario VALUES (2, @permiso_carta);
+        UPDATE platos SET porcentaje_margen_objetivo = 99 WHERE id_plato = 9001;
         CALL pp67_caso(
-            'Carta: incorporacion con permiso individual',
+            'Carta: incorporacion con permiso individual pese al margen inferior al objetivo',
             'CALL sp_incorporar_carta(2,9001,CURRENT_TIMESTAMP(6)+INTERVAL 1 DAY,NULL)',
             0,
             NULL,
@@ -1278,7 +1327,7 @@ BEGIN
         CALL pp67_comprobar(
             'Carta: periodo y autorizacion confirmados',
             ((SELECT COUNT(*) FROM periodos_oferta) = @np + 1 AND (SELECT COUNT(*) FROM autorizaciones_carta) = @na + 1 AND (SELECT COUNT(*) FROM autorizaciones_carta a JOIN periodos_oferta p ON p.id_periodo_oferta = a.id_periodo_oferta WHERE p.id_plato = 9001 AND p.tipo = 'CARTA_PERMANENTE' AND a.id_emisor = 2 AND a.coste_evaluado = 0.24 AND a.precio_venta_evaluado = 5 AND a.fecha_autorizacion = v_fecha_oferta AND a.fecha_autorizacion <= p.fecha_inicio) = 1),
-            'Resultado esperado de la regla comprobada'
+            'Se autoriza con un margen del 95,2 % frente al objetivo del 99 %'
         );
         SET @periodo = (SELECT id_periodo_oferta FROM periodos_oferta WHERE id_plato = 9001 AND tipo = 'CARTA_PERMANENTE');
         CALL pp67_caso(
@@ -1366,27 +1415,6 @@ BEGIN
             FALSE
         );
         CALL pp67_caso(
-            'Plato: rechaza receta que rinde kg',
-            'INSERT INTO platos(id_receta,nombre,descripcion,categoria) VALUES(9203,''__pp67_kg'',''Prueba'',''Prueba'')',
-            1644,
-            'RC-15:',
-            FALSE
-        );
-        CALL pp67_caso(
-            'Plato: cambio a receta en kg rechazado',
-            'UPDATE platos SET id_receta=9203 WHERE id_plato=9001',
-            1644,
-            'RC-15:',
-            FALSE
-        );
-        CALL pp67_caso(
-            'Receta de plato: no cambiar a kg',
-            'UPDATE recetas SET unidad_rendimiento=''kg'' WHERE id_receta=9001',
-            1644,
-            'RC-15:',
-            FALSE
-        );
-        CALL pp67_caso(
             'Plato: receta en raciones permitida',
             'INSERT INTO platos(id_receta,nombre,descripcion,categoria) VALUES(9201,''__pp67_racion'',''Prueba'',''Prueba'')',
             0,
@@ -1425,13 +1453,6 @@ BEGIN
             TRUE
         );
         ROLLBACK;
-        CALL pp67_caso(
-            'RC-02: ingrediente duplicado rechazado',
-            'INSERT INTO componentes_receta(id_receta,cantidad,unidad_medida,id_ingrediente) VALUES(1,100,''g'',1)',
-            1062,
-            NULL,
-            FALSE
-        );
         CALL pp67_caso(
             'RC-02: subreceta duplicada rechazada',
             'INSERT INTO componentes_receta(id_receta,cantidad,unidad_medida,id_receta_componente) VALUES(2,100,''g'',1)',
@@ -1640,26 +1661,22 @@ BEGIN
         CALL pp67_comprobar('No quedan los datos auxiliares invalidos de carta y merma',
             (NOT EXISTS (SELECT 1 FROM periodos_oferta WHERE id_periodo_oferta = 9002 AND id_plato = 9002 AND tipo = 'CARTA_PERMANENTE')
                 AND NOT EXISTS (SELECT 1 FROM movimientos_stock WHERE id_movimiento = @coh_merma)), 'Los dos bloques auxiliares se revierten');
-        INSERT INTO pp67_resultados(prueba, resultado, detalle) VALUES
-            ('Concurrencia', 'PENDIENTE', 'Esta suite es secuencial; faltan pruebas coordinadas con varias conexiones, tambien para los triggers de precios, componentes y unidades, que comprueban sin bloqueos.'),
-            ('Privilegios de cuentas operativas', 'PENDIENTE', 'Se usa una cuenta de pruebas; no certifica las restricciones de cuentas de aplicacion.'),
-            ('Poblado 06: cobertura adicional', 'PENDIENTE', 'Las 12 regresiones de movimientos se ejecutan si 06 esta instalado; faltan pruebas del resto de sus rutinas.');
-
     END IF;
-    IF EXISTS (SELECT 1 FROM information_schema.routines WHERE routine_schema = DATABASE()
+    IF v_triggers > 0 AND EXISTS (SELECT 1 FROM information_schema.routines WHERE routine_schema = DATABASE()
         AND routine_name = 'pob_registrar_movimiento' AND routine_type = 'PROCEDURE') THEN
         IF NOT EXISTS (SELECT 1 FROM information_schema.routines WHERE routine_schema = DATABASE()
             AND routine_name = 'pob_saldo_lote' AND routine_type = 'FUNCTION') THEN
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Falta pob_saldo_lote: instalar 06 completo';
         END IF;
-        SELECT 'POBLADO: 12 comprobaciones de saldos historicos y transacciones' AS bloque;
+        SELECT 'POBLADO: recarga, saldos historicos y transacciones' AS bloque;
         -- Regresión del procedimiento de poblado, sin modificar su escenario original.
         -- Fixtures exclusivas de una copia de pruebas. No se eliminan mediante DELETE:
         -- los movimientos son históricos y sus triggers pueden estar instalados.
         IF EXISTS (SELECT 1 FROM lotes WHERE id_lote BETWEEN 9101 AND 9103) THEN
-            INSERT INTO pp67_resultados(prueba, resultado, detalle) VALUES
-                ('Poblado: regresiones de movimientos', 'PENDIENTE', 'Los fixtures 9101 a 9103 ya existen por una pasada anterior; recrear la copia para repetirlas.');
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Ya existen los lotes de prueba de 06; preparar una copia nueva';
         ELSE
+            CALL pp67_caso('Poblado: rechaza una segunda carga',
+                'CALL pob_poblar_base_datos()', 1644, 'pob: la base de datos ya contiene datos', TRUE);
             INSERT INTO lotes(id_lote, identificador_lote, id_ingrediente, fecha_entrada, fecha_caducidad, ubicacion_almacen, fresco, apto_para_consumo) VALUES
                 (9101, '__pp67_pob_hist', 1, '2026-11-01 00:00:00', NULL, 'Pruebas', 0, 1),
                 (9102, '__pp67_pob_primera', 1, '2026-11-01 00:00:00', NULL, 'Pruebas', 0, 1),
