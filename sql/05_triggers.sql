@@ -128,7 +128,7 @@ BEGIN
     DECLARE v_plato INT UNSIGNED;
     DECLARE v_inicio DATETIME(6);
     DECLARE v_tipo VARCHAR(20);
-    DECLARE v_coste DECIMAL(30, 8);
+    DECLARE v_coste DECIMAL(30, 2);
     DECLARE v_precio DECIMAL(14, 2);
     IF NOT fn_puede_autorizar_carta(NEW.id_emisor) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'RN-02: se requiere un usuario activo con permiso AUTORIZAR_CARTA';
@@ -142,12 +142,9 @@ BEGIN
         OR NEW.fecha_autorizacion > CURRENT_TIMESTAMP(6) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'RN-02: autorizacion posterior al inicio o con fecha futura';
     END IF;
-    SET v_coste = fn_coste_plato(v_plato, NEW.fecha_autorizacion);
-    SELECT precio_venta INTO v_precio FROM platos WHERE id_plato = v_plato;
-    IF v_coste IS NULL OR v_precio IS NULL THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'RN-02: se necesita coste calculable y precio de venta';
-    END IF;
-    SET NEW.coste_evaluado = ROUND(v_coste, 2);
+    -- También valida las cargas directas, sin confiar en los importes recibidos.
+    CALL sp_interno_valorar_carta(v_plato, NEW.fecha_autorizacion, v_coste, v_precio);
+    SET NEW.coste_evaluado = v_coste;
     SET NEW.precio_venta_evaluado = v_precio;
 END$$
 
@@ -203,6 +200,13 @@ BEGIN
     END IF;
 END$$
 
+-- RC-09. Trigger para mantener el histórico del precio de compra y evitar su eliminación.
+CREATE OR REPLACE TRIGGER trg_precio_bd_historico
+BEFORE DELETE ON precios_compra FOR EACH ROW
+BEGIN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'RC-09: no se puede eliminar un precio de compra';
+END$$
+
 -- Componentes de receta: alta y modificación
 
 -- RC-12 y RC-15 (componentes). Válida la magnitud de la línea y que no se cree un ciclo.
@@ -235,12 +239,12 @@ END$$
 
 -- Unidades, ingredientes y recetas: protección de las medidas en uso
 
--- RC-15: una unidad en uso no puede cambiar de código, magnitud ni factor, porque
--- reinterpretaría cantidades y precios ya registrados.
+-- RC-15: cambiar magnitud o factor reinterpretaría cantidades y precios registrados.
+-- Las cuatro FK a unidades_medida impiden cambiar el código de una unidad en uso.
 CREATE OR REPLACE TRIGGER trg_unidad_bu_negocio
 BEFORE UPDATE ON unidades_medida FOR EACH ROW
 BEGIN
-    IF NEW.codigo <> OLD.codigo OR NEW.magnitud <> OLD.magnitud OR NEW.factor_a_base <> OLD.factor_a_base THEN
+    IF NEW.magnitud <> OLD.magnitud OR NEW.factor_a_base <> OLD.factor_a_base THEN
         IF EXISTS (SELECT 1 FROM ingredientes WHERE unidad_medida = OLD.codigo)
             OR EXISTS (SELECT 1 FROM precios_compra WHERE unidad_precio = OLD.codigo)
             OR EXISTS (SELECT 1 FROM recetas WHERE unidad_rendimiento = OLD.codigo)

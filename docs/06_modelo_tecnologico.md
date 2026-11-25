@@ -22,11 +22,13 @@
 
 ## 6.6. Script de poblado de la base de datos mediante procedimientos (opcional)
 
-[`06_poblado_procedimientos.sql`](../sql/06_poblado_procedimientos.sql) es una alternativa a `02_datos.sql`. Usa procedimientos para cargar los datos de demostración y aplicar las reglas de negocio durante la carga.
+[`06_poblado_procedimientos.sql`](../sql/06_poblado_procedimientos.sql) es una alternativa a `02_datos.sql`. Carga los mismos datos de demostración mediante procedimientos con validaciones de carga; no sustituye a los flujos operativos de `04` y `05`.
 
 ## 6.7. Script de creación de pruebas y llamadas
 
 [`07_pruebas.sql`](../sql/07_pruebas.sql) comprueba que las restricciones y reglas de negocio aceptan los casos válidos y rechazan los incorrectos. Se ejecuta en una copia desechable de la base de datos.
+
+[`verificar_consultas.py`](../scripts/verificar_consultas.py) compara las salidas de `03` con los dos poblados y comprueba en una copia aparte que los diagnósticos detectan las anomalías sin contaminar los datos de demostración.
 
 ## 6.8. Cuentas y privilegios de MariaDB
 

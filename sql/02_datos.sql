@@ -49,7 +49,8 @@ INSERT INTO roles_permisos (id_rol, id_permiso) VALUES
     (3, 4),
     (3, 5);
 
-INSERT INTO permisos_adicionales_usuario (id_usuario, id_permiso) VALUES (3, 6);
+-- Marta recibe GESTIONAR_STOCK por el rol EMPLEADO y a título individual (C-10).
+INSERT INTO permisos_adicionales_usuario (id_usuario, id_permiso) VALUES (3, 6), (3, 4);
 
 -- Bases: gramo, mililitro, unidad y ración. Solo se convierten magnitudes iguales.
 INSERT INTO unidades_medida (codigo, nombre, magnitud, factor_a_base) VALUES
@@ -82,7 +83,7 @@ INSERT INTO precios_compra
     (id_precio_compra, id_proveedor, id_ingrediente, precio_compra, unidad_precio, fecha_inicio_vigencia, fecha_fin_vigencia, seleccionado_para_costeo) VALUES
     (1, 1, 1, 2.0000, 'kg', '2026-09-01 00:00:00', '2026-10-01 00:00:00', 0),
     (2, 1, 1, 2.4000, 'kg', '2026-10-01 00:00:00', NULL, 1),
-    (3, 2, 1, 2.7000, 'kg', '2026-10-01 00:00:00', NULL, 0),
+    (3, 2, 1, 0.0027, 'g', '2026-10-01 00:00:00', NULL, 0), -- 2,70 EUR/kg en C-11
     (4, 1, 2, 1.5000, 'kg', '2026-10-01 00:00:00', NULL, 1),
     (5, 2, 3, 6.0000, 'l', '2026-10-01 00:00:00', NULL, 1),
     (6, 2, 4, 0.8000, 'kg', '2026-10-01 00:00:00', NULL, 1),
@@ -95,12 +96,14 @@ INSERT INTO recetas
     (id_receta, nombre, cantidad_rendimiento, unidad_rendimiento, estado) VALUES
     (1, 'Salsa de tomate casera', 1, 'kg', 'ACTIVO'),
     (2, 'Pasta con tomate', 4, 'racion', 'ACTIVO'),
-    (3, 'Tortilla de patatas', 4, 'racion', 'ACTIVO');
+    (3, 'Tortilla de patatas', 4, 'racion', 'ACTIVO'),
+    (4, 'Huevos con salsa de tomate', 4, 'racion', 'ACTIVO');
 
 INSERT INTO platos
     (id_plato, id_receta, nombre, imagen, descripcion, categoria, menu_del_dia, precio_venta, porcentaje_margen_objetivo, estado) VALUES
     (1, 2, 'Pasta con tomate', NULL, 'Pasta con salsa de tomate y cebolla casera.', 'Principal', 1, 9.50, 65, 'ACTIVO'),
-    (2, 3, 'Tortilla de patatas', NULL, 'Tortilla de patatas con cebolla.', 'Entrante', 0, 6.00, 65, 'ACTIVO');
+    (2, 3, 'Tortilla de patatas', NULL, 'Tortilla de patatas con cebolla.', 'Entrante', 0, 6.00, 65, 'ACTIVO'),
+    (3, 4, 'Huevos con salsa de tomate', NULL, 'Huevos cocinados en salsa de tomate casera.', 'Entrante', 0, 4.50, 90, 'ACTIVO');
 
 -- La salsa produce 1 kg tras la cocción. La pasta utiliza 600 g de esa subreceta.
 -- No hay ciclos. g/kg y ml/l permiten probar conversiones de unidades.
@@ -116,7 +119,9 @@ INSERT INTO componentes_receta
     (8, 3, 6, 'ud', 7, NULL),
     (9, 3, 200, 'g', 2, NULL),
     (10, 3, 100, 'ml', 3, NULL),
-    (11, 3, 8, 'g', 4, NULL);
+    (11, 3, 8, 'g', 4, NULL),
+    (12, 4, 4, 'ud', 7, NULL),
+    (13, 4, 400, 'g', NULL, 1);
 
 INSERT INTO lotes
     (id_lote, identificador_lote, id_ingrediente, fecha_entrada, fecha_caducidad, ubicacion_almacen, fresco, apto_para_consumo) VALUES
@@ -164,14 +169,16 @@ INSERT INTO mermas
     (id_merma, cantidad_desperdiciada, fecha_merma, motivo, detalle_motivo, coste_perdida, id_lote, id_plato, id_movimiento) VALUES
     (1, 2, '2026-11-09 09:00:00', 'CADUCIDAD', 'Retirada completa del lote caducado.', 4.80, 8, NULL, 9),
     (2, 0.5, '2026-11-10 11:00:00', 'DETERIORO', 'Tomates dañados detectados al preparar.', 1.20, 1, NULL, 20),
-    (3, 1, '2026-11-10 15:00:00', 'PLATO_DESECHADO', 'Una ración de pasta elaborada y no servida.', 0.72, NULL, 1, NULL);
+    (3, 1, '2026-11-10 15:00:00', 'PLATO_DESECHADO', 'Una ración de pasta elaborada y no servida.', 0.72, NULL, 1, NULL),
+    (4, 2, '2026-10-20 15:00:00', 'DETERIORO', 'Dos raciones de huevos con salsa deterioradas tras su elaboración.', NULL, NULL, 3, NULL);
 
--- Intervalos [inicio, fin): una sugerencia termina al incorporarse a carta.
+-- Intervalos [inicio, fin): pasta y tortilla pasan a carta; los huevos solo se ofrecen como sugerencia durante 14 días.
 INSERT INTO periodos_oferta (id_periodo_oferta, id_plato, tipo, fecha_inicio, fecha_fin) VALUES
     (1, 1, 'SUGERENCIA_CHEF', '2026-10-01 00:00:00', '2026-10-15 00:00:00'),
     (2, 1, 'CARTA_PERMANENTE', '2026-10-15 00:00:00', NULL),
     (3, 2, 'SUGERENCIA_CHEF', '2026-10-10 00:00:00', '2026-10-24 00:00:00'),
-    (4, 2, 'CARTA_PERMANENTE', '2026-10-24 00:00:00', NULL);
+    (4, 2, 'CARTA_PERMANENTE', '2026-10-24 00:00:00', NULL),
+    (5, 3, 'SUGERENCIA_CHEF', '2026-10-12 00:00:00', '2026-10-26 00:00:00');
 
 -- La administradora autoriza durante la prueba; la carta empieza cuando termina la sugerencia.
 -- Costes por ración redondeados: pasta 0,72 €; tortilla 0,84 €.

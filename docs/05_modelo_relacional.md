@@ -150,7 +150,7 @@ Las vistas siguientes detallan los atributos y dominios de cada grupo. Una tabla
 
 ### 5.1.4. Integridad referencial
 
-La política general es impedir el borrado de filas referenciadas (ON DELETE RESTRICT), porque RC-09 exige conservar el histórico y las entidades maestras se desactivan mediante su atributo `estado`. Las claves subrogadas no cambian, por lo que también se usa ON UPDATE RESTRICT. Las excepciones se recogen en la Tabla 5.4.
+La política general es impedir el borrado de filas referenciadas (`ON DELETE RESTRICT`), porque RC-09 exige conservar el histórico y las entidades maestras se desactivan mediante su atributo `estado`. Todas las FK usan `ON UPDATE RESTRICT`, incluidas las cuatro que apuntan a `unidades_medida.codigo`: el código de una unidad referenciada no se puede cambiar. El trigger de unidades protege la magnitud y el factor de las unidades en uso. Las excepciones de borrado se recogen en la Tabla 5.4.
 
 **Tabla 5.4. Excepciones a la política referencial general.**
 
@@ -159,7 +159,6 @@ La política general es impedir el borrado de filas referenciadas (ON DELETE RES
 | `roles_permisos.id_rol`, `roles_permisos.id_permiso` | ON DELETE CASCADE | Una concesión no tiene existencia sin su rol y su permiso, y no es información histórica. |
 | `permisos_adicionales_usuario.id_usuario`, `permisos_adicionales_usuario.id_permiso` | ON DELETE CASCADE | Mismo motivo que en la fila anterior. |
 | `componentes_receta.id_receta` | ON DELETE CASCADE | La línea forma parte de la receta por composición. |
-| `ingredientes.unidad_medida`, `precios_compra.unidad_precio`, `recetas.unidad_rendimiento`, `componentes_receta.unidad_medida` | ON UPDATE CASCADE | Es la acción declarada en las cuatro FK a `unidades_medida.codigo`. Con los triggers instalados no se permite cambiar el código, la magnitud ni el factor de una unidad en uso. El borrado sigue restringido. |
 
 ### 5.1.5. Catálogo de restricciones
 
@@ -173,26 +172,26 @@ La Tabla 5.5 distingue las restricciones del esquema (`01_tablas.sql`), los trig
 | RC-02 | `CHECK` de exclusividad y `UNIQUE` por receta e ingrediente o subreceta, según la referencia informada. | — | — | — |
 | RC-03 | `CHECK` de precio positivo. | — | — | — |
 | RC-04 | AK de proveedor, ingrediente e inicio; `CHECK` de fin posterior al inicio. | Rechazan solapes al insertar o actualizar precios. | — | C-24 detecta solapes. |
-| RI-04, RC-05 | Índice único sobre la columna virtual que identifica el ingrediente solo si el precio está seleccionado. | — | Para costear, el precio seleccionado también debe estar vigente. | C-11 detecta ingredientes sin precio seleccionado y vigente que afectan a platos. |
-| RC-05 a RC-07, RC-11 | Costes y márgenes corrientes no almacenados. | — | Funciones de cálculo a demanda (Tabla 5.6); el coste queda nulo si falta un precio válido. | C-11 diagnostica falta de precio válido, no todas las causas de coste nulo. |
+| RI-04, RC-05 | Índice único sobre la columna virtual que identifica el ingrediente solo si el precio está seleccionado. | — | Para costear, el precio seleccionado también debe estar vigente. | C-16 detecta ingredientes sin precio seleccionado y vigente que afectan a platos. |
+| RC-05 a RC-07, RC-11 | Costes y márgenes corrientes no almacenados. | — | Funciones de cálculo a demanda (Tabla 5.6); el coste queda nulo si falta un precio válido. | C-16 diagnostica falta de precio válido, no todas las causas de coste nulo. |
 | RC-08 | Margen objetivo opcional, con `CHECK` de porcentaje. | — | — | — |
-| RC-09 | FK restrictivas salvo las excepciones de la Tabla 5.4; atributo de estado en las tablas que admiten desactivación lógica. | Impiden modificar o borrar movimientos, mermas y autorizaciones; impiden borrar periodos y limitan sus modificaciones. | Las diferencias de inventario se registran como ajustes, no reescribiendo movimientos. | — |
+| RC-09 | FK restrictivas salvo las excepciones de la Tabla 5.4; atributo de estado en las tablas que admiten desactivación lógica. | Impiden modificar o borrar movimientos, mermas y autorizaciones; impiden borrar periodos y precios de compra. Las modificaciones de periodos están limitadas. | Las diferencias de inventario se registran como ajustes, no reescribiendo movimientos. | — |
 | RC-10 | Relaciones de permisos por rol y adicionales por usuario. | — | Para permisos generales, `fn_tiene_permiso` exige un usuario activo. Si es administrador, no comprueba la concesión ni que exista el permiso solicitado; para los demás exige una concesión por rol o individual. RN-02 usa `fn_puede_autorizar_carta`, sin excepción para el administrador. | — |
 | RC-12 | `CHECK` contra la autorreferencia directa. | Comprueban ciclos al insertar o actualizar componentes. | — | C-25 detecta ciclos. |
 | Mínimo de un componente por receta | La FK solo exige que exista la receta de cada componente. | Impiden eliminar o trasladar el último componente de una receta conservada. | `sp_registrar_receta` crea la receta con al menos un componente en una transacción. | C-23 detecta recetas sin componentes. |
-| RC-13 | — | — | `sp_registrar_movimiento` y `sp_registrar_merma` de lote bloquean el lote y revierten la operación si algún saldo acumulado queda negativo. | C-26 detecta saldos negativos en el historial. |
+| RC-13 | — | — | `sp_registrar_movimiento` y `sp_registrar_merma` de lote bloquean el lote y, tras insertar el movimiento, usan `fn_lote_tiene_saldo_negativo` para comprobar todo el historial en orden de fecha e ID. Si algún saldo queda negativo, revierten la operación. | C-26 detecta saldos negativos en el historial. |
 | RC-14 | `CHECK` de lote o plato exclusivo, con movimiento solo para lote; FK y `UNIQUE` sobre `id_movimiento`. | `trg_merma_bi_coherencia` valida que la salida enlazada sea de merma y coincida en lote, cantidad y fecha. | `sp_registrar_merma` registra la salida y la merma de lote en la misma transacción; una merma de plato no genera salida. `sp_registrar_movimiento` no admite salidas por merma. | C-26 detecta mermas de lote que no coinciden con su salida y salidas por merma sin merma asociada. |
 | RI-06, RC-15 | FK a unidades y `CHECK` de rendimiento positivo. | Validan magnitudes y rendimiento en raciones para platos; limitan cambios en unidades y rendimientos en uso. | `fn_convertir` no convierte entre magnitudes distintas. | — |
 | RC-16 | AK de plato e inicio; `CHECK` de fin posterior al inicio. | Rechazan solapes al insertar periodos; las actualizaciones no pueden desplazar su inicio ni prolongarlos. | — | C-24 detecta solapes. |
 | RC-17 | `CHECK` de coherencia entre tipo, cantidad, finalidad y plato de destino. | Validan la fecha de recepción en salidas de elaboración y protegen el ingrediente y la fecha de entrada de lotes con movimientos. | `sp_registrar_movimiento` valida la fecha y la primera entrada; `sp_registrar_merma` exige entrada previa para una merma de lote. | — |
 | RN-01 | — | Validan aptitud, caducidad y destino al menú del día en salidas de elaboración según las condiciones de la regla. | — | C-27 detecta elaboraciones con lotes caducados; no comprueba aptitud ni destino al menú del día. |
-| RN-02 | FK obligatoria y única al periodo; `CHECK` de los dominios de los importes. | Validan emisor activo con concesión explícita de `AUTORIZAR_CARTA` por rol o individual, tipo de periodo, fecha no posterior al inicio ni futura, coste calculable y precio definido. Registran los importes evaluados, sin umbral de margen. | `sp_incorporar_carta` usa `fn_puede_autorizar_carta` y crea periodo y autorización en una transacción. Ser administrador no sustituye la concesión. | C-23 detecta cartas sin autorización; C-27 detecta autorizaciones posteriores al inicio o de periodos que no son de carta. |
+| RN-02 | FK obligatoria y única al periodo; `CHECK` de los dominios de los importes. | Validan emisor activo con concesión explícita de `AUTORIZAR_CARTA` por rol o individual, tipo de periodo y fecha no posterior al inicio ni futura. Recalculan y registran los importes evaluados, sin umbral de margen. | `sp_incorporar_carta` crea periodo y autorización en una transacción. El procedimiento y el trigger comparten `sp_interno_valorar_carta`, que exige coste calculable y precio definido. Ser administrador no sustituye la concesión. | C-23 detecta cartas sin autorización; C-27 detecta autorizaciones posteriores al inicio o de periodos que no son de carta. |
 | RI-07, RN-03 | Frescura por lote. | Rechazan salidas de elaboración de lotes frescos a partir de las 72 horas desde su recepción. | — | C-27 detecta elaboraciones registradas fuera de ese plazo según los datos del lote. |
 | RN-04 | — | Exigen una sugerencia previa cerrada de al menos 14 días consecutivos en la primera incorporación y protegen los periodos de prueba tras la incorporación. | — | C-27 detecta primeras incorporaciones sin prueba válida. |
 | RNF-01 | Privilegios diferenciados sobre vistas y procedimientos públicos (`08_cuentas_privilegios.sql`), sin acceso directo a tablas para las cuentas operativas. | — | MariaDB autentica la conexión. Los procedimientos `sp_demo_*` resuelven el usuario de aplicación desde la cuenta conectada, sin aceptar un ID de usuario del llamante. | — |
 | RNF-02 | `CHECK` de longitud mínima del hash de aplicación; no acredita el algoritmo. | — | El poblado almacena hashes scrypt generados fuera de SQL con una sal individual. No son las credenciales de las cuentas MariaDB. | — |
 
-El esquema no impone por sí solo que toda receta tenga un componente ni que todo periodo de carta permanente tenga autorización. Los procedimientos de alta citados en la tabla aseguran esos mínimos en sus flujos; una escritura directa que eluda esos flujos puede dejar una receta vacía o una carta sin autorización. C-23 detecta ambos casos. Una receta vacía no tiene coste calculable (RC-11).
+**Límites del DML directo.** Las cuentas operativas no escriben directamente en las tablas. Una cuenta con ese acceso sigue sujeta a las FK, los `CHECK` y los triggers, pero puede omitir las garantías de los procedimientos. Puede crear una receta vacía o una carta sin autorización (C-23); si inserta la autorización, el trigger valida el alta y sustituye los importes aportados. Una receta vacía no tiene coste calculable (RC-11). También puede insertar movimientos con saldo acumulado negativo, sin respetar las comprobaciones operativas de primera entrada, o dejar una salida por merma sin su merma. C-26 detecta saldos negativos y salidas por merma sin vínculo, pero no sustituye las validaciones de primera entrada. El trigger de precios bloquea `DELETE`, no prohíbe `UPDATE`: siguen aplicándose las validaciones de vigencia y unidad.
 
 ## 5.2. Estrategia de transformación de jerarquías
 
@@ -275,13 +274,13 @@ Las rutinas se definen en `04_funciones_procedimientos.sql`; los identificadores
 
 | Atributo (MC) | Cálculo | Rutina | Consulta |
 |---|---|---|---|
-| Lote `/cantidad` | Entradas − salidas + ajustes con signo | `fn_stock_lote` | C-12 (lotes con saldo positivo); C-14 (saldo tras cada movimiento) |
-| Ingrediente `/cantidadTotalDisponible` | Suma de los saldos registrados de sus lotes; no implica aptitud para elaborar | — | C-13 (ingredientes activos) |
-| Receta `/costeElaboracion` | Coste de la elaboración completa: suma de las líneas con expansión de subrecetas y ajuste por su rendimiento | — | C-10 (`coste_elaboracion`) |
-| Receta `/costeUnitario` | `/costeElaboracion` / `cantidad_rendimiento` | `fn_coste_receta` devuelve el coste unitario, no el total | C-10 (`coste_unitario`) |
-| Plato `/costeProduccion` | Coste unitario de su receta, por ración | `fn_coste_plato`, `sp_consultar_escandallo` | C-09 (detalle por ingrediente y ración); C-10 (`coste_unitario` del plato) |
-| Plato `/margenBruto` | `precio_venta` − `/costeProduccion` | `fn_margen_plato`, `sp_consultar_escandallo` | C-10 (`margen_bruto`) |
-| Plato `/porcentajeMargen` | 100 × `/margenBruto` / `precio_venta` | `sp_consultar_escandallo` | C-10 (`porcentaje_margen`) |
+| Lote `/cantidad` | Entradas − salidas + ajustes con signo | `fn_stock_lote` | C-05 (lotes con saldo positivo); C-17 (saldo tras cada movimiento) |
+| Ingrediente `/cantidadTotalDisponible` | Suma de los saldos registrados de sus lotes; no implica aptitud para elaborar | — | C-06 (ingredientes activos) |
+| Receta `/costeElaboracion` | Coste de la elaboración completa: suma de las líneas con expansión de subrecetas y ajuste por su rendimiento | — | C-15 (`coste_elaboracion`) |
+| Receta `/costeUnitario` | `/costeElaboracion` / `cantidad_rendimiento` | `fn_coste_receta` devuelve el coste unitario, no el total | C-15 (`coste_unitario`) |
+| Plato `/costeProduccion` | Coste unitario de su receta, por ración | `fn_coste_plato`, `sp_consultar_escandallo` | C-14 (detalle por ingrediente y ración); C-15 (`coste_unitario` del plato) |
+| Plato `/margenBruto` | `precio_venta` − `/costeProduccion` | `fn_margen_plato`, `sp_consultar_escandallo` | C-15 (`margen_bruto`) |
+| Plato `/porcentajeMargen` | 100 × `/margenBruto` / `precio_venta` | `sp_consultar_escandallo` | C-15 (`porcentaje_margen`) |
 
 ### 5.3.4. Decisiones que requieren justificación expresa
 

@@ -35,7 +35,7 @@ BEGIN
 END$$
 
 -- Expande subrecetas con una CTE: no utiliza funciones almacenadas recursivas.
--- Mismo despiece que C-09/C-10, hasta 64 enlaces. Un fallo en cualquier rama
+-- Mismo despiece que C-14/C-15, hasta 64 enlaces. Un fallo en cualquier rama
 -- invalida el coste total. El redondeo de presentación no interviene aquí.
 CREATE OR REPLACE FUNCTION fn_coste_receta(p_receta INT UNSIGNED, p_fecha DATETIME(6))
 RETURNS DECIMAL(30, 8) READS SQL DATA
@@ -92,6 +92,18 @@ BEGIN
     END IF;
     RETURN (SELECT COALESCE(SUM(CASE WHEN tipo = 'SALIDA' THEN -cantidad ELSE cantidad END), 0)
             FROM movimientos_stock WHERE id_lote = p_lote AND fecha_movimiento <= p_fecha);
+END$$
+
+-- RC-13: llamar tras insertar, dentro de la transacción que bloquea el lote.
+-- Se comprueba todo el historial, no solo el saldo final (C-17 y C-26).
+CREATE OR REPLACE FUNCTION fn_lote_tiene_saldo_negativo(p_lote INT UNSIGNED)
+RETURNS BOOLEAN READS SQL DATA
+BEGIN
+    RETURN EXISTS (SELECT 1 FROM (
+        SELECT SUM(CASE WHEN tipo = 'SALIDA' THEN -cantidad ELSE cantidad END)
+               OVER (ORDER BY fecha_movimiento, id_movimiento ROWS UNBOUNDED PRECEDING) saldo
+        FROM movimientos_stock WHERE id_lote = p_lote
+    ) s WHERE saldo < 0);
 END$$
 
 -- Funciones de comprobación de permisos
@@ -190,11 +202,7 @@ BEGIN
         INSERT INTO movimientos_stock(id_lote, tipo, cantidad, fecha_movimiento, finalidad_salida, id_plato_destino)
         VALUES (p_lote, p_tipo, p_cantidad, p_fecha, p_finalidad, p_plato);
         SET v_id = LAST_INSERT_ID();
-        IF EXISTS (SELECT 1 FROM (
-            SELECT SUM(CASE WHEN tipo = 'SALIDA' THEN -cantidad ELSE cantidad END)
-                   OVER (ORDER BY fecha_movimiento, id_movimiento ROWS UNBOUNDED PRECEDING) saldo
-            FROM movimientos_stock WHERE id_lote = p_lote
-        ) s WHERE saldo < 0) THEN
+        IF fn_lote_tiene_saldo_negativo(p_lote) THEN
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El movimiento deja saldo negativo en el historial';
         END IF;
         COMMIT;
@@ -238,6 +246,24 @@ BEGIN
     SELECT v_id AS id_periodo_oferta;
 END$$
 
+-- RN-02: rutina interna, sin control transaccional ni conjuntos de resultados.
+CREATE OR REPLACE PROCEDURE sp_interno_valorar_carta(
+    IN p_plato INT UNSIGNED,
+    IN p_fecha DATETIME(6),
+    OUT p_coste DECIMAL(30, 2),
+    OUT p_precio DECIMAL(14, 2)
+)
+READS SQL DATA
+BEGIN
+    DECLARE v_coste DECIMAL(30, 8);
+    SET v_coste = fn_coste_plato(p_plato, p_fecha);
+    SELECT precio_venta INTO p_precio FROM platos WHERE id_plato = p_plato;
+    IF v_coste IS NULL OR p_precio IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'RN-02: se necesita coste calculable y precio de venta';
+    END IF;
+    SET p_coste = ROUND(v_coste, 2);
+END$$
+
 -- RN-02: periodo y autorización se confirman juntos o se deshacen juntos.
 CREATE OR REPLACE PROCEDURE sp_incorporar_carta(
     IN p_autorizador INT UNSIGNED,
@@ -251,6 +277,8 @@ BEGIN
     DECLARE v_plato INT UNSIGNED;
     DECLARE v_usuario INT UNSIGNED;
     DECLARE v_fecha DATETIME(6);
+    DECLARE v_coste DECIMAL(30, 2);
+    DECLARE v_precio DECIMAL(14, 2);
     IF @@in_transaction THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Llamar fuera de una transaccion';
     END IF;
@@ -276,9 +304,9 @@ BEGIN
         INSERT INTO periodos_oferta(id_plato, tipo, fecha_inicio, fecha_fin)
         VALUES (p_plato, 'CARTA_PERMANENTE', p_inicio, p_fin);
         SET v_id = LAST_INSERT_ID();
+        CALL sp_interno_valorar_carta(v_plato, v_fecha, v_coste, v_precio);
         INSERT INTO autorizaciones_carta(id_periodo_oferta, id_emisor, fecha_autorizacion, coste_evaluado, precio_venta_evaluado)
-        VALUES (v_id, v_usuario, v_fecha, 0, 1);
-        -- Los valores provisionales se sustituyen en BEFORE INSERT por los calculados.
+        VALUES (v_id, v_usuario, v_fecha, v_coste, v_precio);
         COMMIT;
     END;
     SELECT v_id AS id_periodo_oferta;
@@ -377,11 +405,7 @@ BEGIN
             INSERT INTO movimientos_stock(id_lote, tipo, cantidad, fecha_movimiento, finalidad_salida, id_plato_destino)
             VALUES (p_lote, 'SALIDA', p_cantidad, p_fecha, 'MERMA', NULL);
             SET v_movimiento = LAST_INSERT_ID();
-            IF EXISTS (SELECT 1 FROM (
-                SELECT SUM(CASE WHEN tipo = 'SALIDA' THEN -cantidad ELSE cantidad END)
-                       OVER (ORDER BY fecha_movimiento, id_movimiento ROWS UNBOUNDED PRECEDING) saldo
-                FROM movimientos_stock WHERE id_lote = p_lote
-            ) s WHERE saldo < 0) THEN
+            IF fn_lote_tiene_saldo_negativo(p_lote) THEN
                 SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La merma deja saldo negativo en el historial';
             END IF;
         ELSE

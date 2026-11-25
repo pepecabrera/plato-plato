@@ -601,6 +601,8 @@ BEGIN
     CALL pob_conceder_permiso_rol('EMPLEADO', 'REGISTRAR_MERMAS');
 
     CALL pob_conceder_permiso_usuario('marta@plato-plato.example', 'CONSULTAR_COSTES');
+    -- Marta recibe GESTIONAR_STOCK por el rol EMPLEADO y a título individual (C-10).
+    CALL pob_conceder_permiso_usuario('marta@plato-plato.example', 'GESTIONAR_STOCK');
 END$$
 
 -- Bases: gramo, mililitro, unidad y ración. Solo se convierten magnitudes iguales.
@@ -667,7 +669,7 @@ BEGIN
         0
     );
     CALL pob_alta_precio_compra('Huerta del Sur', 'Tomate', 2.4000, 'kg', '2026-10-01 00:00:00', NULL, 1);
-    CALL pob_alta_precio_compra('Despensa Central', 'Tomate', 2.7000, 'kg', '2026-10-01 00:00:00', NULL, 0);
+    CALL pob_alta_precio_compra('Despensa Central', 'Tomate', 0.0027, 'g', '2026-10-01 00:00:00', NULL, 0); -- 2,70 EUR/kg en C-11
     CALL pob_alta_precio_compra('Huerta del Sur', 'Cebolla', 1.5000, 'kg', '2026-10-01 00:00:00', NULL, 1);
     CALL pob_alta_precio_compra(
         'Despensa Central',
@@ -710,6 +712,7 @@ BEGIN
     CALL pob_alta_receta('Salsa de tomate casera', 1, 'kg', 'ACTIVO');
     CALL pob_alta_receta('Pasta con tomate', 4, 'racion', 'ACTIVO');
     CALL pob_alta_receta('Tortilla de patatas', 4, 'racion', 'ACTIVO');
+    CALL pob_alta_receta('Huevos con salsa de tomate', 4, 'racion', 'ACTIVO');
 
     CALL pob_alta_plato(
         'Pasta con tomate',
@@ -734,6 +737,18 @@ BEGIN
         'ACTIVO'
     );
 
+    CALL pob_alta_plato(
+        'Huevos con salsa de tomate',
+        'Huevos con salsa de tomate',
+        NULL,
+        'Huevos cocinados en salsa de tomate casera.',
+        'Entrante',
+        0,
+        4.50,
+        90,
+        'ACTIVO'
+    );
+
     CALL pob_alta_componente('Salsa de tomate casera', 1200, 'g', 'Tomate', NULL);
     CALL pob_alta_componente('Salsa de tomate casera', 200, 'g', 'Cebolla', NULL);
     CALL pob_alta_componente('Salsa de tomate casera', 50, 'ml', 'Aceite de oliva', NULL);
@@ -745,6 +760,8 @@ BEGIN
     CALL pob_alta_componente('Tortilla de patatas', 200, 'g', 'Cebolla', NULL);
     CALL pob_alta_componente('Tortilla de patatas', 100, 'ml', 'Aceite de oliva', NULL);
     CALL pob_alta_componente('Tortilla de patatas', 8, 'g', 'Sal', NULL);
+    CALL pob_alta_componente('Huevos con salsa de tomate', 4, 'ud', 'Huevo', NULL);
+    CALL pob_alta_componente('Huevos con salsa de tomate', 400, 'g', NULL, 'Salsa de tomate casera');
 END$$
 
 -- Cantidades en la unidad del ingrediente. Los movimientos se insertan en orden cronológico por lote.
@@ -957,10 +974,17 @@ BEGIN
         'Una ración de pasta elaborada y no servida.',
         0.72
     );
+    CALL pob_registrar_merma_plato(
+        'Huevos con salsa de tomate',
+        2,
+        '2026-10-20 15:00:00',
+        'DETERIORO',
+        'Dos raciones de huevos con salsa deterioradas tras su elaboración.',
+        NULL
+    );
 END$$
 
--- Intervalos [inicio, fin): la sugerencia termina exactamente cuando empieza la carta (RC-16, RN-04).
--- Cada plato pasa 14 días como sugerencia del chef antes de su alta en carta permanente.
+-- Intervalos [inicio, fin): pasta y tortilla pasan a carta; los huevos solo se ofrecen como sugerencia durante 14 días.
 CREATE PROCEDURE pob_bloque_oferta()
 BEGIN
     IF NOT @@in_transaction THEN
@@ -980,6 +1004,12 @@ BEGIN
         '2026-10-24 00:00:00'
     );
     CALL pob_alta_periodo_oferta('Tortilla de patatas', 'CARTA_PERMANENTE', '2026-10-24 00:00:00', NULL);
+    CALL pob_alta_periodo_oferta(
+        'Huevos con salsa de tomate',
+        'SUGERENCIA_CHEF',
+        '2026-10-12 00:00:00',
+        '2026-10-26 00:00:00'
+    );
 
     -- Autoriza la administradora tras iniciarse la prueba y antes del alta en carta.
     -- Costes por ración redondeados: pasta 0,72 EUR; tortilla 0,84 EUR (importes históricos, no calculados).

@@ -3,7 +3,7 @@
 -- SOLO sobre una copia desechable con 01 y UNO de los poblados: 02 o 06.
 -- Primera ejecución: sin 04/05, ejecuta 68 comprobaciones del esquema.
 -- Segunda ejecución: instalar 04 y 05 completos y ejecutar de nuevo;
--- realiza 147 comprobaciones de negocio y tres entradas PENDIENTE; una cuarta si se omiten regresiones de 06 ya ejecutadas.
+-- realiza 150 comprobaciones de negocio y tres entradas PENDIENTE; una cuarta si se omiten regresiones de 06 ya ejecutadas.
 -- Detecta el modo por la presencia de triggers. Rechaza instalaciones parciales.
 -- Las pruebas de negocio CONFIRMAN escrituras: recrear la copia antes de repetirlas.
 -- Si está instalado 06, añade 12 comprobaciones de su procedimiento de movimientos.
@@ -141,8 +141,8 @@ BEGIN
         );
         CALL pp67_comprobar(
             'Carga de permisos_adicionales_usuario',
-            (SELECT COUNT(*) = 1 FROM permisos_adicionales_usuario),
-            'Se esperan 1 filas del poblado original'
+            (SELECT COUNT(*) = 2 FROM permisos_adicionales_usuario),
+            'Se esperan 2 filas del poblado'
         );
         CALL pp67_comprobar(
             'Carga de unidades_medida',
@@ -180,18 +180,18 @@ BEGIN
         );
         CALL pp67_comprobar(
             'Carga de recetas',
-            (SELECT COUNT(*) = 3 FROM recetas),
-            'Se esperan 3 filas del poblado original'
+            (SELECT COUNT(*) = 4 FROM recetas),
+            'Se esperan 4 filas del poblado'
         );
         CALL pp67_comprobar(
             'Carga de platos',
-            (SELECT COUNT(*) = 2 FROM platos),
-            'Se esperan 2 filas del poblado original'
+            (SELECT COUNT(*) = 3 FROM platos),
+            'Se esperan 3 filas del poblado'
         );
         CALL pp67_comprobar(
             'Carga de componentes_receta',
-            (SELECT COUNT(*) = 11 FROM componentes_receta),
-            'Se esperan 11 filas del poblado original'
+            (SELECT COUNT(*) = 13 FROM componentes_receta),
+            'Se esperan 13 filas del poblado'
         );
         CALL pp67_comprobar(
             'Carga de lotes',
@@ -205,13 +205,13 @@ BEGIN
         );
         CALL pp67_comprobar(
             'Carga de mermas',
-            (SELECT COUNT(*) = 3 FROM mermas),
-            'Se esperan 3 filas del poblado original'
+            (SELECT COUNT(*) = 4 FROM mermas),
+            'Se esperan 4 filas del poblado'
         );
         CALL pp67_comprobar(
             'Carga de periodos_oferta',
-            (SELECT COUNT(*) = 4 FROM periodos_oferta),
-            'Se esperan 4 filas del poblado original'
+            (SELECT COUNT(*) = 5 FROM periodos_oferta),
+            'Se esperan 5 filas del poblado'
         );
         CALL pp67_comprobar(
             'Carga de autorizaciones_carta',
@@ -536,21 +536,21 @@ BEGIN
                 'trg_periodo_bi_negocio', 'trg_periodo_bu_negocio', 'trg_periodo_bd_historico',
                 'trg_autorizacion_bi_negocio', 'trg_autorizacion_bu_historico', 'trg_autorizacion_bd_historico',
                 'trg_merma_bu_historico', 'trg_merma_bd_historico',
-                'trg_precio_bi_negocio', 'trg_precio_bu_negocio',
+                'trg_precio_bi_negocio', 'trg_precio_bu_negocio', 'trg_precio_bd_historico',
                 'trg_componente_bi_negocio', 'trg_componente_bu_negocio',
                 'trg_unidad_bu_negocio', 'trg_ingrediente_bu_negocio', 'trg_receta_bu_negocio',
                 'trg_merma_bi_coherencia', 'trg_plato_bi_raciones', 'trg_plato_bu_raciones',
-                'trg_componente_bd_minimo', 'trg_lote_bu_historico')) <> 23 THEN
+                'trg_componente_bd_minimo', 'trg_lote_bu_historico')) <> 24 THEN
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Instalacion parcial: ejecutar 05 completo antes de las pruebas de negocio';
         END IF;
         SELECT COUNT(*) INTO v_rutinas FROM information_schema.routines
-        WHERE routine_schema = DATABASE() AND routine_name IN ('fn_convertir', 'fn_coste_ingrediente', 'fn_coste_receta', 'fn_coste_plato', 'fn_margen_plato', 'fn_stock_lote', 'fn_tiene_permiso', 'fn_puede_autorizar_carta', 'sp_consultar_escandallo', 'sp_registrar_movimiento', 'sp_registrar_sugerencia', 'sp_incorporar_carta', 'sp_cerrar_periodo', 'sp_registrar_merma', 'sp_registrar_receta');
-        IF v_rutinas <> 15 THEN
+        WHERE routine_schema = DATABASE() AND routine_name IN ('fn_convertir', 'fn_coste_ingrediente', 'fn_coste_receta', 'fn_coste_plato', 'fn_margen_plato', 'fn_stock_lote', 'fn_lote_tiene_saldo_negativo', 'fn_tiene_permiso', 'fn_puede_autorizar_carta', 'sp_interno_valorar_carta', 'sp_consultar_escandallo', 'sp_registrar_movimiento', 'sp_registrar_sugerencia', 'sp_incorporar_carta', 'sp_cerrar_periodo', 'sp_registrar_merma', 'sp_registrar_receta');
+        IF v_rutinas <> 17 THEN
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Faltan rutinas: ejecutar 04 completo antes de las pruebas de negocio';
         END IF;
         IF (SELECT COUNT(*) FROM information_schema.routines
             WHERE routine_schema = DATABASE() AND routine_name IN ('fn_validar_precio', 'fn_validar_componente')) <> 2 THEN
-            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Faltan fn_validar_precio y fn_validar_componente: ejecutar 05 completo';
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Faltan fn_validar_precio y fn_validar_componente: ejecutar 04 completo';
         END IF;
         IF EXISTS (SELECT 1 FROM recetas WHERE id_receta IN (9001, 9002))
             OR EXISTS (SELECT 1 FROM platos WHERE id_plato IN (9001, 9002))
@@ -558,7 +558,7 @@ BEGIN
             OR EXISTS (SELECT 1 FROM periodos_oferta WHERE id_periodo_oferta = 9002) THEN
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Hay datos de otras pruebas: preparar una copia nueva con 01 y 02';
         END IF;
-        SELECT 'NEGOCIO: 147 comprobaciones y tres PENDIENTE (mas otra si se omiten regresiones previas de 06)' AS bloque;
+        SELECT 'NEGOCIO: 150 comprobaciones y tres PENDIENTE (mas otra si se omiten regresiones previas de 06)' AS bloque;
         -- Funciones y triggers: 01 + (02 o 06) + 04 + 05, sin transacción exterior.
         CALL pp67_comprobar(
             'Conversion kg a g',
@@ -704,6 +704,20 @@ BEGIN
             'INSERT INTO precios_compra(id_proveedor,id_ingrediente,precio_compra,unidad_precio,fecha_inicio_vigencia,fecha_fin_vigencia) VALUES(1,1,2,''l'',''2026-08-01 00:00:00'',''2026-08-15 00:00:00'')',
             1644,
             'RC-15:',
+            FALSE
+        );
+        CALL pp67_caso(
+            'RC-09: el precio historico no se puede borrar',
+            'DELETE FROM precios_compra WHERE fecha_fin_vigencia = ''2026-10-01''',
+            1644,
+            'RC-09:',
+            FALSE
+        );
+        CALL pp67_caso(
+            'RC-15: la FK impide renombrar una unidad en uso',
+            'UPDATE unidades_medida SET codigo=''kg_test'' WHERE codigo=''kg''',
+            1451,
+            NULL,
             FALSE
         );
         CALL pp67_caso(
@@ -942,6 +956,14 @@ BEGIN
             0,
             NULL,
             TRUE
+        );
+        CALL pp67_comprobar(
+            'RN-02: el alta directa conserva la valoracion real, no los valores enviados',
+            (SELECT a.coste_evaluado = ROUND(fn_coste_plato(p.id_plato, a.fecha_autorizacion), 2)
+                AND a.precio_venta_evaluado = pl.precio_venta AND a.precio_venta_evaluado <> 1
+             FROM autorizaciones_carta a JOIN periodos_oferta p USING (id_periodo_oferta)
+             JOIN platos pl USING (id_plato) WHERE a.id_periodo_oferta = 9002),
+            'El trigger debe sustituir ambos importes'
         );
         ROLLBACK;
         SET SESSION timestamp = DEFAULT;
