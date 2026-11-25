@@ -24,12 +24,6 @@ El empleado tendrá el nivel de permisos más limitado de los tres perfiles.
 
 El perfil está orientado a consultar los platos y las recetas necesarios para su preparación y a registrar movimientos de stock y mermas mediante los procedimientos previstos, según sus permisos.
 
-### Cuentas de MariaDB
-
-Para la demostración, cada perfil de aplicación tiene una cuenta local de MariaDB con el nombre del perfil precedido de `pp_`: `pp_administrador`, `pp_encargado` y `pp_empleado`. Sus privilegios permiten consultar las vistas y ejecutar los procedimientos previstos para cada perfil, sin dar acceso directo a las tablas.
-
-MariaDB autentica la conexión y comprueba sus privilegios. A su vez, los procedimientos validan los permisos del usuario de aplicación asociado. Son dos controles distintos: por ejemplo, poder ejecutar el procedimiento de incorporación a carta no sustituye el permiso `AUTORIZAR_CARTA` exigido por RN-02.
-
 ## 3.2. Requisitos generales
 
 ### RG-01 — Gestión de costes y rentabilidad
@@ -280,7 +274,7 @@ Las operaciones se autorizan para usuarios de aplicación activos según los per
 
 #### RC-11 — Coste calculable
 
-Si alguna rama de la receta no puede costearse, el coste queda sin valor (`NULL`): no se sustituye por cero ni se devuelve un total parcial. Esto incluye la falta de un precio seleccionado y vigente, las unidades incompatibles, las recetas sin componentes y las dependencias cíclicas. El modelo tecnológico documenta el límite técnico del recorrido.
+Si alguna rama de la receta no puede costearse, el coste queda sin valor (`NULL`): no se sustituye por cero ni se devuelve un total parcial. Esto incluye la falta de un precio seleccionado y vigente, las unidades incompatibles, las recetas sin componentes y las dependencias cíclicas.
 
 #### RC-12 — Recetas cíclicas
 
@@ -364,7 +358,7 @@ El esquema deberá aplicar sus restricciones declarativas, y las operaciones de 
 
 ## 3.4. Matriz de trazabilidad
 
-La siguiente matriz relaciona los requisitos generales con los requisitos detallados. La trazabilidad completa de cada regla hasta el modelo, el código y las pruebas se presenta en el modelo tecnológico.
+La matriz relaciona los requisitos generales con los detallados.
 
 | Requisito | RG-01 | RG-02 | RG-03 |
 |---|---|---|---|

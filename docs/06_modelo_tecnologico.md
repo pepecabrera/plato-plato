@@ -1,5 +1,7 @@
 # 6. Modelo tecnológico
 
+La base de datos usa MariaDB 10.6 o superior con InnoDB. Las cuentas operativas consultan vistas y ejecutan procedimientos autorizados sin acceso directo a las tablas. La instalación y las comprobaciones se describen en el [README](../README.md).
+
 ## 6.1. Script de creación de tablas y restricciones
 
 [`01_tablas.sql`](../sql/01_tablas.sql) crea la base de datos y sus tablas. Incluye claves y restricciones para mantener la integridad de los datos.

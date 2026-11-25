@@ -81,14 +81,10 @@ Ejecuta `SOURCE sql/03_consultas.sql` después de cargar `02` **o** `06`, antes 
 
 Para ver C-16 con filas, ejecuta solo esa consulta tras `SET @ahora = '2026-09-15 12:00:00'`: el tomate tiene un precio vigente, pero el seleccionado aún no ha entrado en vigor. Con `SET @ahora = '2026-11-09 08:00:00'`, C-05 y C-06 muestran 12 kg en dos lotes de tomate y C-19 identifica el antiguo como no apto. Volver a ejecutar `03` completo restablece el corte por defecto.
 
-La [verificación automatizada](scripts/verificar_consultas.py) ejecuta las 27 consultas reales, compara ambas cargas, comprueba C-14/C-15 contra `fn_coste_receta` y prueba la detección de anomalías en una tercera base temporal sin triggers. No ejecuta `07` ni `08`. Requiere Python 3, el cliente MariaDB y permisos de instalación en una **instancia desechable**:
-
-```sh
-python3 scripts/verificar_consultas.py --socket /ruta/al/mariadb.sock --usuario instalador --pedir-clave
-```
+Para comparar los poblados, ejecuta las consultas con el mismo corte en dos bases nuevas, una con cada carga. Compara los resultados por nombre o identificador de negocio, no por el orden de filas empatadas.
 
 ## Documentación
 
 - [Descripción del problema](docs/01_descripcion_problema.md), [glosario](docs/02_glosario.md) y [requisitos](docs/03_requisitos.md).
 - [Modelo conceptual y escenarios](docs/04_modelo_conceptual.md) y [modelo relacional](docs/05_modelo_relacional.md).
-- [Modelo tecnológico](docs/06_modelo_tecnologico.md), con un resumen de cada script SQL.
+- [Modelo tecnológico](docs/06_modelo_tecnologico.md), descripción sencilla de cada archivo sql.
