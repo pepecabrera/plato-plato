@@ -16,7 +16,7 @@ Este rol podrá consultar los datos de usuarios, roles y concesiones de la demos
 
 El encargado será, generalmente, el jefe de sala o una persona de confianza designada por el administrador.
 
-Su perfil está orientado a las operaciones de stock, mermas, recetas y periodos de oferta permitidas por sus permisos. No podrá consultar costes ni márgenes por defecto; podrá hacerlo si recibe individualmente `CONSULTAR_COSTES`. La gestión de cuentas de empleados no forma parte de esta entrega.
+Su perfil está orientado a las operaciones de stock, mermas, recetas y periodos de oferta permitidas por sus permisos. No podrá consultar costes ni márgenes por defecto; podrá hacerlo si recibe individualmente `CONSULTAR_COSTES` (desde una posible aplicación futura, si se desarrolla un frontend ; los permisos internos de MariaDB son intocables). La gestión de cuentas de empleados no forma parte de esta entrega.
 
 ### US-03 — Empleado
 
@@ -270,7 +270,7 @@ Los movimientos de stock, las mermas y las autorizaciones registradas no se modi
 
 #### RC-10 — Permisos según el rol
 
-Las operaciones se autorizan para usuarios de aplicación activos según los permisos concedidos a su rol o individualmente. En las comprobaciones generales, el administrador activo dispone de acceso general; RN-02 exige una concesión explícita incluso para él. Los permisos de aplicación no otorgan por sí solos privilegios a las cuentas de MariaDB (RNF-01).
+Los permisos de aplicación se asignan a usuarios internos, por rol o individualmente. Los procedimientos de negocio comprueban los que corresponden a operaciones implementadas, como AUTORIZAR_CARTA. El poblado incluye también permisos ilustrativos para operaciones fuera del alcance de la entrega. Estas concesiones no crean cuentas de MariaDB ni modifican sus privilegios. Cuando una operación está expuesta a una cuenta SQL, la cuenta debe poder ejecutar el procedimiento y el usuario interno asociado debe superar las comprobaciones de negocio.
 
 #### RC-11 — Coste calculable
 
