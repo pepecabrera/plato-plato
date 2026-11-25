@@ -24,6 +24,12 @@ El empleado tendrá el nivel de permisos más limitado de los tres perfiles.
 
 El perfil está orientado a consultar los platos y las recetas necesarios para su preparación y a registrar movimientos de stock y mermas mediante los procedimientos previstos, según sus permisos.
 
+### Cuentas de MariaDB
+
+Para la demostración, cada perfil de aplicación tiene una cuenta local de MariaDB con el nombre del perfil precedido de `pp_`: `pp_administrador`, `pp_encargado` y `pp_empleado`. Sus privilegios permiten consultar las vistas y ejecutar los procedimientos previstos para cada perfil, sin dar acceso directo a las tablas.
+
+MariaDB autentica la conexión y comprueba sus privilegios. A su vez, los procedimientos validan los permisos del usuario de aplicación asociado. Son dos controles distintos: por ejemplo, poder ejecutar el procedimiento de incorporación a carta no sustituye el permiso `AUTORIZAR_CARTA` exigido por RN-02.
+
 ## 3.2. Requisitos generales
 
 ### RG-01 — Gestión de costes y rentabilidad

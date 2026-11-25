@@ -1,6 +1,6 @@
 # 5. Modelo relacional en 3FN
 
-Esta sección obtiene el modelo relacional a partir del modelo conceptual de la sección 4 y justifica que todas sus relaciones están en tercera forma normal. Las reglas se citan con los identificadores del catálogo de requisitos (RN, RC y D).
+Esta sección obtiene el modelo relacional a partir del modelo conceptual de la sección 4 y justifica que todas sus relaciones están en tercera forma normal. Las reglas se citan con los identificadores del catálogo de requisitos (RN, RC, y más).
 
 **Notación.** `relacion(pk, atributo, atributo?, #fk)`: el primer atributo es la clave primaria, `#` indica clave ajena y `?` indica que el atributo admite nulos. En las dos relaciones procedentes de asociaciones N:M, la clave primaria está formada por todos sus atributos. AK designa una clave alternativa. Los nombres coinciden con los que se utilizan en el código SQL.
 
@@ -269,9 +269,11 @@ Para cada relación se indican sus claves candidatas (CC) y dependencias funcion
 
 Los atributos derivados del modelo conceptual se calculan al consultar los datos, sin mantener copias del saldo, coste corriente o margen. El cálculo del coste usa la composición actual y la selección de precios actual, con la vigencia evaluada en la fecha de referencia; no reconstruye el escandallo de esa fecha (véase [§6.3, «Consultas a tablas en SQL»](06_modelo_tecnologico.md#63-script-de-consultas-a-tablas-en-sql)).
 
+Las rutinas se definen en `04_funciones_procedimientos.sql`; los identificadores C- corresponden a las consultas de `03_consultas.sql`.
+
 **Tabla 5.6. Cálculo de los atributos derivados.**
 
-| Atributo (MC) | Cálculo | Rutina (`04_funciones_procedimientos.sql`) | Consulta (`03_consultas.sql`) |
+| Atributo (MC) | Cálculo | Rutina | Consulta |
 |---|---|---|---|
 | Lote `/cantidad` | Entradas − salidas + ajustes con signo | `fn_stock_lote` | C-12 (lotes con saldo positivo); C-14 (saldo tras cada movimiento) |
 | Ingrediente `/cantidadTotalDisponible` | Suma de los saldos registrados de sus lotes; no implica aptitud para elaborar | — | C-13 (ingredientes activos) |
