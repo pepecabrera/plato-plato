@@ -8,9 +8,9 @@
 -- debe dar ERROR 1142 y la llamada directa a un procedimiento interno debe dar ERROR 1370.
 USE plato_plato;
 
-CREATE USER 'pp_administrador'@'localhost' ACCOUNT LOCK;
-CREATE USER 'pp_encargado'@'localhost' ACCOUNT LOCK;
-CREATE USER 'pp_empleado'@'localhost' ACCOUNT LOCK;
+CREATE USER IF NOT EXISTS 'pp_administrador'@'localhost' ACCOUNT LOCK;
+CREATE USER IF NOT EXISTS 'pp_encargado'@'localhost' ACCOUNT LOCK;
+CREATE USER IF NOT EXISTS 'pp_empleado'@'localhost' ACCOUNT LOCK;
 
 -- Vistas de consulta: no conceden acceso a las tablas subyacentes.
 CREATE SQL SECURITY DEFINER VIEW v_operativa_platos AS
